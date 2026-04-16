@@ -175,7 +175,6 @@ class PluginManager:
         self.hooks: Dict[PluginHook, List[Plugin]] = {h: [] for h in PluginHook}
         self.plugin_dirs: List[str] = plugin_dirs or [
             os.path.expanduser("~/.EoStudio/plugins"),
-            os.path.join(".", "plugins"),
         ]
         self._manifests: Dict[str, PluginManifest] = {}
 
