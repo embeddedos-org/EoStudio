@@ -156,6 +156,23 @@ class Mesh:
     faces: List[Face] = field(default_factory=list)
     normals: List[Vec3] = field(default_factory=list)
 
+    def compute_normals(self) -> None:
+        """Compute vertex normals by averaging face normals."""
+        self.normals = [Vec3(0, 0, 0) for _ in range(len(self.vertices))]
+        for face in self.faces:
+            if face.v0 >= len(self.vertices) or face.v1 >= len(self.vertices) or face.v2 >= len(self.vertices):
+                continue
+            v0 = self.vertices[face.v0]
+            v1 = self.vertices[face.v1]
+            v2 = self.vertices[face.v2]
+            edge1 = v1 - v0
+            edge2 = v2 - v0
+            n = edge1.cross(edge2).normalized()
+            self.normals[face.v0] += n
+            self.normals[face.v1] += n
+            self.normals[face.v2] += n
+        self.normals = [n.normalized() for n in self.normals]
+
 
 # ---------------------------------------------------------------------------
 # Factory functions
