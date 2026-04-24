@@ -1,11 +1,15 @@
-"""Smart chat — context-aware conversational AI for editors."""
+"""Smart chat — context-aware conversational AI for editors.
+
+Security: User messages are sanitized and checked for PII before
+being sent to LLM backends.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from eostudio.core.ai.llm_client import LLMClient, LLMConfig
+from eostudio.core.ai.llm_client import LLMClient, LLMConfig, sanitize_input, check_pii
 
 _EDITOR_PROMPTS = {
     "cad": "You are a CAD design assistant integrated into EoStudio.",
@@ -90,6 +94,8 @@ class SmartChat:
         return len(self._history)
 
     def send_message(self, text: str, context: Optional[EditorContext] = None) -> ChatResponse:
+        text = sanitize_input(text)
+        check_pii(text)
         user_content = text
         context_used = False
         if context is not None:

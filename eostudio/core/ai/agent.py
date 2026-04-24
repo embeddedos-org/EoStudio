@@ -1,11 +1,15 @@
-"""Design agent — conversational AI assistant for design tasks."""
+"""Design agent — conversational AI assistant for design tasks.
+
+Security: User inputs are sanitized and checked for PII before
+being sent to LLM backends.
+"""
 
 from __future__ import annotations
 
 import json
 from typing import Any, Dict, List, Optional
 
-from eostudio.core.ai.llm_client import LLMClient, LLMConfig
+from eostudio.core.ai.llm_client import LLMClient, LLMConfig, sanitize_input, check_pii
 
 _DOMAIN_PROMPTS = {
     "general": "You are a helpful design assistant for EoStudio.",
@@ -37,6 +41,8 @@ class DesignAgent:
         return self._client
 
     def ask(self, prompt: str) -> str:
+        prompt = sanitize_input(prompt)
+        check_pii(prompt)
         self._history.append({"role": "user", "content": prompt})
         messages = self._client._prepend_system(self._history)
         response = self._client.chat(messages)
@@ -48,6 +54,7 @@ class DesignAgent:
             f"Analyze this design and suggest improvements as a JSON array of strings:\n"
             f"{json.dumps(design_dict, indent=2)}"
         )
+        prompt = sanitize_input(prompt)
         messages = [{"role": "user", "content": prompt}]
         messages = self._client._prepend_system(messages)
         raw = self._client.chat(messages)
@@ -68,6 +75,8 @@ class DesignAgent:
         self._history.clear()
 
     def generate_design_brief(self, prompt: str) -> Dict[str, Any]:
+        prompt = sanitize_input(prompt)
+        check_pii(prompt)
         messages = [{"role": "user", "content": (
             f"Generate a design brief as JSON with keys: name, type, components, layout.\n"
             f"Prompt: {prompt}"

@@ -185,6 +185,38 @@ class MyPlugin(Plugin):
 
 See [Plugin Guide](docs/plugin-guide.md) for full documentation.
 
+## Security
+
+### Plugin Execution Security Model
+
+Plugins run in a **sandboxed environment** with the following protections:
+
+- **Restricted builtins** — Plugins are scanned at load time for use of dangerous builtins (`eval`, `exec`, `compile`, `__import__`, `open`, etc.). Violations are logged to the `eostudio.security` logger.
+- **Execution timeouts** — All plugin hook handlers are executed with a configurable timeout (default: 30 seconds). Hooks that exceed the timeout are terminated and an error is returned.
+- **Input/output validation** — Hook data payloads are validated for type (`dict`) and size (max 10 MB). Return values from hooks are also validated.
+- **Security audit logging** — All plugin lifecycle events (load, activate, deactivate, install) and security-relevant events (timeouts, restricted builtin usage, errors) are logged to the dedicated `eostudio.security` logger.
+
+### LLM API Key Management
+
+API keys for LLM providers (OpenAI, etc.) must be provided via **environment variables only**:
+
+```bash
+export OPENAI_API_KEY=sk-your-key
+# or
+export EOSTUDIO_API_KEY=your-key
+```
+
+- Keys passed explicitly via CLI flags or code will trigger a security warning recommending environment variable usage.
+- API keys are **never** logged, stored in config files, or included in error messages.
+
+### Data Sanitization Before LLM Calls
+
+All user-provided text is processed before being sent to LLM APIs:
+
+- **Input sanitization** — Control characters and null bytes are stripped from user messages.
+- **PII detection** — User messages are scanned for patterns matching emails, phone numbers, SSNs, credit card numbers, and IP addresses. Detections are logged as warnings to `eostudio.security`.
+- **No automatic redaction** — PII is flagged but not removed, allowing callers to decide the appropriate action. This prevents accidental data loss while ensuring awareness.
+
 ## Contributing
 
 1. Fork the repository

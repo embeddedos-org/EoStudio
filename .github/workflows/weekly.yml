@@ -1,0 +1,26 @@
+name: Weekly Comprehensive Tests
+on:
+  schedule:
+    - cron: '0 6 * * 0'
+  workflow_dispatch:
+jobs:
+  full-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Full test suite
+        run: pytest --cov --cov-report=xml -v --tb=long
+      - name: Security audit
+        run: |
+          pip install bandit safety pip-audit detect-secrets
+          bandit -r eostudio/ -ll -ii
+          pip-audit --strict
+          detect-secrets scan --all-files || true

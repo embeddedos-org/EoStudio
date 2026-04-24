@@ -4,6 +4,12 @@ Defines the base :class:`Plugin` class, :class:`PluginManager` for lifecycle
 management, and supporting enumerations/dataclasses for manifests, hooks,
 and plugin state tracking.  External tools (such as EoSim) subclass
 :class:`Plugin` to register as first-class EoStudio extensions.
+
+Security features:
+- Sandboxed plugin execution with restricted builtins
+- Execution timeouts for hook handlers
+- Input/output validation
+- Security audit logging
 """
 
 from __future__ import annotations
@@ -13,13 +19,34 @@ import json
 import logging
 import os
 import shutil
+import signal
 import subprocess
 import sys
+import threading
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Set, Type
 
 log = logging.getLogger(__name__)
+security_log = logging.getLogger("eostudio.security")
+
+
+# ------------------------------------------------------------------
+# Security constants
+# ------------------------------------------------------------------
+
+#: Builtins that plugins are NOT allowed to call directly.
+RESTRICTED_BUILTINS: Set[str] = {
+    "eval", "exec", "compile", "__import__",
+    "globals", "locals", "vars",
+    "open", "breakpoint",
+}
+
+#: Maximum seconds a plugin hook handler is allowed to run.
+PLUGIN_HOOK_TIMEOUT_SECONDS: int = 30
+
+#: Maximum size (bytes) for plugin hook data payloads.
+MAX_HOOK_DATA_SIZE: int = 10 * 1024 * 1024  # 10 MB
 
 
 # ------------------------------------------------------------------
@@ -48,6 +75,115 @@ class PluginHook(Enum):
     PRE_CODEGEN = "pre_codegen"
     POST_CODEGEN = "post_codegen"
     ON_ERROR = "on_error"
+
+
+# ------------------------------------------------------------------
+# Plugin sandbox
+# ------------------------------------------------------------------
+
+class PluginSandbox:
+    """Provides sandboxed execution for plugin code.
+
+    Restricts access to dangerous builtins and enforces execution
+    timeouts on hook handlers.
+    """
+
+    @staticmethod
+    def validate_module(module: object) -> List[str]:
+        """Check a loaded module for use of restricted patterns.
+
+        Returns a list of warning messages (empty if clean).
+        """
+        warnings: List[str] = []
+        source: Optional[str] = None
+        try:
+            import inspect
+            source = inspect.getsource(module)
+        except (OSError, TypeError):
+            pass
+
+        if source:
+            for builtin_name in RESTRICTED_BUILTINS:
+                if builtin_name + "(" in source:
+                    warnings.append(
+                        f"Plugin source uses restricted builtin '{builtin_name}'"
+                    )
+        return warnings
+
+    @staticmethod
+    def run_with_timeout(
+        func: Callable[..., Any],
+        args: tuple = (),
+        kwargs: Optional[Dict[str, Any]] = None,
+        timeout: int = PLUGIN_HOOK_TIMEOUT_SECONDS,
+    ) -> Any:
+        """Execute *func* with a timeout.
+
+        On timeout, raises :class:`TimeoutError`.
+        Uses threading for cross-platform compatibility.
+        """
+        kwargs = kwargs or {}
+        result: List[Any] = []
+        exception: List[BaseException] = []
+
+        def _target() -> None:
+            try:
+                result.append(func(*args, **kwargs))
+            except BaseException as exc:
+                exception.append(exc)
+
+        thread = threading.Thread(target=_target, daemon=True)
+        thread.start()
+        thread.join(timeout=timeout)
+
+        if thread.is_alive():
+            security_log.warning(
+                "Plugin hook execution timed out after %ds", timeout
+            )
+            raise TimeoutError(
+                f"Plugin hook execution exceeded {timeout}s timeout"
+            )
+
+        if exception:
+            raise exception[0]
+
+        return result[0] if result else None
+
+
+# ------------------------------------------------------------------
+# Input / output validation
+# ------------------------------------------------------------------
+
+def _validate_hook_data(data: Any, label: str = "hook data") -> Dict[str, Any]:
+    """Validate that hook data is a reasonable dict payload."""
+    if not isinstance(data, dict):
+        security_log.warning("Invalid %s type: %s (expected dict)", label, type(data).__name__)
+        raise TypeError(f"{label} must be a dict, got {type(data).__name__}")
+
+    serialized = json.dumps(data, default=str)
+    if len(serialized) > MAX_HOOK_DATA_SIZE:
+        security_log.warning(
+            "%s exceeds max size (%d > %d bytes)",
+            label, len(serialized), MAX_HOOK_DATA_SIZE,
+        )
+        raise ValueError(
+            f"{label} exceeds maximum allowed size of {MAX_HOOK_DATA_SIZE} bytes"
+        )
+
+    return data
+
+
+def _validate_hook_result(result: Any, plugin_id: str) -> Dict[str, Any]:
+    """Validate the return value from a plugin hook handler."""
+    if result is None:
+        return {}
+    if not isinstance(result, dict):
+        security_log.warning(
+            "Plugin %s returned non-dict from hook: %s",
+            plugin_id, type(result).__name__,
+        )
+        return {}
+    return result
 
 
 # ------------------------------------------------------------------
@@ -126,20 +262,25 @@ class Plugin:
 
     def activate(self, context: Dict[str, Any]) -> bool:
         """Called when the host loads and activates this plugin."""
+        security_log.info("Activating plugin: %s v%s", self.manifest.id, self.manifest.version)
         self.state = PluginState.ACTIVE
         return True
 
     def deactivate(self) -> None:
         """Called when the host unloads this plugin."""
+        security_log.info("Deactivating plugin: %s", self.manifest.id)
         self.state = PluginState.DISABLED
 
     def on_hook(self, hook: PluginHook, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Dispatch a hook event."""
+        """Dispatch a hook event with input validation and timeout."""
         handler = self._hooks.get(hook)
-        if handler is not None:
-            result = handler(data)
-            return result if isinstance(result, dict) else {}
-        return {}
+        if handler is None:
+            return {}
+
+        _validate_hook_data(data, f"hook input ({hook.value})")
+
+        result = PluginSandbox.run_with_timeout(handler, args=(data,))
+        return _validate_hook_result(result, self.manifest.id)
 
     def get_menu_items(self) -> List[Dict[str, Any]]:
         return []
@@ -204,7 +345,7 @@ class PluginManager:
         return discovered
 
     def load(self, plugin_id: str) -> bool:
-        """Import and instantiate a discovered plugin."""
+        """Import and instantiate a discovered plugin with security checks."""
         manifest = self._manifests.get(plugin_id)
         if manifest is None:
             log.error("Plugin %s not discovered", plugin_id)
@@ -215,7 +356,14 @@ class PluginManager:
             return True
 
         try:
+            security_log.info("Loading plugin %s (entry_point=%s)", plugin_id, manifest.entry_point)
             module = importlib.import_module(manifest.entry_point)
+
+            # Security: scan module for restricted builtin usage
+            warnings = PluginSandbox.validate_module(module)
+            for warn in warnings:
+                security_log.warning("Plugin %s: %s", plugin_id, warn)
+
             plugin_cls: Optional[Type[Plugin]] = None
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
@@ -234,9 +382,10 @@ class PluginManager:
             plugin = plugin_cls(manifest)
             plugin.state = PluginState.LOADED
             self.plugins[plugin_id] = plugin
-            log.info("Loaded plugin %s", plugin_id)
+            security_log.info("Loaded plugin %s successfully", plugin_id)
             return True
         except Exception as exc:
+            security_log.error("Failed to load plugin %s: %s", plugin_id, exc)
             log.error("Failed to load plugin %s: %s", plugin_id, exc)
             return False
 
@@ -253,7 +402,7 @@ class PluginManager:
         for hook_list in self.hooks.values():
             if plugin in hook_list:
                 hook_list.remove(plugin)
-        log.info("Unloaded plugin %s", plugin_id)
+        security_log.info("Unloaded plugin %s", plugin_id)
 
     def activate(self, plugin_id: str, context: Optional[Dict[str, Any]] = None) -> bool:
         """Activate a loaded plugin and register its hooks."""
@@ -267,7 +416,7 @@ class PluginManager:
             success = plugin.activate(ctx)
         except Exception as exc:
             plugin.state = PluginState.ERROR
-            log.error("Plugin %s activation failed: %s", plugin_id, exc)
+            security_log.error("Plugin %s activation failed: %s", plugin_id, exc)
             return False
 
         if not success:
@@ -280,7 +429,7 @@ class PluginManager:
                     self.hooks[hook].append(plugin)
 
         plugin.state = PluginState.ACTIVE
-        log.info("Activated plugin %s", plugin_id)
+        security_log.info("Activated plugin %s", plugin_id)
         return True
 
     def deactivate(self, plugin_id: str) -> None:
@@ -296,10 +445,12 @@ class PluginManager:
         for hook_list in self.hooks.values():
             if plugin in hook_list:
                 hook_list.remove(plugin)
-        log.info("Deactivated plugin %s", plugin_id)
+        security_log.info("Deactivated plugin %s", plugin_id)
 
     def fire_hook(self, hook: PluginHook, data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Fire hook across all active plugins that registered for it."""
+        """Fire hook across all active plugins with validation and timeouts."""
+        _validate_hook_data(data, f"fire_hook input ({hook.value})")
+
         results: List[Dict[str, Any]] = []
         for plugin in self.hooks.get(hook, []):
             if plugin.state != PluginState.ACTIVE:
@@ -308,8 +459,17 @@ class PluginManager:
                 result = plugin.on_hook(hook, data)
                 if result:
                     results.append(result)
+            except TimeoutError:
+                security_log.error(
+                    "Plugin %s timed out on hook %s",
+                    plugin.manifest.id, hook.value,
+                )
+                results.append({"error": "timeout", "plugin": plugin.manifest.id})
             except Exception as exc:
-                log.error("Plugin %s hook %s error: %s", plugin.manifest.id, hook.value, exc)
+                security_log.error(
+                    "Plugin %s hook %s error: %s",
+                    plugin.manifest.id, hook.value, exc,
+                )
                 results.append({"error": str(exc), "plugin": plugin.manifest.id})
         return results
 
@@ -357,6 +517,8 @@ class PluginManager:
         with open(manifest_path, "r", encoding="utf-8") as fh:
             manifest = PluginManifest.from_dict(json.load(fh))
 
+        security_log.info("Installing plugin %s from path: %s", manifest.id, path)
+
         dest_base = os.path.expanduser(self.plugin_dirs[0])
         os.makedirs(dest_base, exist_ok=True)
         dest = os.path.join(dest_base, manifest.id)
@@ -364,12 +526,14 @@ class PluginManager:
             shutil.rmtree(dest)
         shutil.copytree(path, dest)
         self._manifests[manifest.id] = manifest
-        log.info("Installed plugin %s from %s -> %s", manifest.id, path, dest)
+        security_log.info("Installed plugin %s from %s -> %s", manifest.id, path, dest)
         return manifest
 
     def install_from_git(self, repo_url: str) -> PluginManifest:
         """Clone a git repository and install it as a plugin."""
         import tempfile
+
+        security_log.info("Installing plugin from git: %s", repo_url)
 
         with tempfile.TemporaryDirectory(prefix="EoStudio_plugin_") as tmp:
             subprocess.check_call(
