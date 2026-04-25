@@ -22,7 +22,7 @@
 
 EoStudio is the unified design tool suite for the EmbeddedOS ecosystem. It brings together 3D modeling, CAD design, image editing, game design, UI/UX flow design, interior design, UML modeling, MATLAB-style simulation, database design, hardware PCB layout, code editing, and LLM-powered AI assistance — all in a single cross-platform application running on Windows, Ubuntu/Linux, macOS, EoS, and the browser.
 
-This reference book is intended for designers, developers, engineers, and educators who use EoStudio to create, prototype, and generate production code across a wide range of domains. Whether you are designing a responsive web dashboard, modeling a mechanical bracket for 3D printing, creating a game prototype, or using the AI design agent to generate UI layouts from natural language, this book provides complete technical coverage.
+This reference book is intended for designers, developers, engineers, and educators who use EoStudio to create, prototype, and generate production code across a wide [@ide_survey] range of domains. Whether you are designing a responsive web dashboard, modeling a mechanical bracket for 3D printing, creating a game prototype, or using the AI design agent to generate UI layouts from natural language, this book provides complete technical coverage.
 
 EoStudio is built on a modular architecture with 12 specialized editors, 30+ code generators, a plugin system, and deep AI/LLM integration. The rendering pipeline supports Tkinter (desktop), WebSocket-based web rendering, framebuffer/SDL2 for EoS, and native macOS backends. The geometry engine includes Vec2/3/4, Matrix4, Mesh, Bezier, NURBS, and CSG operations. The AI subsystem supports both local models via Ollama and cloud models via the OpenAI API.
 
@@ -1652,3 +1652,8 @@ ollama serve
 *EoStudio — Cross-Platform Design Suite Reference — Version 1.0 — April 2026*
 
 *Copyright (c) 2026 EmbeddedOS Organization. MIT License.*
+
+## References
+
+::: {#refs}
+:::
