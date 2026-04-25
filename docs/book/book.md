@@ -4,6 +4,9 @@
 
 ## The Definitive Technical Reference
 
+![Figure: EoStudio System Architecture — IDE with LSP, code analysis, and PCB design](images/architecture.png)
+
+
 **Version 1.0**
 
 **Srikanth Patchava & EmbeddedOS Contributors**
