@@ -8,11 +8,22 @@
 [![Release](https://github.com/embeddedos-org/EoStudio/actions/workflows/release.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/release.yml)
 [![codecov](https://codecov.io/gh/embeddedos-org/EoStudio/branch/master/graph/badge.svg)](https://codecov.io/gh/embeddedos-org/EoStudio)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)]()
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Book](https://github.com/embeddedos-org/EoStudio/actions/workflows/book-build.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/book-build.yml)
 
-EoStudio is a unified design tool suite for the [EmbeddedOS](https://embeddedos-org.github.io) ecosystem — combining 3D modeling, CAD design, image editing, game design, UI/UX flow design, interior design, UML modeling, MATLAB-style simulation, multi-platform code generation, database design, and LLM-powered AI assistance — all running on **Windows**, **Ubuntu/Linux**, and **EoS**.
+EoStudio is a unified design tool suite for the [EmbeddedOS](https://embeddedos-org.github.io) ecosystem — combining 3D modeling, CAD design, image editing, game design, UI/UX flow design, interior design, UML modeling, MATLAB-style simulation, multi-platform code generation, database design, LLM-powered AI assistance, **animation engine, interactive prototyping, video/promo generation, and React animation codegen** — all running on **Windows**, **Ubuntu/Linux**, and **EoS**.
+
+## What's New in v1.0 (Community Edition)
+
+- **Animation Engine** — Keyframe system with 25+ presets, spring physics, multi-track timeline widget
+- **Design System** — Design tokens, light/dark themes, component variants with states, CSS/Tailwind/Style Dictionary export
+- **Auto Layout** — Flexbox-like layout engine with responsive breakpoints (mobile → desktop)
+- **AI UI Generation Pro** — Text-to-animated-UI, screenshot-to-UI, AI accessibility audit, color palette generation
+- **Interactive Prototyping** — Interactions, gestures, screen transitions, state machine, HTML prototype export
+- **Video & Promo** — Layer compositor, 6 promo templates (App Store, social media, product launch), MP4/GIF export
+- **React Animation Codegen** — Generate full React apps with Framer Motion or GSAP animations from designs
+- **Promo Editor** — Visual editor for creating promotional videos and social media content
 
 ## Quick Start
 
@@ -40,7 +51,7 @@ EoStudio teach --lesson shapes
 
 ## Features
 
-### 12 Design Editors
+### 13 Design Editors
 
 | Editor | CLI Flag | Use Case |
 |--------|----------|----------|
@@ -48,7 +59,7 @@ EoStudio teach --lesson shapes
 | CAD Designer | `--editor cad` | Parametric design, assemblies, constraints |
 | Image Editor | `--editor paint` | Layers, brushes, filters |
 | Game Editor | `--editor game` | ECS, tilemaps, sprites |
-| UI/UX Designer | `--editor ui` | Components, flows, prototyping |
+| UI/UX Designer | `--editor ui` | Components, flows, prototyping, animation |
 | Product Designer | `--editor product` | BOM, 3D-print validation |
 | Interior Designer | `--editor interior` | Floor plans, furniture |
 | UML Modeler | `--editor uml` | Class, sequence, state diagrams |
@@ -56,6 +67,7 @@ EoStudio teach --lesson shapes
 | Database Designer | `--editor database` | ERD, schema, SQL/ORM codegen |
 | Hardware Editor | `--editor hardware` | PCB layout, schematics, Gerber |
 | IDE | `--editor ide` | Code editing, debugging, Git |
+| Promo Editor | `--editor promo` | Video promos, social media, App Store previews |
 
 ### 30+ Code Generators
 
@@ -64,6 +76,7 @@ EoStudio teach --lesson shapes
 | **Mobile** | Flutter, React Native, Kotlin (Android), Swift (iOS) |
 | **Desktop** | Electron, Tauri, tkinter, Qt, Compose Desktop |
 | **Web (Full-Stack)** | React+FastAPI, Vue+Flask, Angular+Express, Svelte+Django |
+| **Web (Animated)** | React + Framer Motion, React + GSAP, React + CSS Animations |
 | **Database** | SQLite, PostgreSQL, MySQL, SQLAlchemy, Prisma, Django Models |
 | **UML → Code** | Python, Java, Kotlin, TypeScript, C++, C# |
 | **3D/CAD** | OpenSCAD, STL, OBJ, glTF, DXF |
@@ -77,8 +90,40 @@ EoStudio teach --lesson shapes
 | **Design Agent** | Multi-domain Q&A, design brief generation, improvement suggestions |
 | **Smart Chat** | Per-editor AI panel with context-aware prompts |
 | **AI Generator** | Text-to-UI, text-to-3D, text-to-CAD design generation |
+| **AI Generator Pro** | Text-to-animated-UI, screenshot-to-UI, AI design system generation |
+| **AI Accessibility** | WCAG 2.1 AA audit with fix suggestions |
+| **AI Palette** | Generate full color palette from a single brand color |
 | **AI Simulator** | Parameter suggestion, instability detection, controller tuning |
 | **Kids Tutor** | Interactive lessons with quizzes and encouragement |
+
+### Animation & Motion
+
+| Feature | Description |
+|---------|------------|
+| **Keyframe Engine** | Multi-track keyframes with 24 easing functions + cubic-bezier |
+| **Spring Physics** | 6 spring presets (gentle, wobbly, stiff, etc.) like Framer Motion |
+| **25 Presets** | fadeIn, slideUp, scaleIn, bounce, shake, pulse, revealUp, etc. |
+| **Timeline Widget** | Visual keyframe editor with transport controls and scrubbing |
+| **React Codegen** | Generate Framer Motion or GSAP animation code from designs |
+
+### Prototyping
+
+| Feature | Description |
+|---------|------------|
+| **Interactions** | 17 triggers (click, hover, scroll, gesture) × 18 actions |
+| **Screen Transitions** | 15 types: fade, slide, push, scale, dissolve, shared element |
+| **Gesture Recognition** | Swipe, pinch, long-press, tap with JS code generation |
+| **State Machine** | Variables, conditions, guards for prototype logic |
+| **HTML Export** | Share-able single-file interactive prototype |
+
+### Video & Promo
+
+| Feature | Description |
+|---------|------------|
+| **Promo Editor** | Visual layer compositor with real-time preview |
+| **6 Templates** | App Store, social media (square/Twitter/LinkedIn), product launch, Product Hunt |
+| **Export** | MP4, GIF, WebM via ffmpeg, 9 social media size presets |
+| **Screen Recorder** | Record prototype sessions with annotations |
 
 **LLM Backends:** Ollama (local, default) + OpenAI API — see [AI Guide](docs/ai-guide.md)
 
@@ -125,9 +170,10 @@ EoStudio ask --domain cad "Design an L-bracket with mounting holes"
 
 ```
 eostudio/
-├── cli/               # Click CLI (10 commands)
+├── cli/               # Click CLI (18 commands)
 ├── core/
-│   ├── ai/            # LLMClient, DesignAgent, SmartChat, AIGenerator, AISimulator, Tutor
+│   ├── ai/            # LLMClient, DesignAgent, SmartChat, AIGenerator, AIGeneratorPro, Tutor
+│   ├── animation/     # Keyframes, timeline, spring physics, 25 presets
 │   ├── geometry/      # Vec2/3/4, Matrix4, Mesh, Bezier, NURBS, CSG
 │   ├── rendering/     # Rasterizer, scene graph, camera, Phong lighting
 │   ├── physics/       # Rigid body, collision, particles
@@ -137,13 +183,15 @@ eostudio/
 │   ├── game/          # ECS, tilemap, sprites, scripting
 │   ├── image/         # Layers, brushes, filters
 │   ├── hardware/      # PCB, schematic, Gerber
-│   ├── ui_flow/       # Component library, prototyping
-│   └── interior/      # Floor plans, furniture
+│   ├── ui_flow/       # Design tokens, auto-layout, variants, responsive, design system
+│   ├── interior/      # Floor plans, furniture
+│   ├── prototyping/   # Interactions, transitions, gestures, state machine, player
+│   └── video/         # Recorder, compositor, exporter, promo templates
 ├── gui/
-│   ├── editors/       # 12 visual editors
+│   ├── editors/       # 13 visual editors (including promo editor)
 │   ├── widgets/       # Viewport, canvas, timeline, properties
-│   └── dialogs/       # Export, settings, AI chat
-├── codegen/           # 30+ framework code generators
+│   └── dialogs/       # Export, settings, AI chat, design system
+├── codegen/           # 30+ framework code generators + react_motion
 ├── formats/           # .EoStudio, OBJ, STL, SVG, glTF, DXF
 ├── plugins/           # Plugin system + EoSim integration
 └── templates/         # 5 project templates
@@ -168,7 +216,7 @@ flake8 eostudio/ tests/ --max-line-length=120
 mypy eostudio/ --ignore-missing-imports
 ```
 
-**Test coverage:** 6 test files with 100+ test cases covering AI modules, geometry, codegen, plugins, simulation, formats, and integration.
+**Test coverage:** 11 test files with 200+ test cases covering AI modules, geometry, codegen, plugins, simulation, formats, animation, design system, prototyping, video, react motion, and end-to-end integration.
 
 ## Plugin System
 

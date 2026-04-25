@@ -141,6 +141,16 @@ def generate_code(
         "firmware-freertos": lambda: _generate_firmware("freertos", scene_data, app_name),
         "firmware-zephyr": lambda: _generate_firmware("zephyr", scene_data, app_name),
         "firmware-linux": lambda: _generate_firmware("linux", scene_data, app_name),
+        # React + Animation generators (Phase 6)
+        "react-framer-motion": lambda: _generate_react_motion(
+            "framer-motion", components, screens, scene_data
+        ),
+        "react-gsap": lambda: _generate_react_motion(
+            "gsap", components, screens, scene_data
+        ),
+        "react-css-animations": lambda: _generate_react_motion(
+            "css", components, screens, scene_data
+        ),
     }
 
     gen_fn = generators.get(framework)
@@ -371,3 +381,17 @@ def _generate_firmware(
     })
     gen = FirmwareGenerator(board_config, target_os=target_os)
     return gen.generate(app_name=app_name)
+
+
+def _generate_react_motion(
+    library: str,
+    components: List[Dict[str, Any]],
+    screens: List[Dict[str, Any]],
+    scene_data: Dict[str, Any],
+) -> Dict[str, str]:
+    from eostudio.codegen.react_motion import ReactMotionGenerator
+    from eostudio.core.animation.timeline import AnimationTimeline
+
+    timeline_data = scene_data.get("animation_timeline")
+    timeline = AnimationTimeline.from_dict(timeline_data) if timeline_data else AnimationTimeline()
+    return ReactMotionGenerator(library=library).generate(timeline, components, screens)

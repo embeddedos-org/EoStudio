@@ -1,6 +1,6 @@
 # EoStudio Editors Guide
 
-> Complete reference for all 12 editors in EoStudio.
+> Complete reference for all 13 editors in EoStudio.
 
 ## Editor Overview
 
@@ -10,7 +10,7 @@
 | 2 | CAD Designer | `--editor cad` | Parametric engineering design, assemblies |
 | 3 | Image Editor | `--editor paint` | 2D raster/vector image editing |
 | 4 | Game Editor | `--editor game` | 2D/3D game level design, ECS |
-| 5 | UI/UX Designer | `--editor ui` | User interface prototyping, wireframes |
+| 5 | UI/UX Designer | `--editor ui` | User interface prototyping, animation, AI generation |
 | 6 | Product Designer | `--editor product` | BOM generation, 3D-print validation |
 | 7 | Interior Designer | `--editor interior` | Floor plans, furniture layout |
 | 8 | UML Modeler | `--editor uml` | Class, sequence, state machine diagrams |
@@ -18,6 +18,7 @@
 | 10 | Database Designer | `--editor database` | ERD, schema design, SQL/ORM codegen |
 | 11 | Hardware Editor | `--editor hardware` | PCB layout, schematics, Gerber export |
 | 12 | IDE | `--editor ide` | Code editing, debugging, Git, terminal |
+| 13 | Promo Editor | `--editor promo` | Video promos, App Store previews, social media |
 
 ---
 

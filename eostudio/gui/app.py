@@ -28,6 +28,7 @@ class EditorManager:
         "database": "eostudio.gui.editors.database_editor",
         "hardware": "eostudio.gui.editors.hardware_editor",
         "ide": "eostudio.gui.editors.ide_editor",
+        "promo": "eostudio.gui.editors.promo_editor",
     }
 
     def __init__(self) -> None:
@@ -148,6 +149,37 @@ class EoStudioApp:
                 {"label": "Run with EoSim"},
                 {"label": "Select Platform"},
                 {"label": "View 3D Product"},
+            ]},
+            {"label": "Animation", "children": [
+                {"label": "Open Timeline"},
+                {"label": "Animation Presets"},
+                {"label": "Spring Physics"},
+                {"label": "Export React + Framer Motion"},
+                {"label": "Export React + GSAP"},
+            ]},
+            {"label": "Prototype", "children": [
+                {"label": "Play Prototype"},
+                {"label": "Export HTML Prototype"},
+                {"label": "Add Interaction"},
+                {"label": "Screen Transitions"},
+                {"label": "Gesture Settings"},
+            ]},
+            {"label": "Design System", "children": [
+                {"label": "Edit Design Tokens"},
+                {"label": "Switch Theme"},
+                {"label": "Export CSS Variables"},
+                {"label": "Export Tailwind Config"},
+                {"label": "Export Style Dictionary"},
+                {"label": "AI Generate Design System"},
+                {"label": "AI Generate Palette"},
+            ]},
+            {"label": "Video & Promo", "children": [
+                {"label": "Open Promo Editor"},
+                {"label": "App Store Preview"},
+                {"label": "Social Media Post"},
+                {"label": "Product Launch Video"},
+                {"label": "Export Video (MP4)"},
+                {"label": "Export GIF"},
             ]},
             {"label": "Help", "children": [
                 {"label": "About EoStudio"},

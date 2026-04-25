@@ -16,7 +16,7 @@ def cli():
     "--editor",
     type=click.Choice([
         "3d", "cad", "paint", "game", "ui", "product",
-        "interior", "uml", "simulation", "database", "ide", "all",
+        "interior", "uml", "simulation", "database", "ide", "promo", "all",
     ]),
     default="all",
     help="Editor to launch.",
@@ -54,6 +54,7 @@ def export(project_file: str, fmt: str, output: str):
     "--framework",
     type=click.Choice([
         "html", "flutter", "compose", "react", "openscad",
+        "react-framer-motion", "react-gsap", "react-css-animations",
         "mobile-flutter", "mobile-react-native", "mobile-kotlin", "mobile-swift",
         "desktop-electron", "desktop-tauri", "desktop-tkinter", "desktop-qt",
         "webapp-react-fastapi", "webapp-vue-flask", "webapp-angular-express",
@@ -248,6 +249,204 @@ def new(template: str, output: str, show_list: bool):
 
     project_path = create_project_from_template(template, output)
     click.echo(f"Created project from '{template}' template -> {project_path}")
+
+
+@cli.command()
+@click.argument("project_file")
+@click.option(
+    "--framework",
+    type=click.Choice(["react-framer-motion", "react-gsap", "react-css"]),
+    default="react-framer-motion",
+    help="Animation library to target.",
+)
+@click.option("--output", "-o", required=True, help="Output directory.")
+def react_motion(project_file: str, framework: str, output: str):
+    """Generate React code with animations (Framer Motion / GSAP / CSS)."""
+    from eostudio.formats.project import EoStudioProject
+    from eostudio.codegen.react_motion import ReactMotionGenerator
+    from eostudio.core.animation.timeline import AnimationTimeline
+
+    project = EoStudioProject.load(project_file)
+    scene_data = project.scenes.get(project.active_scene, {})
+    components = scene_data.get("components", [])
+    screens = scene_data.get("screens", [])
+
+    lib_map = {"react-framer-motion": "framer-motion", "react-gsap": "gsap", "react-css": "css"}
+    timeline_data = scene_data.get("animation_timeline")
+    timeline = AnimationTimeline.from_dict(timeline_data) if timeline_data else AnimationTimeline()
+
+    gen = ReactMotionGenerator(library=lib_map[framework])
+    files = gen.generate(timeline, components, screens)
+
+    import os
+    os.makedirs(output, exist_ok=True)
+    for fname, content in files.items():
+        path = os.path.join(output, fname)
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(content)
+    click.echo(f"Generated {framework} app ({len(files)} files) -> {output}")
+
+
+@cli.command()
+@click.argument("prompt")
+@click.option("--style", default="modern", help="Design style (modern, minimal, bold, playful).")
+@click.option("--output", "-o", default=None, help="Output JSON file.")
+def generate_ui(prompt: str, style: str, output: str):
+    """AI-generate a UI design with animations from a text prompt."""
+    from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
+    import json
+
+    gen = AIDesignGeneratorPro()
+    result = gen.text_to_animated_ui(prompt, style=style)
+
+    formatted = json.dumps(result, indent=2)
+    if output:
+        with open(output, "w") as f:
+            f.write(formatted)
+        click.echo(f"Generated animated UI design -> {output}")
+    else:
+        click.echo(formatted)
+
+
+@cli.command()
+@click.argument("prompt")
+@click.option("--output", "-o", default=None, help="Output JSON file.")
+def design_system(prompt: str, output: str):
+    """AI-generate a design system (tokens, colors, typography) from a brand description."""
+    from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
+    import json
+
+    gen = AIDesignGeneratorPro()
+    result = gen.text_to_design_system(prompt)
+
+    formatted = json.dumps(result, indent=2)
+    if output:
+        with open(output, "w") as f:
+            f.write(formatted)
+        click.echo(f"Generated design system -> {output}")
+    else:
+        click.echo(formatted)
+
+
+@cli.command()
+@click.argument("image_path")
+@click.option("--output", "-o", default=None, help="Output JSON file.")
+def screenshot_to_ui(image_path: str, output: str):
+    """Convert a screenshot/image to UI component structure using AI vision."""
+    from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
+    import json
+
+    gen = AIDesignGeneratorPro()
+    result = gen.screenshot_to_ui(image_path)
+
+    formatted = json.dumps(result, indent=2)
+    if output:
+        with open(output, "w") as f:
+            f.write(formatted)
+        click.echo(f"Extracted UI from screenshot -> {output}")
+    else:
+        click.echo(formatted)
+
+
+@cli.command()
+@click.argument("project_file")
+@click.option(
+    "--template",
+    type=click.Choice([
+        "app_store_preview", "social_square", "product_launch",
+        "twitter_card", "linkedin_post", "product_hunt",
+    ]),
+    default="social_square",
+    help="Promo template to use.",
+)
+@click.option("--output", "-o", required=True, help="Output directory for rendered frames.")
+@click.option("--product-name", default="My Product", help="Product name for the promo.")
+@click.option("--tagline", default="The next big thing", help="Tagline text.")
+def promo(project_file: str, template: str, output: str, product_name: str, tagline: str):
+    """Generate promotional content (App Store, social media, product launch)."""
+    from eostudio.core.video.promo_templates import get_template
+    import json, os
+
+    tmpl = get_template(template)
+    if not tmpl:
+        click.echo(f"Unknown template: {template}")
+        return
+
+    compositor = tmpl.create_compositor(
+        product_name=product_name, tagline=tagline,
+        app_name=product_name, product=product_name,
+    )
+
+    frames = compositor.render_all_frames()
+    os.makedirs(output, exist_ok=True)
+
+    manifest_path = os.path.join(output, "manifest.json")
+    with open(manifest_path, "w") as f:
+        json.dump({
+            "template": template,
+            "width": compositor.width,
+            "height": compositor.height,
+            "fps": compositor.fps,
+            "duration": compositor.duration,
+            "total_frames": len(frames),
+            "ffmpeg_command": compositor.generate_ffmpeg_command(
+                os.path.join(output, "output.mp4"), output
+            ),
+        }, f, indent=2)
+
+    click.echo(f"Promo '{template}' ({compositor.width}x{compositor.height}) -> {output}")
+    click.echo(f"  {len(frames)} frames, {compositor.duration}s duration")
+    click.echo(f"  Run ffmpeg command in manifest.json to render video")
+
+
+@cli.command()
+@click.argument("project_file")
+@click.option("--output", "-o", required=True, help="Output HTML file.")
+@click.option("--device", default="iphone_14", help="Device frame for prototype.")
+def prototype(project_file: str, output: str, device: str):
+    """Export an interactive HTML prototype from a design project."""
+    from eostudio.formats.project import EoStudioProject
+    from eostudio.core.prototyping.player import PrototypePlayer, PrototypeScreen
+
+    project = EoStudioProject.load(project_file)
+    scene_data = project.scenes.get(project.active_scene, {})
+    screens = scene_data.get("screens", [{"name": "Home", "components": scene_data.get("components", [])}])
+
+    player = PrototypePlayer()
+    for screen in screens:
+        player.add_screen(PrototypeScreen(
+            id=screen.get("name", "screen").lower().replace(" ", "_"),
+            name=screen.get("name", "Screen"),
+            components=screen.get("components", []),
+            device_frame=device,
+        ))
+
+    html = player.export_html()
+    with open(output, "w") as f:
+        f.write(html)
+    click.echo(f"Interactive prototype ({len(screens)} screens, {device}) -> {output}")
+
+
+@cli.command()
+@click.argument("brand_color")
+@click.option("--style", default="modern", help="Palette style.")
+@click.option("--output", "-o", default=None, help="Output JSON file.")
+def palette(brand_color: str, style: str, output: str):
+    """Generate a full color palette from a brand color (e.g. #2563eb)."""
+    from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
+    import json
+
+    gen = AIDesignGeneratorPro()
+    result = gen.generate_palette(brand_color, style=style)
+
+    formatted = json.dumps(result, indent=2)
+    if output:
+        with open(output, "w") as f:
+            f.write(formatted)
+        click.echo(f"Generated palette from {brand_color} -> {output}")
+    else:
+        click.echo(formatted)
 
 
 def main():

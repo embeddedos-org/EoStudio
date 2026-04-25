@@ -11,6 +11,7 @@ from eostudio.gui.editors.uml_editor import UMLEditor
 from eostudio.gui.editors.simulation_editor import SimulationEditor
 from eostudio.gui.editors.database_editor import DatabaseEditor
 from eostudio.gui.editors.ide_editor import IDEEditor
+from eostudio.gui.editors.promo_editor import PromoEditor
 
 __all__ = [
     "Modeler3DEditor",
@@ -24,4 +25,5 @@ __all__ = [
     "SimulationEditor",
     "DatabaseEditor",
     "IDEEditor",
+    "PromoEditor",
 ]
