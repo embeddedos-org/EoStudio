@@ -68,6 +68,9 @@ We hope this reference helps you unlock the full potential of EoStudio for your 
 
 EoStudio is a cross-platform design suite that unifies 12 specialized editors for 3D modeling, CAD, image editing, game design, UI/UX, interior design, UML, simulation, database design, hardware PCB, and code editing — with integrated LLM-powered AI assistance and 30+ code generators.
 
+![Figure: EoStudio Debug Session Flow — breakpoints, variable inspection, and watch output](images/debug-flow.png)
+
+
 It is a core component of the EmbeddedOS ecosystem, designed to streamline the entire design-to-code workflow for embedded systems, applications, and cross-platform products.
 
 ## 1.2 Key Capabilities
@@ -261,6 +264,9 @@ User Design → Editor → Design Document (.eostudio)
               React App  Flutter App  OpenSCAD
               (HTML/JS)  (Dart)       (3D Print)
 ```
+
+![Figure: EoStudio Code Edit Pipeline — keystroke through Tree-sitter parse to LSP diagnostics](images/editor-pipeline.png)
+
 
 ---
 
