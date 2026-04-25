@@ -10,6 +10,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Version](https://img.shields.io/badge/version-0.1.0-blue)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Book](https://github.com/embeddedos-org/EoStudio/actions/workflows/book-build.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/book-build.yml)
 
 EoStudio is a unified design tool suite for the [EmbeddedOS](https://embeddedos-org.github.io) ecosystem — combining 3D modeling, CAD design, image editing, game design, UI/UX flow design, interior design, UML modeling, MATLAB-style simulation, multi-platform code generation, database design, and LLM-powered AI assistance — all running on **Windows**, **Ubuntu/Linux**, and **EoS**.
 
