@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -52,7 +55,9 @@ class EosBackend(DisplayBackend):
         self._windows.pop(window_id, None)
 
     def set_window_title(self, window_id: int, title: str) -> None:
-        pass
+        self._title = title
+        if self._fb and hasattr(self._fb, 'set_title'):
+            self._fb.set_title(title)
 
     def get_window_size(self, window_id: int) -> Tuple[int, int]:
         return self._width, self._height
@@ -130,13 +135,15 @@ class EosBackend(DisplayBackend):
             self._fb.flush()
 
     def get_clipboard_text(self) -> str:
-        return ""
+        return getattr(self, '_clipboard', '')
 
     def set_clipboard_text(self, text: str) -> None:
-        pass
+        self._clipboard = text
+        logger.debug("Clipboard set (%d chars) — not supported on framebuffer", len(text))
 
     def set_cursor(self, cursor_type: str) -> None:
-        pass
+        self._cursor_type = cursor_type
+        logger.debug("Cursor set to '%s' — not supported on framebuffer", cursor_type)
 
     def schedule_timer(self, interval_ms: int, callback: Callable[[], None],
                        repeat: bool = False) -> int:

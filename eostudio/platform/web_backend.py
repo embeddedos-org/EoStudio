@@ -26,10 +26,46 @@ class WebBackend(DisplayBackend):
         self._next_timer_id: int = 1
 
     def init(self) -> None:
-        pass
+        import asyncio
+        import json
+        import threading
+
+        self._loop = asyncio.new_event_loop()
+        self._clients: set = set()
+
+        async def _handler(websocket):
+            self._clients.add(websocket)
+            try:
+                async for raw in websocket:
+                    try:
+                        event_dict = json.loads(raw)
+                        self.inject_event(event_dict)
+                    except (json.JSONDecodeError, KeyError):
+                        pass
+            finally:
+                self._clients.discard(websocket)
+
+        async def _serve():
+            try:
+                import websockets
+                self._ws_server = await websockets.serve(
+                    _handler, self._host, self._port)
+                await self._ws_server.wait_closed()
+            except ImportError:
+                pass  # websockets not installed; queue-only mode
+
+        self._server_thread = threading.Thread(
+            target=lambda: self._loop.run_until_complete(_serve()),
+            daemon=True, name="ws-backend",
+        )
+        self._server_thread.start()
 
     def shutdown(self) -> None:
         self._draw_queue.clear()
+        if hasattr(self, '_ws_server') and self._ws_server:
+            self._ws_server.close()
+        if hasattr(self, '_loop') and self._loop and self._loop.is_running():
+            self._loop.call_soon_threadsafe(self._loop.stop)
 
     def is_available(self) -> bool:
         return True
@@ -67,6 +103,12 @@ class WebBackend(DisplayBackend):
 
     def _send(self, cmd: Dict[str, Any]) -> None:
         self._draw_queue.append(cmd)
+        if hasattr(self, '_clients') and self._clients and hasattr(self, '_loop'):
+            import json
+            import asyncio
+            msg = json.dumps(cmd)
+            for ws in list(self._clients):
+                asyncio.run_coroutine_threadsafe(ws.send(msg), self._loop)
 
     @staticmethod
     def _css(color: int) -> str:

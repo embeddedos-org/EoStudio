@@ -3,6 +3,9 @@
 **Cross-Platform Design Suite with LLM Integration**
 
 [![CI](https://github.com/embeddedos-org/EoStudio/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/embeddedos-org/EoStudio/actions)
+[![CodeQL](https://github.com/embeddedos-org/EoStudio/actions/workflows/codeql.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/codeql.yml)
+[![Nightly](https://github.com/embeddedos-org/EoStudio/actions/workflows/nightly.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/nightly.yml)
+[![Release](https://github.com/embeddedos-org/EoStudio/actions/workflows/release.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/release.yml)
 [![codecov](https://codecov.io/gh/embeddedos-org/EoStudio/branch/master/graph/badge.svg)](https://codecov.io/gh/embeddedos-org/EoStudio)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Version](https://img.shields.io/badge/version-0.1.0-blue)]()
@@ -221,3 +224,7 @@ See [Plugin Guide](docs/plugin-guide.md) for full documentation.
 ## License
 
 MIT License — see [LICENSE](LICENSE) for details.
+
+## Security
+
+Please see [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
