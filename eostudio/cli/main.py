@@ -449,6 +449,162 @@ def palette(brand_color: str, style: str, output: str):
         click.echo(formatted)
 
 
+@cli.command()
+@click.argument("prompt")
+@click.option("--framework", default="react", help="Target framework.")
+@click.option("--output", "-o", default=None, help="Output markdown/JSON file.")
+def spec(prompt: str, framework: str, output: str):
+    """Generate full spec: requirements → design → tech → tasks (like Kiro.dev)."""
+    from eostudio.core.specs.spec_engine import SpecEngine
+    import json
+
+    engine = SpecEngine()
+    result = engine.generate_full_spec(prompt, framework)
+
+    if output and output.endswith(".md"):
+        md = engine.export_markdown(result)
+        with open(output, "w") as f:
+            f.write(md)
+        click.echo(f"Full spec exported to {output}")
+    elif output:
+        with open(output, "w") as f:
+            json.dump(result, f, indent=2)
+        click.echo(f"Full spec JSON exported to {output}")
+    else:
+        md = engine.export_markdown(result)
+        click.echo(md)
+
+
+@cli.command()
+@click.argument("spec_file")
+@click.option("--framework", default="react", help="Target framework.")
+@click.option("--output", "-o", required=True, help="Output directory.")
+@click.option("--max-iterations", default=5, help="Max agent iterations.")
+def agent(spec_file: str, framework: str, output: str, max_iterations: int):
+    """Run agentic AI loop: generate → test → fix → refine (like Kiro.dev)."""
+    import json
+    from eostudio.core.ai.agent_loop import AgenticAILoop, AgentConfig
+
+    with open(spec_file) as f:
+        spec_data = json.load(f)
+
+    config = AgentConfig(framework=framework, output_dir=output,
+                         max_iterations=max_iterations)
+    agent_loop = AgenticAILoop(config=config)
+
+    def on_progress(state, msg):
+        click.echo(f"  [{state.value}] {msg}")
+
+    agent_loop.on_progress(on_progress)
+    result = agent_loop.run(spec_data)
+    click.echo(f"\nAgent completed: {result['state']} ({result['iterations']} iterations, {len(result['files'])} files)")
+
+
+@cli.command()
+@click.option("--output", "-o", required=True, help="Output directory.")
+@click.option("--components", "-c", multiple=True, help="Specific components to generate.")
+def ui_kit(output: str, components: tuple):
+    """Generate production UI kit (30+ React components like shadcn/ui)."""
+    import os
+    from eostudio.codegen.ui_kit import UIKitGenerator
+
+    gen = UIKitGenerator()
+    if components:
+        files = {}
+        for name in components:
+            code = gen.generate_component(name)
+            if code:
+                files[f"src/components/ui/{name.lower()}.tsx"] = code
+    else:
+        files = gen.generate_all()
+
+    os.makedirs(output, exist_ok=True)
+    for fname, content in files.items():
+        path = os.path.join(output, fname)
+        os.makedirs(os.path.dirname(path) or output, exist_ok=True)
+        with open(path, "w") as f:
+            f.write(content)
+    click.echo(f"Generated {len(files)} UI kit files -> {output}")
+
+
+@cli.command()
+@click.argument("project_dir")
+@click.option("--target", type=click.Choice(["docker", "vercel", "netlify", "github_pages", "fly_io", "railway"]),
+              default="docker")
+@click.option("--name", default="my-app", help="Project name.")
+def deploy(project_dir: str, target: str, name: str):
+    """Generate deployment configs (Docker, Vercel, Netlify, GitHub Pages)."""
+    from eostudio.core.deploy import Deployer, DeployTarget, DeployConfig
+
+    config = DeployConfig(target=DeployTarget(target), project_name=name)
+    deployer = Deployer()
+    result = deployer.deploy(config)
+    written = deployer.write_files(result, project_dir)
+
+    click.echo(f"Generated {target} deployment config:")
+    for f in written:
+        click.echo(f"  {f}")
+    if result.commands:
+        click.echo("\nDeploy commands:")
+        for cmd in result.commands:
+            click.echo(f"  $ {cmd}")
+
+
+@cli.command()
+@click.argument("prompt")
+@click.option("--framework", default="react", help="Target framework.")
+@click.option("--output", "-o", required=True, help="Output directory.")
+@click.option("--deploy-to", default="docker", help="Deployment target.")
+def build(prompt: str, framework: str, output: str, deploy_to: str):
+    """Full pipeline: prompt → spec → code → tests → deploy config (end-to-end)."""
+    import json, os
+    from eostudio.core.specs.spec_engine import SpecEngine
+    from eostudio.core.ai.agent_loop import AgenticAILoop, AgentConfig
+    from eostudio.codegen.ui_kit import UIKitGenerator
+    from eostudio.core.deploy import Deployer, DeployTarget, DeployConfig
+
+    click.echo("Step 1/4: Generating spec...")
+    engine = SpecEngine()
+    spec_data = engine.generate_full_spec(prompt, framework)
+
+    spec_path = os.path.join(output, "spec.json")
+    os.makedirs(output, exist_ok=True)
+    with open(spec_path, "w") as f:
+        json.dump(spec_data, f, indent=2)
+    click.echo(f"  Spec: {spec_path}")
+
+    md_path = os.path.join(output, "SPEC.md")
+    with open(md_path, "w") as f:
+        f.write(engine.export_markdown(spec_data))
+    click.echo(f"  Markdown: {md_path}")
+
+    click.echo("Step 2/4: Generating code...")
+    config = AgentConfig(framework=framework, output_dir=output, auto_test=False)
+    agent_loop = AgenticAILoop(config=config)
+    result = agent_loop.run(spec_data)
+    click.echo(f"  Generated {len(result['files'])} files")
+
+    click.echo("Step 3/4: Adding UI kit...")
+    ui_files = UIKitGenerator().generate_all()
+    for fname, content in ui_files.items():
+        path = os.path.join(output, fname)
+        os.makedirs(os.path.dirname(path) or output, exist_ok=True)
+        with open(path, "w") as f:
+            f.write(content)
+    click.echo(f"  Added {len(ui_files)} UI components")
+
+    click.echo("Step 4/4: Generating deploy config...")
+    deploy_config = DeployConfig(target=DeployTarget(deploy_to),
+                                  project_name=prompt[:20].lower().replace(" ", "-"))
+    deployer = Deployer()
+    deploy_result = deployer.deploy(deploy_config)
+    deployer.write_files(deploy_result, output)
+    click.echo(f"  Deploy target: {deploy_to}")
+
+    click.echo(f"\nDone! Full project at: {output}")
+    click.echo(f"  {len(result['files']) + len(ui_files)} total files")
+
+
 def main():
     cli()
 
