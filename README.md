@@ -163,6 +163,7 @@ EoStudio ask --domain cad "Design an L-bracket with mounting holes"
 | [AI & LLM Guide](docs/ai-guide.md) | LLM setup, Smart Chat, AI Generator, prompts |
 | [Plugin Guide](docs/plugin-guide.md) | Plugin development — hooks, manifest, lifecycle |
 | [Integration Guide](docs/integration-guide.md) | External tools, build systems, Git workflow |
+| [Release Video Guide](docs/release-video-guide.md) | Automated release videos — CLI, CI/CD, Python API |
 | [API Reference](docs/api-reference.md) | Python API for all modules |
 | [Architecture](docs/architecture.md) | System design, module relationships, data flow |
 
