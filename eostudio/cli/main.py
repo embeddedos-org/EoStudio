@@ -428,6 +428,62 @@ def prototype(project_file: str, output: str, device: str):
     click.echo(f"Interactive prototype ({len(screens)} screens, {device}) -> {output}")
 
 
+@cli.command("release-video")
+@click.option("--version", "ver", default=None, help="Version string (auto-detected if not set).")
+@click.option("--output", "-o", default="./release-video", help="Output directory.")
+@click.option("--voice", default="en-US-GuyNeural", help="TTS voice name.")
+@click.option("--no-narration", is_flag=True, help="Skip TTS narration generation.")
+@click.option("--from-tag", default=None, help="Start git tag (auto-detected if not set).")
+@click.option("--to-tag", default=None, help="End git tag (auto-detected if not set).")
+@click.option("--product-name", default="EoStudio", help="Product name for the video.")
+@click.option("--tagline", default="", help="Tagline text for the hero slide.")
+def release_video(
+    ver: str, output: str, voice: str, no_narration: bool,
+    from_tag: str, to_tag: str, product_name: str, tagline: str,
+):
+    """Generate a release video from the git changelog."""
+    from eostudio.core.video.release_video import (
+        ChangelogParser, ReleaseVideoConfig, ReleaseVideoGenerator,
+    )
+
+    parser = ChangelogParser()
+
+    # Parse changelog
+    if from_tag and to_tag:
+        changelog = parser.parse_between_tags(from_tag, to_tag)
+    else:
+        try:
+            changelog = parser.parse_latest_release()
+        except RuntimeError as e:
+            click.echo(f"Error: {e}", err=True)
+            raise SystemExit(1)
+
+    version = ver or changelog.version
+    config = ReleaseVideoConfig(
+        version=version,
+        product_name=product_name,
+        tagline=tagline,
+        changelog=changelog,
+        output_dir=output,
+        voice=voice,
+        include_narration=not no_narration,
+    )
+
+    click.echo(f"Generating release video for {product_name} v{version}...")
+    click.echo(f"  Features: {len(changelog.features)}, Fixes: {len(changelog.fixes)}, "
+               f"Contributors: {len(changelog.contributors)}")
+
+    gen = ReleaseVideoGenerator(config)
+    result = gen.generate()
+
+    click.echo(f"\nRelease video generated:")
+    click.echo(f"  Video: {result['final_video_path']}")
+    if result.get("audio_path"):
+        click.echo(f"  Audio: {result['audio_path']}")
+    if result.get("manifest"):
+        click.echo(f"  Duration: {result['manifest'].get('duration_seconds', '?')}s")
+
+
 @cli.command()
 @click.argument("brand_color")
 @click.option("--style", default="modern", help="Palette style.")
