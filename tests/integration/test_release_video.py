@@ -1326,3 +1326,179 @@ class TestE2EWithRealisticMocks:
 
         # Without narration, final_video_path is the raw manim output
         assert result["final_video_path"].endswith(".mp4")
+
+
+# ── CLI Smoke Tests ──────────────────────────────────────────────────────────
+
+class TestReleaseVideoCLI:
+    """Smoke tests for the `release-video` CLI command using Click's CliRunner."""
+
+    @patch("subprocess.run")
+    def test_help_shows_all_options(self, mock_run):
+        from click.testing import CliRunner
+        from eostudio.cli.main import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["release-video", "--help"])
+
+        assert result.exit_code == 0
+        assert "Generate a release video" in result.output
+        assert "--version" in result.output
+        assert "--output" in result.output
+        assert "--voice" in result.output
+        assert "--no-narration" in result.output
+        assert "--from-tag" in result.output
+        assert "--to-tag" in result.output
+        assert "--product-name" in result.output
+        assert "--tagline" in result.output
+
+    @patch("subprocess.run")
+    def test_cli_with_tag_range(self, mock_run):
+        """Smoke test: CLI with --from-tag/--to-tag generates video."""
+        from click.testing import CliRunner
+        from eostudio.cli.main import cli
+
+        router = _SubprocessRouter(tempfile.mkdtemp())
+        mock_run.side_effect = router
+
+        with tempfile.TemporaryDirectory() as out_dir:
+            result = runner = CliRunner()
+            result = runner.invoke(cli, [
+                "release-video",
+                "--from-tag", "v2.0.0",
+                "--to-tag", "v2.1.0",
+                "--output", out_dir,
+                "--no-narration",
+                "--product-name", "TestApp",
+                "--version", "2.1.0",
+            ])
+
+            assert result.exit_code == 0, f"CLI failed: {result.output}"
+            assert "Generating release video for TestApp v2.1.0" in result.output
+            assert "Release video generated" in result.output
+            assert "Video:" in result.output
+
+            # Script and manifest were created
+            assert os.path.exists(os.path.join(out_dir, "release_scene.py"))
+            assert os.path.exists(os.path.join(out_dir, "release_video_manifest.json"))
+
+    @patch("subprocess.run")
+    def test_cli_auto_detect_fails_gracefully(self, mock_run):
+        """Smoke test: CLI without tags on a repo with <2 tags exits with error."""
+        from click.testing import CliRunner
+        from eostudio.cli.main import cli
+
+        # Return only 1 tag so parse_latest_release fails
+        mock_run.return_value = MagicMock(returncode=0, stdout="v1.0.0")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["release-video", "--no-narration"])
+
+        assert result.exit_code != 0
+        assert "Need at least 2 version tags" in result.output
+
+    @patch("subprocess.run")
+    def test_cli_output_includes_feature_counts(self, mock_run):
+        """Smoke test: CLI output reports correct feature/fix counts."""
+        from click.testing import CliRunner
+        from eostudio.cli.main import cli
+
+        router = _SubprocessRouter(tempfile.mkdtemp())
+        mock_run.side_effect = router
+
+        with tempfile.TemporaryDirectory() as out_dir:
+            runner = CliRunner()
+            result = runner.invoke(cli, [
+                "release-video",
+                "--from-tag", "v2.0.0",
+                "--to-tag", "v2.1.0",
+                "--output", out_dir,
+                "--no-narration",
+            ])
+
+            assert result.exit_code == 0, f"CLI failed: {result.output}"
+            assert "Features: 3" in result.output
+            assert "Fixes: 2" in result.output
+            assert "Contributors: 5" in result.output
+
+    @patch("subprocess.run")
+    def test_cli_manifest_has_correct_content(self, mock_run):
+        """Smoke test: manifest JSON written by CLI has expected fields."""
+        from click.testing import CliRunner
+        from eostudio.cli.main import cli
+
+        router = _SubprocessRouter(tempfile.mkdtemp())
+        mock_run.side_effect = router
+
+        with tempfile.TemporaryDirectory() as out_dir:
+            runner = CliRunner()
+            result = runner.invoke(cli, [
+                "release-video",
+                "--from-tag", "v2.0.0",
+                "--to-tag", "v2.1.0",
+                "--output", out_dir,
+                "--no-narration",
+                "--version", "2.1.0",
+                "--product-name", "EoStudio",
+            ])
+
+            assert result.exit_code == 0, f"CLI failed: {result.output}"
+
+            manifest_path = os.path.join(out_dir, "release_video_manifest.json")
+            assert os.path.exists(manifest_path)
+            with open(manifest_path) as f:
+                manifest = json.load(f)
+
+            assert manifest["version"] == "2.1.0"
+            assert manifest["product_name"] == "EoStudio"
+            assert manifest["resolution"] == "1920x1080"
+            assert manifest["changelog_summary"]["features"] == 3
+            assert manifest["changelog_summary"]["fixes"] == 2
+
+    @patch("subprocess.run")
+    def test_cli_custom_voice_passed_through(self, mock_run):
+        """Smoke test: --voice option is accepted without error."""
+        from click.testing import CliRunner
+        from eostudio.cli.main import cli
+
+        router = _SubprocessRouter(tempfile.mkdtemp())
+        mock_run.side_effect = router
+
+        with tempfile.TemporaryDirectory() as out_dir:
+            runner = CliRunner()
+            result = runner.invoke(cli, [
+                "release-video",
+                "--from-tag", "v2.0.0",
+                "--to-tag", "v2.1.0",
+                "--output", out_dir,
+                "--no-narration",
+                "--voice", "en-US-JennyNeural",
+            ])
+
+            assert result.exit_code == 0, f"CLI failed: {result.output}"
+
+    @patch("subprocess.run")
+    def test_cli_tagline_in_script(self, mock_run):
+        """Smoke test: --tagline flows through to the generated Manim script."""
+        from click.testing import CliRunner
+        from eostudio.cli.main import cli
+
+        router = _SubprocessRouter(tempfile.mkdtemp())
+        mock_run.side_effect = router
+
+        with tempfile.TemporaryDirectory() as out_dir:
+            runner = CliRunner()
+            result = runner.invoke(cli, [
+                "release-video",
+                "--from-tag", "v2.0.0",
+                "--to-tag", "v2.1.0",
+                "--output", out_dir,
+                "--no-narration",
+                "--tagline", "Ship faster.",
+            ])
+
+            assert result.exit_code == 0, f"CLI failed: {result.output}"
+
+            with open(os.path.join(out_dir, "release_scene.py")) as f:
+                script = f.read()
+            assert "Ship faster." in script
