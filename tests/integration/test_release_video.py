@@ -1502,3 +1502,243 @@ class TestReleaseVideoCLI:
             with open(os.path.join(out_dir, "release_scene.py")) as f:
                 script = f.read()
             assert "Ship faster." in script
+
+
+# ── Performance Benchmarks ───────────────────────────────────────────────────
+
+import time
+
+
+class _Timer:
+    """Context manager that records elapsed wall-clock time."""
+
+    def __init__(self):
+        self.elapsed: float = 0.0
+
+    def __enter__(self):
+        self._start = time.perf_counter()
+        return self
+
+    def __exit__(self, *_):
+        self.elapsed = time.perf_counter() - self._start
+
+
+class TestPerformanceBenchmarks:
+    """Benchmark each pipeline step to catch performance regressions.
+
+    All subprocess calls are mocked, so these measure the Python-side
+    overhead: script generation, narration text assembly, file I/O,
+    argument construction, and manifest writing — not actual Manim/ffmpeg
+    rendering time.
+    """
+
+    def test_benchmark_changelog_parsing(self, output_dir):
+        """Benchmark: parse git log output into structured changelog."""
+        git_log = ""
+        for i in range(100):
+            git_log += (
+                f"hash{i:04d}\n"
+                f"{'feat' if i % 3 == 0 else 'fix'}: change number {i}\n"
+                f"\n"
+                f"Author{i % 10}\n"
+                f"2026-04-{(i % 28) + 1:02d}T10:00:00\n"
+                "---END---\n"
+            )
+
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = [
+                MagicMock(returncode=0, stdout=git_log),
+                MagicMock(returncode=0, stdout=" 150 files changed, 5000 insertions(+), 1200 deletions(-)"),
+            ]
+
+            timer = _Timer()
+            with timer:
+                parser = ChangelogParser("/fake")
+                cl = parser.parse_between_tags("v1.0.0", "v2.0.0")
+
+        assert len(cl.features) + len(cl.fixes) + len(cl.other) == 100
+        assert timer.elapsed < 1.0, f"Changelog parsing took {timer.elapsed:.3f}s (limit: 1.0s)"
+
+    @patch("subprocess.run")
+    def test_benchmark_manim_script_generation(self, mock_run, output_dir):
+        """Benchmark: generate Manim Python script from changelog."""
+        mock_run.return_value = MagicMock(returncode=0, stderr="")
+
+        cl = _make_changelog()
+        # Add many features to stress the script builder
+        for i in range(50):
+            cl.features.append(ChangelogEntry(
+                hash=f"f{i:04d}", subject=f"Feature number {i} with details", type="feat",
+            ))
+
+        config = ReleaseVideoConfig(
+            version="3.0.0", changelog=cl, output_dir=output_dir,
+            max_features_shown=20,
+        )
+        gen = ReleaseVideoGenerator(config)
+
+        timer = _Timer()
+        with timer:
+            for _ in range(100):
+                script = gen.generate_manim_script()
+
+        assert len(script) > 1000
+        compile(script, "<bench>", "exec")
+        avg_ms = (timer.elapsed / 100) * 1000
+        assert avg_ms < 50, f"Script generation avg {avg_ms:.1f}ms (limit: 50ms)"
+
+    @patch("subprocess.run")
+    def test_benchmark_narration_script_generation(self, mock_run, output_dir):
+        """Benchmark: generate narration text segments from changelog."""
+        mock_run.return_value = MagicMock(returncode=0, stderr="")
+
+        cl = _make_changelog()
+        for i in range(20):
+            cl.features.append(ChangelogEntry(
+                hash=f"n{i:04d}", subject=f"Narration feature {i}", type="feat",
+            ))
+        config = ReleaseVideoConfig(version="4.0.0", changelog=cl, output_dir=output_dir)
+        gen = ReleaseVideoGenerator(config)
+
+        timer = _Timer()
+        with timer:
+            for _ in range(1000):
+                segments = gen.generate_narration_script()
+
+        assert len(segments) >= 4
+        avg_us = (timer.elapsed / 1000) * 1_000_000
+        assert avg_us < 500, f"Narration script avg {avg_us:.0f}µs (limit: 500µs)"
+
+    @patch("subprocess.run")
+    def test_benchmark_render_video(self, mock_run, output_dir):
+        """Benchmark: render_video overhead (script write + subprocess dispatch)."""
+        router = _SubprocessRouter(output_dir)
+        mock_run.side_effect = router
+
+        config = ReleaseVideoConfig(
+            version="5.0.0", changelog=_make_changelog(),
+            output_dir=output_dir, include_narration=False,
+        )
+        gen = ReleaseVideoGenerator(config)
+
+        timer = _Timer()
+        with timer:
+            video_path = gen.render_video()
+
+        assert os.path.exists(video_path)
+        assert timer.elapsed < 2.0, f"render_video took {timer.elapsed:.3f}s (limit: 2.0s)"
+
+    @patch("subprocess.run")
+    def test_benchmark_combine_video_audio(self, mock_run, output_dir):
+        """Benchmark: combine_video_audio overhead (duration probe + ffmpeg dispatch)."""
+        router = _SubprocessRouter(output_dir)
+        mock_run.side_effect = router
+
+        config = ReleaseVideoConfig(
+            version="5.0.0", changelog=_make_changelog(), output_dir=output_dir,
+        )
+        gen = ReleaseVideoGenerator(config)
+
+        # Create dummy input files
+        os.makedirs(output_dir, exist_ok=True)
+        vid = os.path.join(output_dir, "video.mp4")
+        aud = os.path.join(output_dir, "audio.mp3")
+        for p in (vid, aud):
+            with open(p, "wb") as f:
+                f.write(b"\x00" * 128)
+
+        timer = _Timer()
+        with timer:
+            result = gen.combine_video_audio(vid, aud)
+
+        assert result.endswith(".mp4")
+        assert timer.elapsed < 1.0, f"combine took {timer.elapsed:.3f}s (limit: 1.0s)"
+
+    @patch("subprocess.run")
+    def test_benchmark_manifest_generation(self, mock_run, output_dir):
+        """Benchmark: manifest JSON generation and write."""
+        mock_run.return_value = MagicMock(
+            returncode=0, stderr="  Duration: 00:00:30.00, start: 0.0\n",
+        )
+
+        config = ReleaseVideoConfig(
+            version="5.0.0", changelog=_make_changelog(), output_dir=output_dir,
+        )
+        gen = ReleaseVideoGenerator(config)
+        os.makedirs(output_dir, exist_ok=True)
+        fake_video = os.path.join(output_dir, "test.mp4")
+        with open(fake_video, "wb") as f:
+            f.write(b"\x00" * 64)
+
+        timer = _Timer()
+        with timer:
+            for _ in range(100):
+                manifest = gen.generate_manifest(fake_video)
+
+        assert manifest["version"] == "5.0.0"
+        avg_ms = (timer.elapsed / 100) * 1000
+        assert avg_ms < 50, f"Manifest generation avg {avg_ms:.1f}ms (limit: 50ms)"
+
+    @patch("subprocess.run")
+    def test_benchmark_full_pipeline_no_narration(self, mock_run, output_dir):
+        """Benchmark: full pipeline without narration (end-to-end)."""
+        router = _SubprocessRouter(output_dir)
+        mock_run.side_effect = router
+
+        config = ReleaseVideoConfig(
+            version="6.0.0", changelog=_make_changelog(),
+            output_dir=output_dir, include_narration=False,
+        )
+        gen = ReleaseVideoGenerator(config)
+
+        timer = _Timer()
+        with timer:
+            result = gen.generate()
+
+        assert result["version"] == "6.0.0"
+        assert result["manifest"] is not None
+        assert timer.elapsed < 3.0, f"Full pipeline took {timer.elapsed:.3f}s (limit: 3.0s)"
+
+    @patch("subprocess.run")
+    def test_benchmark_large_changelog(self, mock_run, output_dir):
+        """Benchmark: pipeline with a large changelog (500 commits)."""
+        router = _SubprocessRouter(output_dir)
+        mock_run.side_effect = router
+
+        cl = ReleaseChangelog(
+            version="10.0.0", previous_version="9.0.0", date="2026-04-28",
+        )
+        for i in range(200):
+            cl.features.append(ChangelogEntry(
+                hash=f"f{i:04d}", subject=f"Feature {i}: {'x' * 40}", type="feat",
+                author=f"dev{i % 20}", date="2026-04-28",
+            ))
+        for i in range(200):
+            cl.fixes.append(ChangelogEntry(
+                hash=f"x{i:04d}", subject=f"Fix {i}: {'y' * 30}", type="fix",
+                author=f"dev{i % 15}", date="2026-04-28",
+            ))
+        for i in range(100):
+            cl.other.append(ChangelogEntry(
+                hash=f"o{i:04d}", subject=f"Refactor {i}", type="refactor",
+            ))
+        cl.contributors = {f"dev{i}" for i in range(25)}
+        cl.stats = {"files_changed": 300, "insertions": 10000, "deletions": 3000}
+
+        config = ReleaseVideoConfig(
+            version="10.0.0", changelog=cl, output_dir=output_dir,
+            include_narration=False, max_features_shown=6,
+        )
+
+        gen = ReleaseVideoGenerator(config)
+
+        timer = _Timer()
+        with timer:
+            result = gen.generate()
+
+        assert result["changelog"]["features"] == 200
+        assert result["changelog"]["fixes"] == 200
+        # Script should still be valid despite large input
+        with open(os.path.join(output_dir, "release_scene.py")) as f:
+            compile(f.read(), "<large_changelog>", "exec")
+        assert timer.elapsed < 3.0, f"Large changelog pipeline took {timer.elapsed:.3f}s (limit: 3.0s)"
