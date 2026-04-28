@@ -97,14 +97,76 @@ release-video/
 
 ### Video Slides
 
-The generated video contains these slides:
+The generated video contains 6 slides (5th is conditional). Here's an example for EoStudio v2.1.0:
 
-1. **Hero** — Product name, version badge, tagline, release date
-2. **What's New** — Top features extracted from `feat:` commits (up to 6)
-3. **Fixes & Improvements** — Bug fixes from `fix:` commits (up to 5)
-4. **By The Numbers** — Stats: features count, bugs fixed, files changed, contributors
-5. **Breaking Changes** — Only shown if any `BREAKING CHANGE:` commits exist
-6. **Call to Action** — "Upgrade to {product} v{version} today"
+#### Slide 1 — Hero
+
+Product name with gradient title, version badge, tagline, and release date.
+
+![Hero Slide](images/release-video/slide-hero.svg)
+
+#### Slide 2 — What's New
+
+Top features extracted from `feat:` commits (configurable, up to 6 by default).
+
+![Features Slide](images/release-video/slide-features.svg)
+
+#### Slide 3 — Fixes & Improvements
+
+Bug fixes from `fix:` commits (up to 5).
+
+![Fixes Slide](images/release-video/slide-fixes.svg)
+
+#### Slide 4 — By The Numbers
+
+Release statistics: feature count, bugs fixed, files changed, contributors.
+
+![Stats Slide](images/release-video/slide-stats.svg)
+
+#### Slide 5 — Breaking Changes *(conditional)*
+
+Only included when `BREAKING CHANGE:` or `feat!:` commits are present.
+
+![Breaking Changes Slide](images/release-video/slide-breaking.svg)
+
+#### Slide 6 — Call to Action
+
+Closing slide with upgrade prompt and gradient button.
+
+![CTA Slide](images/release-video/slide-cta.svg)
+
+---
+
+### Example: Full Pipeline Run
+
+```bash
+$ EoStudio release-video --version 2.1.0 --output ./release-artifacts/video
+
+Generating release video for EoStudio v2.1.0...
+  Features: 3, Fixes: 2, Contributors: 5
+
+Release video generated:
+  Video: ./release-artifacts/video/EoStudio_v2.1.0_release.mp4
+  Audio: ./release-artifacts/video/narration.mp3
+  Duration: 42.5s
+```
+
+The resulting directory:
+
+```
+release-artifacts/video/
+├── release_scene.py                  # Manim scene (can be customized and re-rendered)
+├── narration.mp3                     # Full narration audio
+├── EoStudio_v2.1.0_release.mp4      # Final 1080p video with narration
+├── release_video_manifest.json       # Machine-readable metadata
+├── narration_segments/               # Individual TTS segments
+│   ├── seg_00.mp3                    #   "Introducing EoStudio version 2.1.0..."
+│   ├── sil_00.mp3                    #   1.0s pause
+│   ├── seg_01.mp3                    #   "This release brings 3 new features..."
+│   └── ...
+└── videos/release_scene/1080p30/
+    └── ReleaseVideo.mp4              # Raw Manim render (no audio)
+```
 
 ### Manifest
 
