@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-04-28
+
+### Added
+- **Automated Release Video Pipeline** (`core/video/release_video.py`)
+  - `ChangelogParser` — parses git history between version tags using conventional commits
+  - `ReleaseVideoGenerator` — generates Manim scenes with 6 slides (hero, features, fixes, stats, breaking changes, CTA)
+  - TTS narration via edge-tts with configurable voice, rate, and pitch
+  - ffmpeg video+audio combine with duration capping
+  - JSON manifest with version, duration, resolution, and changelog summary
+  - Example output: `EoStudio release-video --version 2.0.0 --output ./release-artifacts/video`
+
+- **CI/CD Pipeline Builder** (`core/devtools/cicd.py`)
+  - `PipelineBuilder` with `add_release_video_step()` for automated video in CI
+  - `create_release_with_video_pipeline()` — 4-stage template (Test → Build → Video → Publish)
+  - `to_github_actions_yaml()` — generate GitHub Actions workflow YAML
+
+- **GitHub Actions Workflow** (`.github/workflows/release-video.yml`)
+  - Triggers on `v*` tags and manual dispatch
+  - Installs ffmpeg, Manim, edge-tts; generates video; uploads as release asset
+  - Inputs: version override, skip narration toggle
+
+- **`release-video` CLI Command**
+  - `EoStudio release-video` — generate release video from git changelog
+  - Options: `--version`, `--output`, `--voice`, `--no-narration`, `--from-tag`, `--to-tag`, `--product-name`, `--tagline`
+
+- **Documentation** (`docs/release-video-guide.md`)
+  - CLI usage with examples, Python API reference, CI/CD integration (GitHub Actions, GitLab CI)
+  - SVG slide mockups showing each video slide
+  - Configuration reference, TTS voice table, troubleshooting
+
+- **72 Integration Tests**
+  - Changelog parsing with mock git output
+  - Manim script generation and Python syntax validation
+  - Narration script segment structure
+  - E2E pipeline with realistic argument-aware subprocess mocks
+  - CLI smoke tests using Click CliRunner
+
 ## [1.0.0] - 2026-04-25 — Community Edition
 
 ### Added
@@ -96,5 +133,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ISO/IEC standards compliance documentation
 - MIT license
 
+[2.0.0]: https://github.com/embeddedos-org/EoStudio/releases/tag/v2.0.0
 [1.0.0]: https://github.com/embeddedos-org/EoStudio/releases/tag/v1.0.0
 [0.1.0]: https://github.com/embeddedos-org/EoStudio/releases/tag/v0.1.0
