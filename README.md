@@ -6,6 +6,7 @@
 [![CodeQL](https://github.com/embeddedos-org/EoStudio/actions/workflows/codeql.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/codeql.yml)
 [![Nightly](https://github.com/embeddedos-org/EoStudio/actions/workflows/nightly.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/nightly.yml)
 [![Release](https://github.com/embeddedos-org/EoStudio/actions/workflows/release.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/release.yml)
+[![Release Video](https://github.com/embeddedos-org/EoStudio/actions/workflows/release-video.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/release-video.yml)
 [![codecov](https://codecov.io/gh/embeddedos-org/EoStudio/branch/master/graph/badge.svg)](https://codecov.io/gh/embeddedos-org/EoStudio)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue)]()
