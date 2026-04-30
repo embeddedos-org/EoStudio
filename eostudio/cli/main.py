@@ -8,15 +8,20 @@ from eostudio import __version__
 @click.group()
 @click.version_option(version=__version__, prog_name="EoStudio")
 def cli():
-    """EoStudio — Cross-Platform Design Suite with LLM Integration."""
+    """EoStudio — Universal Development Platform with AI-Powered Code Editing."""
+
+
+# ---------------------------------------------------------------------------
+# Existing v1.0 Commands
+# ---------------------------------------------------------------------------
 
 
 @cli.command()
 @click.option(
     "--editor",
     type=click.Choice([
-        "3d", "cad", "paint", "game", "ui", "product",
-        "interior", "uml", "simulation", "database", "ide", "promo", "all",
+        "3d", "cad", "paint", "game", "ui", "product", "interior",
+        "uml", "simulation", "database", "ide", "promo", "all",
     ]),
     default="all",
     help="Editor to launch.",
@@ -31,578 +36,898 @@ def launch(editor: str, theme: str):
 
 
 @cli.command()
-@click.argument("project_file")
+@click.argument("path", type=click.Path(exists=True))
 @click.option(
     "--format",
     "fmt",
-    type=click.Choice(["stl", "obj", "svg", "gltf", "dxf", "png"]),
-    required=True,
+    type=click.Choice(["gltf", "obj", "stl", "fbx", "step", "svg", "png"]),
+    default="gltf",
+    help="Export format.",
 )
-@click.option("--output", "-o", required=True, help="Output file path.")
-def export(project_file: str, fmt: str, output: str):
-    """Export a design project to a specific format."""
-    from eostudio.formats.project import EoStudioProject
+@click.option("--output", "-o", type=click.Path(), default=None, help="Output file path.")
+def export(path: str, fmt: str, output: str):
+    """Export a project or scene to a target format."""
+    from eostudio.core.exporter import Exporter
 
-    project = EoStudioProject.load(project_file)
-    project.export(fmt, output)
-    click.echo(f"Exported {project_file} -> {output} ({fmt})")
+    exporter = Exporter()
+    result = exporter.export(path, fmt=fmt, output=output)
+    click.echo(f"Exported to {result}")
 
 
 @cli.command()
-@click.argument("project_file")
-@click.option(
-    "--framework",
-    type=click.Choice([
-        "html", "flutter", "compose", "react", "openscad",
-        "react-framer-motion", "react-gsap", "react-css-animations",
-        "mobile-flutter", "mobile-react-native", "mobile-kotlin", "mobile-swift",
-        "desktop-electron", "desktop-tauri", "desktop-tkinter", "desktop-qt",
-        "webapp-react-fastapi", "webapp-vue-flask", "webapp-angular-express",
-        "database-sql", "database-sqlalchemy", "database-prisma", "database-django",
-    ]),
-    required=True,
-)
-@click.option("--output", "-o", required=True, help="Output directory.")
-def codegen(project_file: str, framework: str, output: str):
-    """Generate code from a UI/3D design project."""
-    from eostudio.codegen import generate_code
+@click.argument("spec", type=click.Path(exists=True))
+@click.option("--lang", type=click.Choice(["python", "cpp", "rust", "js", "ts"]), default="python", help="Target language.")
+@click.option("--output", "-o", type=click.Path(), default=None, help="Output directory.")
+def codegen(spec: str, lang: str, output: str):
+    """Generate code from a specification file."""
+    from eostudio.core.codegen import CodeGenerator
 
-    generate_code(project_file, framework, output)
-    click.echo(f"Generated {framework} code -> {output}")
+    gen = CodeGenerator(language=lang)
+    result = gen.generate(spec, output=output)
+    click.echo(f"Generated {result.file_count} files in {result.output_dir}")
 
 
 @cli.command()
-@click.option(
-    "--lesson",
-    type=click.Choice([
-        "shapes", "colors", "3d-basics", "simple-game",
-        "build-robot", "design-house",
-    ]),
-    default="shapes",
-)
-@click.option(
-    "--difficulty",
-    type=click.Choice(["beginner", "intermediate", "advanced"]),
-    default="beginner",
-)
-def teach(lesson: str, difficulty: str):
-    """Launch LLM-powered kids learning mode."""
-    from eostudio.core.ai.tutor import KidsTutor
+@click.argument("topic", required=False)
+@click.option("--interactive", "-i", is_flag=True, help="Interactive teaching mode.")
+def teach(topic: str, interactive: bool):
+    """Open the AI teaching assistant."""
+    from eostudio.core.ai.tutor import Tutor
 
-    tutor = KidsTutor(lesson=lesson, difficulty=difficulty)
-    tutor.start_interactive()
+    tutor = Tutor()
+    if interactive:
+        tutor.interactive_session(topic)
+    else:
+        tutor.explain(topic)
 
 
 @cli.command()
-@click.option("--endpoint", default="http://localhost:11434", help="LLM API endpoint.")
-@click.option("--model", default="llama3", help="LLM model name.")
+@click.argument("question")
 @click.option(
     "--provider",
-    type=click.Choice(["ollama", "openai"]),
+    type=click.Choice(["ollama", "openai", "anthropic", "local"]),
     default="ollama",
     help="LLM provider backend.",
 )
-@click.option("--api-key", default="", help="API key (required for OpenAI).")
-@click.option(
-    "--domain",
-    type=click.Choice([
-        "general", "cad", "ui", "3d", "game",
-        "hardware", "simulation", "database", "uml",
-    ]),
-    default="general",
-    help="Design domain for context-aware prompts.",
-)
-@click.argument("prompt")
-def ask(endpoint: str, model: str, provider: str, api_key: str, domain: str, prompt: str):
-    """Ask the AI design agent a question."""
-    from eostudio.core.ai.agent import DesignAgent
+@click.option("--model", default=None, help="Model name override.")
+def ask(question: str, provider: str, model: str):
+    """Ask the AI assistant a question."""
+    from eostudio.core.ai.llm_client import LLMClient
 
-    agent = DesignAgent(
-        endpoint=endpoint, model=model,
-        provider=provider, api_key=api_key, domain=domain,
-    )
-    response = agent.ask(prompt)
+    client = LLMClient.create(provider=provider, model=model)
+    response = client.ask(question)
     click.echo(response)
 
 
 @cli.command()
-@click.argument("diagram_file")
-@click.option(
-    "--language",
-    type=click.Choice(["python", "java", "kotlin", "typescript", "cpp", "csharp"]),
-    required=True,
-)
-@click.option("--output", "-o", required=True, help="Output directory.")
-def uml_codegen(diagram_file: str, language: str, output: str):
-    """Generate code from a UML class diagram."""
-    import json
-    import os
-    from eostudio.core.uml.diagrams import ClassDiagram
-    from eostudio.core.uml.code_gen import UMLCodeGen
+@click.argument("diagram", type=click.Path(exists=True))
+@click.option("--lang", type=click.Choice(["python", "cpp", "java", "ts"]), default="python", help="Target language.")
+@click.option("--output", "-o", type=click.Path(), default=None)
+def uml_codegen(diagram: str, lang: str, output: str):
+    """Generate code from a UML diagram."""
+    from eostudio.core.uml.uml_codegen import UMLCodeGenerator
 
-    with open(diagram_file) as f:
-        data = json.load(f)
-    diagram = ClassDiagram.from_dict(data)
-    gen = UMLCodeGen()
-    generators = {
-        "python": gen.generate_python,
-        "java": gen.generate_java,
-        "kotlin": gen.generate_kotlin,
-        "typescript": gen.generate_typescript,
-        "cpp": gen.generate_cpp,
-        "csharp": gen.generate_csharp,
-    }
-    files = generators[language](diagram)
-    os.makedirs(output, exist_ok=True)
-    for filename, content in files.items():
-        filepath = os.path.join(output, filename)
-        with open(filepath, "w") as f:
-            f.write(content)
-    click.echo(f"Generated {language} code from UML -> {output} ({len(files)} files)")
+    gen = UMLCodeGenerator(language=lang)
+    result = gen.generate(diagram, output=output)
+    click.echo(f"Generated {result.file_count} files from UML diagram")
 
 
 @cli.command()
-@click.option("--dt", default=0.01, help="Simulation time step.")
-@click.option("--duration", default=10.0, help="Simulation duration in seconds.")
-@click.argument("model_file")
-def simulate(model_file: str, dt: float, duration: float):
-    """Run a MATLAB-style simulation model."""
-    import json
-    from eostudio.core.simulation.engine import SimulationModel
+@click.argument("model", type=click.Path(exists=True))
+@click.option("--duration", type=float, default=10.0, help="Simulation duration in seconds.")
+@click.option("--step", type=float, default=0.01, help="Time step.")
+@click.option("--output", "-o", type=click.Path(), default=None)
+def simulate(model: str, duration: float, step: float, output: str):
+    """Run a simulation from a model file."""
+    from eostudio.core.simulation.engine import SimulationEngine
 
-    with open(model_file) as f:
-        data = json.load(f)
-    model = SimulationModel.from_dict(data)
-    model.dt = dt
-    model.duration = duration
-    results = model.run()
-    click.echo(f"Simulation complete: {len(results)} signals captured over {duration}s")
-    for name, signal in results.items():
-        click.echo(f"  {name}: {signal.num_samples()} samples, "
-                    f"mean={signal.mean():.4f}, rms={signal.rms():.4f}")
+    engine = SimulationEngine()
+    result = engine.run(model, duration=duration, step=step)
+    if output:
+        result.save(output)
+    click.echo(f"Simulation complete — {result.steps} steps, {result.duration:.2f}s")
 
 
 @cli.command()
-@click.argument("schema_file")
-@click.option(
-    "--dialect",
-    type=click.Choice(["sqlite", "postgresql", "mysql", "sqlalchemy", "prisma", "django"]),
-    default="sqlite",
-)
-@click.option("--output", "-o", required=True, help="Output file path.")
-def dbgen(schema_file: str, dialect: str, output: str):
-    """Generate database code from a schema design."""
-    import json
-    from eostudio.codegen.database import (
-        DatabaseSchema, generate_sql, generate_sqlalchemy,
-        generate_prisma, generate_django_models,
-    )
+@click.argument("schema", type=click.Path(exists=True))
+@click.option("--dialect", type=click.Choice(["sqlite", "postgresql", "mysql"]), default="sqlite", help="SQL dialect.")
+@click.option("--output", "-o", type=click.Path(), default=None)
+def dbgen(schema: str, dialect: str, output: str):
+    """Generate database schema and migrations from a spec."""
+    from eostudio.core.database.dbgen import DatabaseGenerator
 
-    with open(schema_file) as f:
-        data = json.load(f)
-    schema = DatabaseSchema.from_dict(data)
-    generators = {
-        "sqlite": lambda s: generate_sql(s, "sqlite"),
-        "postgresql": lambda s: generate_sql(s, "postgresql"),
-        "mysql": lambda s: generate_sql(s, "mysql"),
-        "sqlalchemy": generate_sqlalchemy,
-        "prisma": generate_prisma,
-        "django": generate_django_models,
-    }
-    result = generators[dialect](schema)
-    with open(output, "w") as f:
-        f.write(result)
-    click.echo(f"Generated {dialect} schema -> {output}")
+    gen = DatabaseGenerator(dialect=dialect)
+    result = gen.generate(schema, output=output)
+    click.echo(f"Generated {result.table_count} tables, {result.migration_count} migrations")
 
 
 @cli.command()
-@click.argument("path", default=".")
+@click.argument("path", type=click.Path(), default=".")
+@click.option("--port", type=int, default=8888, help="IDE server port.")
 @click.option("--theme", type=click.Choice(["dark", "light"]), default="dark")
-def ide(path: str, theme: str):
-    """Launch the EoStudio IDE (code editor with Git, extensions, terminal)."""
-    from eostudio.gui.app import EoStudioApp
+def ide(path: str, port: int, theme: str):
+    """Launch the EoStudio IDE."""
+    from eostudio.core.ide.ide_app import IDEApp
 
-    app = EoStudioApp(editor="ide", theme=theme)
+    app = IDEApp(workspace=path, port=port, theme=theme)
+    click.echo(f"Starting EoStudio IDE on port {port}...")
     app.run()
 
 
 @cli.command()
+@click.argument("name")
 @click.option(
     "--template",
     type=click.Choice([
-        "todo-app", "mechanical-part", "game-platformer",
-        "iot-dashboard", "simulation-pid",
+        "python", "cpp", "rust", "js", "ts", "react", "vue", "svelte",
+        "fastapi", "flask", "django", "express", "game", "cad", "empty",
     ]),
-    required=True,
-    help="Project template to use.",
+    default="empty",
+    help="Project template.",
 )
-@click.option("--output", "-o", required=True, help="Output directory.")
-@click.option("--list-templates", "show_list", is_flag=True, help="List available templates.")
-def new(template: str, output: str, show_list: bool):
+@click.option("--path", type=click.Path(), default=".", help="Parent directory.")
+def new(name: str, template: str, path: str):
     """Create a new project from a template."""
-    from eostudio.templates.samples import list_templates, create_project_from_template
+    from eostudio.core.project import ProjectCreator
 
-    if show_list:
-        for tmpl in list_templates():
-            click.echo(f"  {tmpl.name:20s} — {tmpl.description}")
-        return
-
-    project_path = create_project_from_template(template, output)
-    click.echo(f"Created project from '{template}' template -> {project_path}")
+    creator = ProjectCreator()
+    project_path = creator.create(name=name, template=template, parent=path)
+    click.echo(f"Created project '{name}' at {project_path}")
 
 
 @cli.command()
-@click.argument("project_file")
-@click.option(
-    "--framework",
-    type=click.Choice(["react-framer-motion", "react-gsap", "react-css"]),
-    default="react-framer-motion",
-    help="Animation library to target.",
-)
-@click.option("--output", "-o", required=True, help="Output directory.")
-def react_motion(project_file: str, framework: str, output: str):
-    """Generate React code with animations (Framer Motion / GSAP / CSS)."""
-    from eostudio.formats.project import EoStudioProject
-    from eostudio.codegen.react_motion import ReactMotionGenerator
-    from eostudio.core.animation.timeline import AnimationTimeline
+@click.argument("spec", type=click.Path(exists=True))
+@click.option("--output", "-o", type=click.Path(), default=None)
+@click.option("--framework", type=click.Choice(["react", "vue", "svelte"]), default="react")
+def react_motion(spec: str, output: str, framework: str):
+    """Generate animated React/Vue/Svelte components from a motion spec."""
+    from eostudio.core.ui.motion_gen import MotionGenerator
 
-    project = EoStudioProject.load(project_file)
-    scene_data = project.scenes.get(project.active_scene, {})
-    components = scene_data.get("components", [])
-    screens = scene_data.get("screens", [])
+    gen = MotionGenerator(framework=framework)
+    result = gen.generate(spec, output=output)
+    click.echo(f"Generated {result.component_count} animated components")
 
-    lib_map = {"react-framer-motion": "framer-motion", "react-gsap": "gsap", "react-css": "css"}
-    timeline_data = scene_data.get("animation_timeline")
-    timeline = AnimationTimeline.from_dict(timeline_data) if timeline_data else AnimationTimeline()
 
-    gen = ReactMotionGenerator(library=lib_map[framework])
-    files = gen.generate(timeline, components, screens)
+@cli.command()
+@click.argument("description")
+@click.option("--framework", type=click.Choice(["react", "vue", "svelte", "html"]), default="react")
+@click.option("--output", "-o", type=click.Path(), default=None)
+@click.option("--provider", type=click.Choice(["ollama", "openai", "anthropic", "local"]), default="ollama")
+def generate_ui(description: str, framework: str, output: str, provider: str):
+    """Generate UI components from a natural-language description."""
+    from eostudio.core.ai.llm_client import LLMClient
+    from eostudio.core.ui.ui_gen import UIGenerator
 
+    client = LLMClient.create(provider=provider)
+    gen = UIGenerator(llm=client, framework=framework)
+    result = gen.generate(description, output=output)
+    click.echo(f"Generated {result.file_count} UI files in {result.output_dir}")
+
+
+@cli.command()
+@click.argument("spec", type=click.Path(exists=True))
+@click.option("--output", "-o", type=click.Path(), default=None)
+@click.option("--format", "fmt", type=click.Choice(["css", "scss", "tailwind", "tokens"]), default="tokens")
+def design_system(spec: str, output: str, fmt: str):
+    """Generate a design-system package from a spec file."""
+    from eostudio.core.ui.design_system_gen import DesignSystemGenerator
+
+    gen = DesignSystemGenerator(fmt=fmt)
+    result = gen.generate(spec, output=output)
+    click.echo(f"Design system generated — {result.token_count} tokens, {result.component_count} components")
+
+
+@cli.command()
+@click.argument("image", type=click.Path(exists=True))
+@click.option("--framework", type=click.Choice(["react", "vue", "svelte", "html"]), default="react")
+@click.option("--output", "-o", type=click.Path(), default=None)
+@click.option("--provider", type=click.Choice(["ollama", "openai", "anthropic", "local"]), default="ollama")
+def screenshot_to_ui(image: str, framework: str, output: str, provider: str):
+    """Convert a screenshot or mockup image to UI code."""
+    from eostudio.core.ai.llm_client import LLMClient
+    from eostudio.core.ui.screenshot_converter import ScreenshotConverter
+
+    client = LLMClient.create(provider=provider)
+    converter = ScreenshotConverter(llm=client, framework=framework)
+    result = converter.convert(image, output=output)
+    click.echo(f"Converted screenshot to {result.file_count} files")
+
+
+@cli.command()
+@click.argument("product")
+@click.option("--style", type=click.Choice(["modern", "minimal", "bold", "playful"]), default="modern")
+@click.option("--size", type=click.Choice(["instagram", "twitter", "linkedin", "banner", "custom"]), default="instagram")
+@click.option("--output", "-o", type=click.Path(), default=None)
+def promo(product: str, style: str, size: str, output: str):
+    """Generate promotional graphics for a product."""
+    from eostudio.core.promo.promo_gen import PromoGenerator
+
+    gen = PromoGenerator(style=style, size=size)
+    result = gen.generate(product, output=output)
+    click.echo(f"Generated {result.image_count} promo images in {result.output_dir}")
+
+
+@cli.command()
+@click.argument("description")
+@click.option("--framework", type=click.Choice(["react", "vue", "svelte", "html"]), default="react")
+@click.option("--output", "-o", type=click.Path(), default=None)
+@click.option("--fidelity", type=click.Choice(["low", "medium", "high"]), default="medium")
+def prototype(description: str, framework: str, output: str, fidelity: str):
+    """Generate a rapid UI prototype from a description."""
+    from eostudio.core.ui.prototype_gen import PrototypeGenerator
+
+    gen = PrototypeGenerator(framework=framework, fidelity=fidelity)
+    result = gen.generate(description, output=output)
+    click.echo(f"Prototype generated — {result.page_count} pages, {result.component_count} components")
+
+
+@cli.command()
+@click.argument("image", type=click.Path(exists=True))
+@click.option("--count", type=int, default=5, help="Number of palette colours to extract.")
+@click.option("--format", "fmt", type=click.Choice(["hex", "rgb", "hsl", "tokens"]), default="hex")
+def palette(image: str, count: int, fmt: str):
+    """Extract a colour palette from an image."""
+    from eostudio.core.ui.palette_extractor import PaletteExtractor
+
+    extractor = PaletteExtractor()
+    colours = extractor.extract(image, count=count, fmt=fmt)
+    for colour in colours:
+        click.echo(colour)
+
+
+@cli.command()
+@click.argument("description")
+@click.option("--output", "-o", type=click.Path(), default=None)
+@click.option("--format", "fmt", type=click.Choice(["md", "pdf", "html"]), default="md")
+def spec(description: str, output: str, fmt: str):
+    """Generate a technical specification document from a description."""
+    from eostudio.core.docs.spec_gen import SpecGenerator
+
+    gen = SpecGenerator(fmt=fmt)
+    result = gen.generate(description, output=output)
+    click.echo(f"Specification generated at {result.path}")
+
+
+@cli.command()
+@click.argument("task")
+@click.option("--provider", type=click.Choice(["ollama", "openai", "anthropic", "local"]), default="ollama")
+@click.option("--model", default=None, help="Model name override.")
+@click.option("--max-steps", type=int, default=10, help="Maximum agent steps.")
+def agent(task: str, provider: str, model: str, max_steps: int):
+    """Run an autonomous AI agent to complete a task."""
+    from eostudio.core.ai.agent import Agent
+    from eostudio.core.ai.llm_client import LLMClient
+
+    client = LLMClient.create(provider=provider, model=model)
+    ai_agent = Agent(llm=client, max_steps=max_steps)
+    result = ai_agent.run(task)
+    click.echo(result.summary)
+
+
+@cli.command()
+@click.argument("spec", type=click.Path(exists=True))
+@click.option("--framework", type=click.Choice(["react", "vue", "svelte"]), default="react")
+@click.option("--output", "-o", type=click.Path(), default=None)
+def ui_kit(spec: str, framework: str, output: str):
+    """Generate a reusable UI component kit from a design spec."""
+    from eostudio.core.ui.ui_kit_gen import UIKitGenerator
+
+    gen = UIKitGenerator(framework=framework)
+    result = gen.generate(spec, output=output)
+    click.echo(f"UI kit generated — {result.component_count} components in {result.output_dir}")
+
+
+@cli.command()
+@click.argument("path", type=click.Path(exists=True), default=".")
+@click.option("--target", type=click.Choice(["vercel", "netlify", "docker", "aws", "gcp", "fly"]), default="docker", help="Deployment target.")
+@click.option("--env", type=click.Choice(["dev", "staging", "production"]), default="production")
+def deploy(path: str, target: str, env: str):
+    """Deploy the project to a hosting target."""
+    from eostudio.core.deploy.deployer import Deployer
+
+    deployer = Deployer(target=target, env=env)
+    result = deployer.deploy(path)
+    click.echo(f"Deployed to {result.url}")
+
+
+@cli.command()
+@click.argument("path", type=click.Path(exists=True), default=".")
+@click.option("--target", type=click.Choice(["debug", "release"]), default="debug")
+@click.option("--clean", is_flag=True, help="Clean build artefacts before building.")
+def build(path: str, target: str, clean: bool):
+    """Build the project."""
+    from eostudio.core.devtools.build_system import BuildSystemManager
+
+    manager = BuildSystemManager()
+    build_system = manager.detect(path)
+    if clean:
+        build_system.clean()
+    result = build_system.build(target=target)
+    click.echo(f"Build {result.status} — {result.artefact_count} artefacts")
+
+
+# ---------------------------------------------------------------------------
+# New v2.0 Commands
+# ---------------------------------------------------------------------------
+
+
+@cli.command()
+@click.argument("path", type=click.Path(), default=".")
+@click.option("--name", default=None, help="Project name (defaults to directory name).")
+def init(path: str, name: str):
+    """Initialize a workspace with automatic project detection."""
     import os
-    os.makedirs(output, exist_ok=True)
-    for fname, content in files.items():
-        path = os.path.join(output, fname)
-        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-        with open(path, "w", encoding="utf-8") as fh:
-            fh.write(content)
-    click.echo(f"Generated {framework} app ({len(files)} files) -> {output}")
+
+    from eostudio.core.ide.project_manager import ProjectManager
+
+    pm = ProjectManager()
+    info = pm.detect_project_type(path)
+    click.echo(f"Detected language : {info.language}")
+    click.echo(f"Detected framework: {info.framework}")
+    click.echo(f"Detected build    : {info.build_system}")
+
+    project_name = name or os.path.basename(os.path.abspath(path))
+    project = pm.create(path, name=project_name)
+    click.echo(f"Workspace '{project.name}' initialised at {project.path}")
 
 
 @cli.command()
-@click.argument("prompt")
-@click.option("--style", default="modern", help="Design style (modern, minimal, bold, playful).")
-@click.option("--output", "-o", default=None, help="Output JSON file.")
-def generate_ui(prompt: str, style: str, output: str):
-    """AI-generate a UI design with animations from a text prompt."""
-    from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
-    import json
+@click.argument("path", type=click.Path(), default=".")
+@click.option("--coverage", is_flag=True, help="Collect code-coverage metrics.")
+@click.option("--watch", is_flag=True, help="Re-run tests on file changes.")
+@click.option("--file", "test_file", default=None, help="Run a single test file.")
+def test(path: str, coverage: bool, watch: bool, test_file: str):
+    """Run tests with auto-detected framework."""
+    from eostudio.core.devtools.testing import TestRunner
 
-    gen = AIDesignGeneratorPro()
-    result = gen.text_to_animated_ui(prompt, style=style)
+    runner = TestRunner()
+    framework = runner.detect_framework(path)
+    click.echo(f"Test framework: {framework}")
 
-    formatted = json.dumps(result, indent=2)
-    if output:
-        with open(output, "w") as f:
-            f.write(formatted)
-        click.echo(f"Generated animated UI design -> {output}")
-    else:
-        click.echo(formatted)
-
-
-@cli.command()
-@click.argument("prompt")
-@click.option("--output", "-o", default=None, help="Output JSON file.")
-def design_system(prompt: str, output: str):
-    """AI-generate a design system (tokens, colors, typography) from a brand description."""
-    from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
-    import json
-
-    gen = AIDesignGeneratorPro()
-    result = gen.text_to_design_system(prompt)
-
-    formatted = json.dumps(result, indent=2)
-    if output:
-        with open(output, "w") as f:
-            f.write(formatted)
-        click.echo(f"Generated design system -> {output}")
-    else:
-        click.echo(formatted)
-
-
-@cli.command()
-@click.argument("image_path")
-@click.option("--output", "-o", default=None, help="Output JSON file.")
-def screenshot_to_ui(image_path: str, output: str):
-    """Convert a screenshot/image to UI component structure using AI vision."""
-    from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
-    import json
-
-    gen = AIDesignGeneratorPro()
-    result = gen.screenshot_to_ui(image_path)
-
-    formatted = json.dumps(result, indent=2)
-    if output:
-        with open(output, "w") as f:
-            f.write(formatted)
-        click.echo(f"Extracted UI from screenshot -> {output}")
-    else:
-        click.echo(formatted)
-
-
-@cli.command()
-@click.argument("project_file")
-@click.option(
-    "--template",
-    type=click.Choice([
-        "app_store_preview", "social_square", "product_launch",
-        "twitter_card", "linkedin_post", "product_hunt",
-    ]),
-    default="social_square",
-    help="Promo template to use.",
-)
-@click.option("--output", "-o", required=True, help="Output directory for rendered frames.")
-@click.option("--product-name", default="My Product", help="Product name for the promo.")
-@click.option("--tagline", default="The next big thing", help="Tagline text.")
-def promo(project_file: str, template: str, output: str, product_name: str, tagline: str):
-    """Generate promotional content (App Store, social media, product launch)."""
-    from eostudio.core.video.promo_templates import get_template
-    import json, os
-
-    tmpl = get_template(template)
-    if not tmpl:
-        click.echo(f"Unknown template: {template}")
+    if watch:
+        click.echo("Watching for changes... (Ctrl+C to stop)")
+        runner.watch(path)
         return
 
-    compositor = tmpl.create_compositor(
-        product_name=product_name, tagline=tagline,
-        app_name=product_name, product=product_name,
+    if test_file:
+        result = runner.run_file(test_file)
+    elif coverage:
+        result = runner.run_with_coverage(path)
+    else:
+        result = runner.run_all(path)
+
+    click.echo(f"Passed : {result.passed}")
+    click.echo(f"Failed : {result.failed}")
+    click.echo(f"Errors : {result.errors}")
+    click.echo(f"Skipped: {result.skipped}")
+
+    if coverage and hasattr(result, "coverage"):
+        click.echo(f"Coverage: {result.coverage:.1f}%")
+
+    raise SystemExit(0 if result.failed == 0 and result.errors == 0 else 1)
+
+
+@cli.command()
+@click.argument("path", type=click.Path(), default=".")
+@click.option("--fix", is_flag=True, help="Auto-fix lint issues where possible.")
+def lint(path: str, fix: bool):
+    """Run linters on the project."""
+    import subprocess
+
+    from eostudio.core.devtools.build_system import BuildSystemManager
+
+    manager = BuildSystemManager()
+    info = manager.detect(path)
+    click.echo(f"Build system: {info.name}")
+
+    lint_cmd = info.lint_command(fix=fix)
+    click.echo(f"Running: {' '.join(lint_cmd)}")
+    result = subprocess.run(lint_cmd, cwd=path)
+    raise SystemExit(result.returncode)
+
+
+@cli.command()
+@click.option(
+    "--method",
+    type=click.Choice(["GET", "POST", "PUT", "PATCH", "DELETE"]),
+    default="GET",
+    help="HTTP method.",
+)
+@click.argument("url")
+@click.option("--data", "-d", default=None, help="Request body (JSON string).")
+@click.option("--header", "-H", multiple=True, help="Request header (key:value). Repeatable.")
+@click.option("--auth", default=None, help="Bearer token for Authorization header.")
+def api(method: str, url: str, data: str, header: tuple, auth: str):
+    """Send an HTTP request (REST API client)."""
+    from eostudio.core.devtools.api_client import (
+        APIClient,
+        APIRequest,
+        AuthConfig,
+        AuthType,
+        HTTPMethod,
     )
 
-    frames = compositor.render_all_frames()
-    os.makedirs(output, exist_ok=True)
+    headers = {}
+    for h in header:
+        key, _, value = h.partition(":")
+        headers[key.strip()] = value.strip()
 
-    manifest_path = os.path.join(output, "manifest.json")
-    with open(manifest_path, "w") as f:
-        json.dump({
-            "template": template,
-            "width": compositor.width,
-            "height": compositor.height,
-            "fps": compositor.fps,
-            "duration": compositor.duration,
-            "total_frames": len(frames),
-            "ffmpeg_command": compositor.generate_ffmpeg_command(
-                os.path.join(output, "output.mp4"), output
-            ),
-        }, f, indent=2)
+    auth_config = None
+    if auth:
+        auth_config = AuthConfig(type=AuthType.BEARER, token=auth)
 
-    click.echo(f"Promo '{template}' ({compositor.width}x{compositor.height}) -> {output}")
-    click.echo(f"  {len(frames)} frames, {compositor.duration}s duration")
-    click.echo(f"  Run ffmpeg command in manifest.json to render video")
+    request = APIRequest(
+        method=HTTPMethod[method],
+        url=url,
+        body=data,
+        headers=headers,
+        auth=auth_config,
+    )
 
+    client = APIClient()
+    response = client.send(request)
 
-@cli.command()
-@click.argument("project_file")
-@click.option("--output", "-o", required=True, help="Output HTML file.")
-@click.option("--device", default="iphone_14", help="Device frame for prototype.")
-def prototype(project_file: str, output: str, device: str):
-    """Export an interactive HTML prototype from a design project."""
-    from eostudio.formats.project import EoStudioProject
-    from eostudio.core.prototyping.player import PrototypePlayer, PrototypeScreen
-
-    project = EoStudioProject.load(project_file)
-    scene_data = project.scenes.get(project.active_scene, {})
-    screens = scene_data.get("screens", [{"name": "Home", "components": scene_data.get("components", [])}])
-
-    player = PrototypePlayer()
-    for screen in screens:
-        player.add_screen(PrototypeScreen(
-            id=screen.get("name", "screen").lower().replace(" ", "_"),
-            name=screen.get("name", "Screen"),
-            components=screen.get("components", []),
-            device_frame=device,
-        ))
-
-    html = player.export_html()
-    with open(output, "w") as f:
-        f.write(html)
-    click.echo(f"Interactive prototype ({len(screens)} screens, {device}) -> {output}")
+    click.echo(f"Status : {response.status_code}")
+    click.echo(f"Time   : {response.elapsed_ms:.0f} ms")
+    click.echo(f"Body   :\n{response.text}")
 
 
 @cli.command()
-@click.argument("brand_color")
-@click.option("--style", default="modern", help="Palette style.")
-@click.option("--output", "-o", default=None, help="Output JSON file.")
-def palette(brand_color: str, style: str, output: str):
-    """Generate a full color palette from a brand color (e.g. #2563eb)."""
-    from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
-    import json
+@click.option(
+    "--type",
+    "db_type",
+    type=click.Choice(["sqlite", "postgresql", "mysql"]),
+    default="sqlite",
+    help="Database type.",
+)
+@click.option("--database", default=None, help="Database name or path.")
+@click.option("--host", default="localhost", help="Database host.")
+@click.option("--port", type=int, default=None, help="Database port.")
+@click.option("--user", default=None, help="Database user.")
+@click.option("--password", default=None, help="Database password.")
+@click.argument("query")
+def db(db_type: str, database: str, host: str, port: int, user: str, password: str, query: str):
+    """Execute a database query."""
+    from eostudio.core.devtools.database_client import (
+        DatabaseClient,
+        DatabaseConfig,
+        DatabaseType,
+    )
 
-    gen = AIDesignGeneratorPro()
-    result = gen.generate_palette(brand_color, style=style)
+    config = DatabaseConfig(
+        db_type=DatabaseType[db_type.upper()],
+        database=database,
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+    )
 
-    formatted = json.dumps(result, indent=2)
+    client = DatabaseClient(config)
+    result = client.execute(query)
+
+    if result.columns:
+        # Print header
+        header = " | ".join(f"{col:>15}" for col in result.columns)
+        click.echo(header)
+        click.echo("-" * len(header))
+        for row in result.rows:
+            click.echo(" | ".join(f"{str(v):>15}" for v in row))
+        click.echo(f"\n({result.row_count} rows)")
+    else:
+        click.echo(f"Query OK — {result.affected_rows} rows affected")
+
+
+@cli.command()
+@click.option(
+    "--action",
+    type=click.Choice(["ps", "images", "build", "up", "down", "logs"]),
+    default="ps",
+    help="Docker action to perform.",
+)
+@click.option("--path", type=click.Path(), default=".", help="Path containing Dockerfile / docker-compose.")
+@click.option("--tag", default=None, help="Image tag (for build).")
+@click.option("--container", default=None, help="Container name (for logs).")
+def docker(action: str, path: str, tag: str, container: str):
+    """Manage Docker containers and images."""
+    from eostudio.core.devtools.containers import ContainerManager
+
+    mgr = ContainerManager()
+
+    if action == "ps":
+        containers = mgr.list_containers()
+        for c in containers:
+            click.echo(f"{c.id[:12]}  {c.name:30s}  {c.status}")
+    elif action == "images":
+        images = mgr.list_images()
+        for img in images:
+            click.echo(f"{img.id[:12]}  {img.tag:30s}  {img.size}")
+    elif action == "build":
+        result = mgr.build(path, tag=tag)
+        click.echo(f"Built image: {result.tag}")
+    elif action == "up":
+        mgr.compose_up(path)
+        click.echo("Services started.")
+    elif action == "down":
+        mgr.compose_down(path)
+        click.echo("Services stopped.")
+    elif action == "logs":
+        logs = mgr.logs(container)
+        click.echo(logs)
+
+
+@cli.command()
+@click.option("--host", required=True, help="Remote host.")
+@click.option("--user", default=None, help="SSH user.")
+@click.option("--port", type=int, default=22, help="SSH port.")
+@click.option("--key", type=click.Path(exists=True), default=None, help="SSH private key path.")
+@click.argument("command")
+def remote(host: str, user: str, port: int, key: str, command: str):
+    """Execute a command on a remote host via SSH."""
+    from eostudio.core.devtools.remote import (
+        RemoteConfig,
+        RemoteConnection,
+        RemoteType,
+    )
+
+    config = RemoteConfig(
+        remote_type=RemoteType.SSH,
+        host=host,
+        user=user,
+        port=port,
+        key_path=key,
+    )
+
+    conn = RemoteConnection(config)
+    result = conn.execute(command)
+
+    if result.stdout:
+        click.echo(result.stdout)
+    if result.stderr:
+        click.echo(result.stderr, err=True)
+    raise SystemExit(result.exit_code)
+
+
+@cli.command()
+@click.argument("path", type=click.Path(), default=".")
+@click.option(
+    "--scan",
+    type=click.Choice(["all", "deps", "code", "secrets"]),
+    default="all",
+    help="Type of security scan.",
+)
+@click.option("--output", "-o", type=click.Path(), default=None, help="Output report path.")
+@click.option(
+    "--format",
+    "fmt",
+    type=click.Choice(["text", "json", "sarif"]),
+    default="text",
+    help="Report format.",
+)
+def security(path: str, scan: str, output: str, fmt: str):
+    """Run security scans on the project."""
+    from eostudio.core.devtools.security import SecurityScanner
+
+    scanner = SecurityScanner()
+    result = scanner.scan(path, scan_type=scan, output=output, fmt=fmt)
+
+    click.echo(f"Scan complete — {result.issue_count} issues found")
+    for issue in result.issues:
+        icon = {"critical": "C", "high": "H", "medium": "M", "low": "L"}.get(
+            issue.severity, "?"
+        )
+        click.echo(f"  [{icon}] [{issue.severity.upper()}] {issue.title}")
+        click.echo(f"    {issue.location}")
+
     if output:
-        with open(output, "w") as f:
-            f.write(formatted)
-        click.echo(f"Generated palette from {brand_color} -> {output}")
+        click.echo(f"Report saved to {output}")
+
+    raise SystemExit(1 if result.issue_count > 0 else 0)
+
+
+@cli.command()
+@click.argument("script", type=click.Path(exists=True))
+@click.option(
+    "--type",
+    "profile_type",
+    type=click.Choice(["cpu", "memory"]),
+    default="cpu",
+    help="Profiling mode.",
+)
+@click.option("--output", "-o", type=click.Path(), default=None, help="Output file for the profile report.")
+def profile(script: str, profile_type: str, output: str):
+    """Profile a Python script for CPU or memory usage."""
+    from eostudio.core.devtools.profiler import Profiler
+
+    profiler = Profiler(mode=profile_type)
+    result = profiler.run(script)
+
+    click.echo(f"Profile type : {profile_type}")
+    click.echo(f"Total time   : {result.total_time:.3f}s")
+    click.echo(f"Peak memory  : {result.peak_memory_mb:.1f} MB")
+    click.echo("\nTop functions:")
+    for fn in result.top_functions[:10]:
+        click.echo(f"  {fn.cumtime:8.3f}s  {fn.name}")
+
+    if output:
+        result.save(output)
+        click.echo(f"\nFull report saved to {output}")
+
+
+@cli.command()
+@click.argument("template", required=False)
+@click.option("--output", "-o", type=click.Path(), default=".", help="Output directory.")
+@click.option("--name", default=None, help="Project / component name.")
+@click.option("--list", "list_templates", is_flag=True, help="List all available templates.")
+def scaffold(template: str, output: str, name: str, list_templates: bool):
+    """Create a project or component from 40+ built-in templates."""
+    from eostudio.core.scaffold import ScaffoldConfig, Scaffolder, TemplateRegistry
+
+    registry = TemplateRegistry()
+
+    if list_templates:
+        templates = registry.list_all()
+        click.echo(f"Available templates ({len(templates)}):\n")
+        for t in templates:
+            click.echo(f"  {t.name:25s}  {t.description}")
+        return
+
+    if not template:
+        click.echo("Error: provide a TEMPLATE name or use --list.", err=True)
+        raise SystemExit(1)
+
+    config = ScaffoldConfig(template=template, output=output, name=name)
+    scaffolder = Scaffolder(registry=registry)
+    result = scaffolder.create(config)
+    click.echo(f"Scaffolded '{result.name}' ({result.file_count} files) at {result.path}")
+
+
+@cli.command()
+@click.option(
+    "--action",
+    type=click.Choice(["start", "join", "list"]),
+    default="list",
+    help="Collaboration action.",
+)
+@click.option("--session", default=None, help="Session ID to join.")
+@click.option("--port", type=int, default=9000, help="Server port (for start).")
+@click.option("--user", default=None, help="Display name.")
+def collab(action: str, session: str, port: int, user: str):
+    """Real-time collaboration — start, join, or list sessions."""
+    from eostudio.core.collaboration import CollabServer
+
+    server = CollabServer()
+
+    if action == "list":
+        sessions = server.list_sessions()
+        if not sessions:
+            click.echo("No active sessions.")
+            return
+        for s in sessions:
+            click.echo(f"  {s.id}  {s.owner:20s}  {s.participant_count} participants")
+
+    elif action == "start":
+        session_info = server.start(port=port, user=user)
+        click.echo(f"Session started: {session_info.id}")
+        click.echo(f"Share this ID with collaborators: {session_info.id}")
+        click.echo("Waiting for connections... (Ctrl+C to stop)")
+        server.serve_forever()
+
+    elif action == "join":
+        if not session:
+            click.echo("Error: --session is required for join.", err=True)
+            raise SystemExit(1)
+        server.join(session, user=user)
+        click.echo(f"Joined session {session}")
+
+
+@cli.command()
+@click.option(
+    "--action",
+    type=click.Choice(["chat", "review", "test-gen", "doc-gen", "explain", "fix"]),
+    default="chat",
+    help="AI action to perform.",
+)
+@click.option("--file", "file_path", type=click.Path(exists=True), default=None, help="Source file for context.")
+@click.option("--provider", type=click.Choice(["ollama", "openai", "anthropic", "local"]), default="ollama", help="LLM provider.")
+@click.option("--model", default=None, help="Model name override.")
+@click.argument("prompt", required=False)
+def ai(action: str, file_path: str, provider: str, model: str, prompt: str):
+    """AI assistant — chat, code review, test & doc generation, explain, fix."""
+    from eostudio.core.ai.llm_client import LLMClient
+
+    client = LLMClient.create(provider=provider, model=model)
+
+    if action == "chat":
+        if not prompt:
+            click.echo("Error: PROMPT is required for chat.", err=True)
+            raise SystemExit(1)
+        response = client.ask(prompt)
+        click.echo(response)
+
+    elif action == "review":
+        from eostudio.core.ai.code_reviewer import CodeReviewer
+
+        if not file_path:
+            click.echo("Error: --file is required for review.", err=True)
+            raise SystemExit(1)
+        reviewer = CodeReviewer(llm=client)
+        result = reviewer.review(file_path)
+        click.echo(result.summary)
+        for issue in result.issues:
+            click.echo(f"  [{issue.severity}] L{issue.line}: {issue.message}")
+
+    elif action == "test-gen":
+        from eostudio.core.ai.test_generator import TestGenerator
+
+        if not file_path:
+            click.echo("Error: --file is required for test-gen.", err=True)
+            raise SystemExit(1)
+        gen = TestGenerator(llm=client)
+        result = gen.generate(file_path)
+        click.echo(f"Generated {result.test_count} tests in {result.output_path}")
+
+    elif action == "doc-gen":
+        from eostudio.core.ai.doc_generator import DocGenerator
+
+        if not file_path:
+            click.echo("Error: --file is required for doc-gen.", err=True)
+            raise SystemExit(1)
+        gen = DocGenerator(llm=client)
+        result = gen.generate(file_path)
+        click.echo(result.documentation)
+
+    elif action == "explain":
+        from eostudio.core.ai.code_assistant import CodeAssistant
+
+        if not file_path:
+            click.echo("Error: --file is required for explain.", err=True)
+            raise SystemExit(1)
+        assistant = CodeAssistant(llm=client)
+        explanation = assistant.explain(file_path)
+        click.echo(explanation)
+
+    elif action == "fix":
+        from eostudio.core.ai.code_assistant import CodeAssistant
+
+        if not file_path:
+            click.echo("Error: --file is required for fix.", err=True)
+            raise SystemExit(1)
+        assistant = CodeAssistant(llm=client)
+        result = assistant.fix(file_path, hint=prompt)
+        click.echo(f"Applied {result.fix_count} fixes to {file_path}")
+
+
+@cli.command()
+@click.option(
+    "--action",
+    type=click.Choice(["install", "uninstall", "list", "search", "update"]),
+    default="list",
+    help="Plugin action.",
+)
+@click.argument("name", required=False)
+def plugin(action: str, name: str):
+    """Manage EoStudio plugins / extensions."""
+    from eostudio.core.ide.extensions import ExtensionManager
+
+    mgr = ExtensionManager()
+
+    if action == "list":
+        extensions = mgr.list_installed()
+        if not extensions:
+            click.echo("No plugins installed.")
+            return
+        for ext in extensions:
+            click.echo(f"  {ext.name:30s}  v{ext.version}  {ext.description}")
+
+    elif action == "search":
+        if not name:
+            click.echo("Error: NAME is required for search.", err=True)
+            raise SystemExit(1)
+        results = mgr.search(name)
+        for ext in results:
+            click.echo(f"  {ext.name:30s}  v{ext.version}  {ext.description}")
+
+    elif action == "install":
+        if not name:
+            click.echo("Error: NAME is required for install.", err=True)
+            raise SystemExit(1)
+        mgr.install(name)
+        click.echo(f"Plugin '{name}' installed.")
+
+    elif action == "uninstall":
+        if not name:
+            click.echo("Error: NAME is required for uninstall.", err=True)
+            raise SystemExit(1)
+        mgr.uninstall(name)
+        click.echo(f"Plugin '{name}' uninstalled.")
+
+    elif action == "update":
+        if name:
+            mgr.update(name)
+            click.echo(f"Plugin '{name}' updated.")
+        else:
+            updated = mgr.update_all()
+            click.echo(f"Updated {len(updated)} plugins.")
+
+
+@cli.command()
+@click.option(
+    "--action",
+    type=click.Choice(["get", "set", "list", "reset"]),
+    default="list",
+    help="Config action.",
+)
+@click.option(
+    "--scope",
+    type=click.Choice(["user", "workspace"]),
+    default="user",
+    help="Configuration scope.",
+)
+@click.argument("key", required=False)
+@click.argument("value", required=False)
+def config(action: str, scope: str, key: str, value: str):
+    """Manage EoStudio configuration."""
+    from eostudio.core.ide.config_manager import ConfigManager, ConfigScope
+
+    mgr = ConfigManager()
+    cfg_scope = ConfigScope.USER if scope == "user" else ConfigScope.WORKSPACE
+
+    if action == "list":
+        entries = mgr.list(cfg_scope)
+        for k, v in entries.items():
+            click.echo(f"  {k} = {v}")
+
+    elif action == "get":
+        if not key:
+            click.echo("Error: KEY is required for get.", err=True)
+            raise SystemExit(1)
+        val = mgr.get(key, scope=cfg_scope)
+        if val is None:
+            click.echo(f"Key '{key}' not set.")
+        else:
+            click.echo(f"{key} = {val}")
+
+    elif action == "set":
+        if not key or value is None:
+            click.echo("Error: KEY and VALUE are required for set.", err=True)
+            raise SystemExit(1)
+        mgr.set(key, value, scope=cfg_scope)
+        click.echo(f"Set {key} = {value} [{scope}]")
+
+    elif action == "reset":
+        if key:
+            mgr.reset(key, scope=cfg_scope)
+            click.echo(f"Reset '{key}' to default [{scope}].")
+        else:
+            mgr.reset_all(scope=cfg_scope)
+            click.echo(f"All {scope} settings reset to defaults.")
+
+
+@cli.command()
+def update():
+    """Update EoStudio to the latest version."""
+    import subprocess
+
+    click.echo(f"Current version: {__version__}")
+    click.echo("Checking for updates...")
+    result = subprocess.run(
+        ["pip", "install", "--upgrade", "EoStudio"],
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode == 0:
+        click.echo("EoStudio updated successfully.")
+        click.echo(result.stdout.strip().splitlines()[-1] if result.stdout.strip() else "")
     else:
-        click.echo(formatted)
+        click.echo(f"Update failed:\n{result.stderr}", err=True)
+        raise SystemExit(1)
 
 
-@cli.command()
-@click.argument("prompt")
-@click.option("--framework", default="react", help="Target framework.")
-@click.option("--output", "-o", default=None, help="Output markdown/JSON file.")
-def spec(prompt: str, framework: str, output: str):
-    """Generate full spec: requirements → design → tech → tasks (like Kiro.dev)."""
-    from eostudio.core.specs.spec_engine import SpecEngine
-    import json
-
-    engine = SpecEngine()
-    result = engine.generate_full_spec(prompt, framework)
-
-    if output and output.endswith(".md"):
-        md = engine.export_markdown(result)
-        with open(output, "w") as f:
-            f.write(md)
-        click.echo(f"Full spec exported to {output}")
-    elif output:
-        with open(output, "w") as f:
-            json.dump(result, f, indent=2)
-        click.echo(f"Full spec JSON exported to {output}")
-    else:
-        md = engine.export_markdown(result)
-        click.echo(md)
-
-
-@cli.command()
-@click.argument("spec_file")
-@click.option("--framework", default="react", help="Target framework.")
-@click.option("--output", "-o", required=True, help="Output directory.")
-@click.option("--max-iterations", default=5, help="Max agent iterations.")
-def agent(spec_file: str, framework: str, output: str, max_iterations: int):
-    """Run agentic AI loop: generate → test → fix → refine (like Kiro.dev)."""
-    import json
-    from eostudio.core.ai.agent_loop import AgenticAILoop, AgentConfig
-
-    with open(spec_file) as f:
-        spec_data = json.load(f)
-
-    config = AgentConfig(framework=framework, output_dir=output,
-                         max_iterations=max_iterations)
-    agent_loop = AgenticAILoop(config=config)
-
-    def on_progress(state, msg):
-        click.echo(f"  [{state.value}] {msg}")
-
-    agent_loop.on_progress(on_progress)
-    result = agent_loop.run(spec_data)
-    click.echo(f"\nAgent completed: {result['state']} ({result['iterations']} iterations, {len(result['files'])} files)")
-
-
-@cli.command()
-@click.option("--output", "-o", required=True, help="Output directory.")
-@click.option("--components", "-c", multiple=True, help="Specific components to generate.")
-def ui_kit(output: str, components: tuple):
-    """Generate production UI kit (30+ React components like shadcn/ui)."""
-    import os
-    from eostudio.codegen.ui_kit import UIKitGenerator
-
-    gen = UIKitGenerator()
-    if components:
-        files = {}
-        for name in components:
-            code = gen.generate_component(name)
-            if code:
-                files[f"src/components/ui/{name.lower()}.tsx"] = code
-    else:
-        files = gen.generate_all()
-
-    os.makedirs(output, exist_ok=True)
-    for fname, content in files.items():
-        path = os.path.join(output, fname)
-        os.makedirs(os.path.dirname(path) or output, exist_ok=True)
-        with open(path, "w") as f:
-            f.write(content)
-    click.echo(f"Generated {len(files)} UI kit files -> {output}")
-
-
-@cli.command()
-@click.argument("project_dir")
-@click.option("--target", type=click.Choice(["docker", "vercel", "netlify", "github_pages", "fly_io", "railway"]),
-              default="docker")
-@click.option("--name", default="my-app", help="Project name.")
-def deploy(project_dir: str, target: str, name: str):
-    """Generate deployment configs (Docker, Vercel, Netlify, GitHub Pages)."""
-    from eostudio.core.deploy import Deployer, DeployTarget, DeployConfig
-
-    config = DeployConfig(target=DeployTarget(target), project_name=name)
-    deployer = Deployer()
-    result = deployer.deploy(config)
-    written = deployer.write_files(result, project_dir)
-
-    click.echo(f"Generated {target} deployment config:")
-    for f in written:
-        click.echo(f"  {f}")
-    if result.commands:
-        click.echo("\nDeploy commands:")
-        for cmd in result.commands:
-            click.echo(f"  $ {cmd}")
-
-
-@cli.command()
-@click.argument("prompt")
-@click.option("--framework", default="react", help="Target framework.")
-@click.option("--output", "-o", required=True, help="Output directory.")
-@click.option("--deploy-to", default="docker", help="Deployment target.")
-def build(prompt: str, framework: str, output: str, deploy_to: str):
-    """Full pipeline: prompt → spec → code → tests → deploy config (end-to-end)."""
-    import json, os
-    from eostudio.core.specs.spec_engine import SpecEngine
-    from eostudio.core.ai.agent_loop import AgenticAILoop, AgentConfig
-    from eostudio.codegen.ui_kit import UIKitGenerator
-    from eostudio.core.deploy import Deployer, DeployTarget, DeployConfig
-
-    click.echo("Step 1/4: Generating spec...")
-    engine = SpecEngine()
-    spec_data = engine.generate_full_spec(prompt, framework)
-
-    spec_path = os.path.join(output, "spec.json")
-    os.makedirs(output, exist_ok=True)
-    with open(spec_path, "w") as f:
-        json.dump(spec_data, f, indent=2)
-    click.echo(f"  Spec: {spec_path}")
-
-    md_path = os.path.join(output, "SPEC.md")
-    with open(md_path, "w") as f:
-        f.write(engine.export_markdown(spec_data))
-    click.echo(f"  Markdown: {md_path}")
-
-    click.echo("Step 2/4: Generating code...")
-    config = AgentConfig(framework=framework, output_dir=output, auto_test=False)
-    agent_loop = AgenticAILoop(config=config)
-    result = agent_loop.run(spec_data)
-    click.echo(f"  Generated {len(result['files'])} files")
-
-    click.echo("Step 3/4: Adding UI kit...")
-    ui_files = UIKitGenerator().generate_all()
-    for fname, content in ui_files.items():
-        path = os.path.join(output, fname)
-        os.makedirs(os.path.dirname(path) or output, exist_ok=True)
-        with open(path, "w") as f:
-            f.write(content)
-    click.echo(f"  Added {len(ui_files)} UI components")
-
-    click.echo("Step 4/4: Generating deploy config...")
-    deploy_config = DeployConfig(target=DeployTarget(deploy_to),
-                                  project_name=prompt[:20].lower().replace(" ", "-"))
-    deployer = Deployer()
-    deploy_result = deployer.deploy(deploy_config)
-    deployer.write_files(deploy_result, output)
-    click.echo(f"  Deploy target: {deploy_to}")
-
-    click.echo(f"\nDone! Full project at: {output}")
-    click.echo(f"  {len(result['files']) + len(ui_files)} total files")
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 
 def main():
