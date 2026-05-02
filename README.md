@@ -4,6 +4,11 @@ _The release pipeline will populate per-platform downloads here on the first rel
 <!-- END PLATFORMS -->
 
 
+<!-- BEGIN PLATFORMS -->
+_The release pipeline will populate per-platform downloads here on the first release._
+<!-- END PLATFORMS -->
+
+
 **Cross-Platform Design Suite with LLM Integration**
 
 [![CI](https://github.com/embeddedos-org/EoStudio/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/embeddedos-org/EoStudio/actions)

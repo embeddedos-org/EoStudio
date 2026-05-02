@@ -66,6 +66,9 @@ We hope this reference helps you unlock the full potential of EoStudio for your 
 
 ## 1.1 What is EoStudio?
 
+
+![Figure: EoStudio — 3D Product Visualization](images/product-3d.png)
+
 EoStudio is a cross-platform design suite that unifies 12 specialized editors for 3D modeling, CAD, image editing, game design, UI/UX, interior design, UML, simulation, database design, hardware PCB, and code editing — with integrated LLM-powered AI assistance and 30+ code generators.
 
 ![Figure: EoStudio Debug Session Flow — breakpoints, variable inspection, and watch output](images/debug-flow.png)

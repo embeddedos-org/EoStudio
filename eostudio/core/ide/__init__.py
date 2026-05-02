@@ -8,9 +8,10 @@ from eostudio.core.ide.project_manager import ProjectManager
 from eostudio.core.ide.terminal import TerminalEmulator
 from eostudio.core.ide.debugger import Debugger
 from eostudio.core.ide.cloud import CloudSync
+from eostudio.core.ide.config_manager import ConfigManager, SecretsManager
 
 __all__ = [
     "SyntaxHighlighter", "LanguageServer", "GitIntegration",
     "ExtensionManager", "ProjectManager", "TerminalEmulator",
-    "Debugger", "CloudSync",
+    "Debugger", "CloudSync", "ConfigManager", "SecretsManager",
 ]
