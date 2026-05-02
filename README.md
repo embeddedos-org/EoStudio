@@ -1,4 +1,8 @@
 # EoStudio
+<!-- BEGIN PLATFORMS -->
+_The release pipeline will populate per-platform downloads here on the first release._
+<!-- END PLATFORMS -->
+
 
 **Cross-Platform Design Suite with LLM Integration**
 
@@ -279,3 +283,4 @@ MIT License — see [LICENSE](LICENSE) for details.
 ## Security
 
 Please see [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
+
