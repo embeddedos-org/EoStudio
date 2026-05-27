@@ -23,7 +23,7 @@ We continuously benchmark EoStudio — Dev Studio against the entire EmbeddedOS 
 
 ---
 
-## 🎬 Product Marketing Video
+## 🎬 Product Marketing Video (App Store Proof of Production)
 
 Experience EoStudio — Dev Studio in action! Watch our high-fidelity product demonstration and marketing video:
 
