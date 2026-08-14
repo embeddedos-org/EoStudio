@@ -1,150 +1,73 @@
-# EoStudio v3.1.0 — Universal Development Platform
+# EoStudio — Universal Development & Design Platform
 
-[![License](https://img.shields.io/github/license/embeddedos-org/EoStudio)](LICENSE)
-[![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org)
-[![Tests](https://img.shields.io/github/actions/workflow/status/embeddedos-org/EoStudio/release-video.yml?label=tests)](tests/)
-[![Version](https://img.shields.io/badge/version-3.1.0-green.svg)](CHANGELOG.md)
+[![CI](https://github.com/embeddedos-org/EoStudio/actions/workflows/ci.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/embeddedos-org/EoStudio/actions/workflows/codeql.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/codeql.yml)
+[![Scorecard](https://github.com/embeddedos-org/EoStudio/actions/workflows/scorecard.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/scorecard.yml)
+[![Release](https://github.com/embeddedos-org/EoStudio/actions/workflows/release.yml/badge.svg)](https://github.com/embeddedos-org/EoStudio/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**EoStudio** is the world's most powerful, comprehensive, and top-rated universal development platform. It is designed to be the ultimate developer tool, combining a rich desktop-grade visual editor suite with cutting-edge AI orchestration, real-time multi-user collaboration, LSP-grade code intelligence, an integrated devtools suite, and a robust plugin marketplace.
+EoStudio is a Python development and design platform for the **EmbeddedOS (EoS)**
+ecosystem. It combines a visual editor/design suite with multi-target code
+generation, 2D/3D asset export, AI-assisted coding, real-time collaboration, and
+a plugin system, driven from a single `EoStudio` command-line entry point
+(`click`-based). It is part of the
+[EmbeddedOS (EoS)](https://github.com/embeddedos-org) ecosystem and integrates
+with [eOffice](https://github.com/embeddedos-org/eOffice) and
+[EoSim](https://github.com/embeddedos-org/EoSim) through bundled plugins.
+Version 3.1.0.
 
-Whether you are building complex embedded firmware, reactive web interfaces, native mobile apps, or cloud-native microservices, EoStudio provides a unified, blazing-fast, and deeply integrated environment that replaces over 70 separate development tools.
+## What's inside
 
----
+| Path | Contents |
+|---|---|
+| `eostudio/cli/` | The `EoStudio` command-line interface |
+| `eostudio/core/ai/` | Model router, orchestrator, inline completion, agentic coder, workspace intelligence |
+| `eostudio/core/collaboration/` | Real-time multi-user editing (Operational Transformation) |
+| `eostudio/core/ide/` | Code intelligence (`code_intelligence`) |
+| `eostudio/core/devtools/` | Git / CI / Docker developer tooling (`devex`) |
+| `eostudio/core/security/` | Static analysis and secret scanning (`hardening`) |
+| `eostudio/core/` (more) | `ui`, `ui_flow`, `animation`, `geometry`, `prototyping`, `scaffold`, `simulation`, `deploy`, `specs`, `uml`, `video`, `enterprise` |
+| `eostudio/codegen/` | Code generators: React, Flutter, HTML/CSS, WASM, GTK, .NET, mobile, game engine, hardware, OpenSCAD, device tree |
+| `eostudio/formats/` | 2D/3D export: SVG, DXF, STL, OBJ, glTF |
+| `eostudio/gui/` | Desktop GUI (`app`, `editors`, `widgets`, `dialogs`) |
+| `eostudio/platform/` | Rendering backends: Tkinter, web, PWA, Electron, macOS, EoS |
+| `eostudio/plugins/` | Plugin base + marketplace; `eoffice` and `eosim` plugins |
+| `eostudio/templates/` | Project and sample templates |
+| `tests/` | pytest suite |
 
-## 🚀 Key Features (Why EoStudio Surpasses Every Competitor)
-
-| Feature Category | EoStudio v3.1.0 | Cursor / Copilot / VS Code | Devin / Claude Code |
-| :--- | :--- | :--- | :--- |
-| **AI Orchestration** | **Multi-Model Router** (GPT-4.1, Gemini, Claude, Ollama) + **Self-Healing Code Loop** + **Codebase RAG** | Single model, no fallback, no codebase RAG | No GUI, single model, no embedded support |
-| **Real-Time Collab** | **OT-based Multi-User Editing** with active cursors & presence | VS Code Live Share only (no OT, no presence) | None |
-| **Code Intelligence** | **LSP Diagnostics** + **AI Test Gen** + **Built-in Perf Profiler** | Basic autocomplete, no built-in profiler | Command-line only, no visual feedback |
-| **UI/UX & Live Preview** | **Unified Hot-Reload** (React, Next.js, Flutter, Flask) + **Command Palette** | Framework-specific, fragmented | None |
-| **Security Hardening** | **Built-in SAST** + **Secret Scanner** + **Dependency CVE Check** | Requires external plugins (Snyk, Sonar) | None |
-| **Marketplace** | **One-Click Verified Plugin Catalog** (AI, Themes, DevTools) | Fragmented, unverified marketplace | None |
-
----
-
-## 🛠️ Deep Dive into Core Modules
-
-### 1. Multi-Model AI Router & Orchestrator (`orchestrator.py`, `multi_model_router.py`)
-- **Intelligent Routing**: Automatically routes tasks to the optimal model (e.g., GPT-4.1 for complex logic, Gemini 2.5 Flash for fast chat, local Llama3 for privacy-first operations).
-- **Persistent Conversation Memory**: Features a rolling context window that automatically compresses older messages into summaries to fit within token limits.
-- **Self-Healing Loop**: Runs your code, catches compiler or runtime errors, asks the AI to fix them, and repeats until the code executes successfully.
-- **Codebase RAG**: Indexes your entire project and retrieves relevant code snippets to include in AI prompts for hyper-accurate, project-specific answers.
-
-### 2. Inline Code Completion (`inline_completion.py`)
-- **Ghost Text Completions**: Real-time, Cursor-style inline code suggestions.
-- **Context-Aware**: Analyzes imports, function signatures, and project description to suggest accurate code.
-- **Ultra-Low Latency**: Built-in LRU cache for instant repeat completions and telemetry to track acceptance rates.
-
-### 3. Agentic Coder (`agentic_coder.py`)
-- **Autonomous Developer**: A Devin-style autonomous agent that can create files, modify code, run terminal commands, execute tests, and commit changes to git in a loop until the task is complete.
-
-### 4. Real-Time Collaboration (`realtime_collab.py`)
-- **Figma-Style Editing**: Allows multiple developers to edit the same file simultaneously.
-- **Operational Transformation (OT)**: Resolves conflicts automatically in real-time.
-- **Presence & Cursors**: Visualizes other users' active cursors, selection ranges, and presence colors.
-
-### 5. Code Intelligence & Performance Profiling (`code_intelligence.py`)
-- **LSP Diagnostics**: Built-in syntax, style, unused import, and complexity checkers.
-- **AI Test Generator**: One-click generation of comprehensive test suites (pytest, Jest, etc.) covering happy paths and edge cases.
-- **Performance Profiler**: Profiles Python code using cProfile and provides actionable, AI-powered recommendations to optimize hotspots.
-- **Duplicate Detector**: Finds duplicate code blocks across the workspace to help you refactor and keep your codebase DRY.
-
-### 6. DevEx Hub & Docker Manager (`devex.py`)
-- **Git Supercharger**: Generates AI commit messages, creates PR drafts, and resolves merge conflicts with AI.
-- **CI/CD Integration**: Views, triggers, and debugs GitHub Actions, GitLab CI, and CircleCI workflows.
-- **Docker Manager**: Builds, runs, stops, and inspects Docker containers and images directly from the IDE.
-
-### 7. Interactive Dashboard & Web Server (`dashboard.py`)
-- **TUI Dashboard**: Beautiful, rich terminal dashboard showing project stats, git status, AI model health, and keyboard shortcuts.
-- **Web Dashboard**: Serves a responsive browser-based dashboard with real-time metrics and an embedded AI Chat panel.
-- **Command Palette**: A Ctrl+P style palette with fuzzy search to execute any editor action instantly.
-
-### 8. Security Hardening (`hardening.py`)
-- **SAST Scanner**: Detects 12 OWASP Top 10 patterns (SQL injection, command injection, XSS, etc.).
-- **Secret Scanner**: Prevents credential leaks by detecting hardcoded API keys (AWS, GitHub, OpenAI, etc.).
-- **Dependency Auditor**: Scans Python and Node dependencies for known CVEs.
-- **HTML Reports**: Generates detailed, professional security reports with a security score (0-100).
-
----
-
-## 📦 Installation
-
-To install EoStudio and all its dependencies:
+## Install
 
 ```bash
 git clone https://github.com/embeddedos-org/EoStudio.git
 cd EoStudio
 pip install -e ".[dev]"
+EoStudio --help
 ```
 
-Verify the installation:
+The base install pulls only `click`. AI and integration features are opt-in
+extras:
+
+| Extra | Adds |
+|---|---|
+| `.[ai]` | OpenAI model backend (`httpx`, `tiktoken`, `openai`) |
+| `.[ai-full]` | `ai` plus Anthropic |
+| `.[ai-local]` | Local/Ollama backend via `httpx` |
+| `.[database]` | PostgreSQL, MySQL, MongoDB, Redis clients |
+| `.[cloud]` | `httpx`, `keyring` |
+| `.[video]` | `edge-tts` (narrated release videos) |
+| `.[all]` | Everything above |
+
+## Test
+
 ```bash
-eostudio --help
+pip install -e ".[dev]"
+pytest        # tests/ (configured in pyproject.toml)
 ```
 
----
+## Docs
 
-## 💻 CLI Usage
+See [`docs/`](docs/) (`mkdocs.yml`) and [`CHANGELOG.md`](CHANGELOG.md).
 
-EoStudio comes with an incredibly powerful command-line interface:
+## License
 
-```bash
-# Start the interactive terminal dashboard
-eostudio dashboard
-
-# Start the web dashboard server on port 7777
-eostudio dashboard --web --port 7777
-
-# Ask the AI Orchestrator a project-specific question
-eostudio query "How does our authentication module work?"
-
-# Run the autonomous Agentic Coder to complete a task
-eostudio agent "Add OAuth2 login with Google to our Flask app"
-
-# Run a static security scan of the workspace and generate an HTML report
-eostudio scan --report-html ./security-report.html
-
-# Get Cursor-style inline code completion suggestions
-eostudio complete src/main.py --offset 124
-
-# Manage plugins
-eostudio plugin search "theme"
-eostudio plugin install "dracula-theme"
-```
-
----
-
-## 🧪 Running Tests
-
-We take code quality and reliability extremely seriously. EoStudio features a massive test suite with **464+ tests passing successfully**.
-
-To run the full test suite:
-```bash
-python3 -m pytest tests/ -v
-```
-
-To run only the new enhanced feature tests:
-```bash
-python3 -m pytest tests/unit/test_enhanced_features.py -v
-```
-
----
-
-## 🤝 Contributing
-
-We welcome contributions from the global developer community! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
-
----
-
-## 📞 Support & Feedback
-
-- **Community Discussions**: Open a GitHub Discussion for help, design proposals, or general chat.
-- **Official Support**: For billing, credits, refunds, or official technical support, please submit a request at [https://help.manus.im](https://help.manus.im).
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+Licensed under the [MIT License](LICENSE).
