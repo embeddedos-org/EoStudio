@@ -17,7 +17,7 @@ Status is one of: `todo`, `in-progress`, `blocked`, `review`, `done`.
 
 | ID | Task | Owner | Verified by | Evidence |
 |----|------|-------|-------------|----------|
-| —  | None yet. | — | — | — |
+| T-001 | Fix a mock that never took effect, failing the narration E2E test | testing | reviewer | `tests/integration/test_release_video.py` patched `eostudio.core.video.release_video.edge_tts` with `create=True`, but `_generate_narration_async` does `import edge_tts` **inside the function body** (edge_tts is an optional dependency, the `video` extra). A function-local import resolves through `sys.modules` and never reads a patched module attribute, so the patch was a no-op and the test raised `ModuleNotFoundError` wherever edge_tts was not installed — meaning the narration path had never actually been exercised in a clean environment. Replaced with `patch.dict(sys.modules, {"edge_tts": mock})`. Production code unchanged. Suite: 473 passed, 0 failed. |
 
 ---
 
