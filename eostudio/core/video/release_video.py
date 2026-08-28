@@ -11,6 +11,11 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set
 
+try:  # optional: only needed when include_narration is set
+    import edge_tts
+except ImportError:  # pragma: no cover - exercised by the "not installed" path
+    edge_tts = None
+
 
 # ── Color palette (matches promo/eostudio_promo.py) ──────────────────────────
 
@@ -550,7 +555,11 @@ class ReleaseVideoGenerator:
     async def _generate_narration_async(
         self, segments: List[Dict[str, Any]], narration_dir: str,
     ) -> str:
-        import edge_tts
+        if edge_tts is None:
+            raise RuntimeError(
+                "Narration was requested but edge-tts is not installed. "
+                "Install it with:  pip install 'EoStudio[video]'"
+            )
 
         cfg = self.config
         part_paths: List[str] = []
