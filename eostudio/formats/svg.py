@@ -74,3 +74,23 @@ class SVGExporter:
         content = self.export(shapes, width=width, height=height)
         with open(filepath, "w", encoding="utf-8") as fh:
             fh.write(content)
+
+
+def export_svg(
+    shapes: List[Dict[str, Any]],
+    filepath: str,
+    width: int = 800,
+    height: int = 600,
+) -> None:
+    """Write ``shapes`` to ``filepath`` as SVG.
+
+    The function form `eostudio.formats.project` imports; the argument order
+    matches `export_obj` and `export_stl_ascii`, destination second.
+
+    Args:
+        shapes: Shape dictionaries, as stored on a scene's ``objects``.
+        filepath: Destination ``.svg`` file path.
+        width: Viewport width in user units.
+        height: Viewport height in user units.
+    """
+    SVGExporter().export_to_file(shapes, filepath, width=width, height=height)

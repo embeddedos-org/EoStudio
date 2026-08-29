@@ -64,3 +64,19 @@ class OBJExporter:
         content = self.export(mesh, name=name)
         with open(filepath, "w", encoding="utf-8") as fh:
             fh.write(content)
+
+
+def export_obj(mesh: Mesh, filepath: str, name: Optional[str] = None) -> None:
+    """Write ``mesh`` to ``filepath`` in Wavefront OBJ format.
+
+    The function form `eostudio.formats.project` imports. `stl.py` and `dxf.py`
+    already expose their exporters this way; obj and svg only had the class,
+    so the import at the top of `EoStudioProject.export()` failed and took
+    every other format down with it.
+
+    Args:
+        mesh: The mesh to export.
+        filepath: Destination ``.obj`` file path.
+        name: Optional object name. Defaults to ``mesh.name``.
+    """
+    OBJExporter().export_to_file(mesh, filepath, name)
