@@ -15,6 +15,15 @@ from typing import Callable, Dict, List, Optional
 class BuildSystem(Enum):
     """Supported build systems."""
 
+    # The EmbeddedOS build control plane. EoStudio is specified as a graphical
+    # IDE over eBuild and EoSim, and §15 of the platform design says it
+    # "invokes eBuild APIs/CLI; it does not duplicate build logic". Without
+    # this member the platform's own build tool was absent from the IDE's list
+    # of build systems while Buck and Bazel were present, and an ebuild project
+    # opened here fell through to the MAKE fallback — running `make` in a
+    # directory with no Makefile.
+    EBUILD = "ebuild"
+
     NPM = "npm"
     YARN = "yarn"
     PNPM = "pnpm"
@@ -80,6 +89,12 @@ class BuildTask:
 
 # Detection config: (marker file/dir, BuildSystem)
 _DETECTION_ORDER: List[tuple] = [
+    # First, deliberately. An ebuild project is described by build.yaml and has
+    # no CMakeLists.txt at its root — ebuild generates the build files into the
+    # build directory — so anything matching later would either miss it or,
+    # once a project has been configured once, claim it for CMake and bypass
+    # the toolchain that owns it.
+    ("build.yaml", BuildSystem.EBUILD),
     ("pnpm-lock.yaml", BuildSystem.PNPM),
     ("yarn.lock", BuildSystem.YARN),
     ("package-lock.json", BuildSystem.NPM),
@@ -105,6 +120,22 @@ _DETECTION_ORDER: List[tuple] = [
 ]
 
 _DEFAULT_CONFIGS: Dict[BuildSystem, BuildConfig] = {
+    # These are ebuild's actual verbs, checked against `ebuild --help`. The one
+    # place this repository previously named the tool it is a front end for, it
+    # named an invocation that does not exist:
+    #
+    #     f"ebuild --platform {platform} --config board.yaml {source_dir}"
+    #
+    # ebuild has no top-level --platform or --config; the board is selected by
+    # `ebuild configure --board <board>`. That string was stored in a dict and
+    # never executed, so nothing ever found out.
+    BuildSystem.EBUILD: BuildConfig(
+        system=BuildSystem.EBUILD,
+        build_command="ebuild build",
+        test_command="ebuild test",
+        clean_command="ebuild clean",
+        run_command="ebuild monitor",
+    ),
     BuildSystem.NPM: BuildConfig(
         system=BuildSystem.NPM,
         build_command="npm run build",
