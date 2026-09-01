@@ -825,6 +825,39 @@ class _MockCommunicate:
 
 # ── E2E Tests with Realistic Subprocess Mocks ───────────────────────────────
 
+class TestNarrationWithoutEdgeTts:
+    """edge-tts is an optional extra, so the narration path has to say so.
+
+    The import used to sit inside _generate_narration_async. A function-local
+    import bypasses a patch of the module attribute, so
+    @patch("...release_video.edge_tts") had no effect and the test failed with
+    ModuleNotFoundError on any machine without the extra installed.
+    """
+
+    def test_missing_edge_tts_names_the_extra(self, output_dir):
+        import eostudio.core.video.release_video as rv
+
+        config = ReleaseVideoConfig(
+            version="1.0.0",
+            product_name="EoStudio",
+            tagline="Design Everything.",
+            changelog=_make_changelog(),
+            output_dir=output_dir,
+            include_narration=True,
+        )
+        gen = ReleaseVideoGenerator(config)
+
+        with patch.object(rv, "edge_tts", None):
+            with pytest.raises(RuntimeError, match=r"EoStudio\[video\]"):
+                gen.generate_narration(gen.generate_narration_script())
+
+    def test_edge_tts_is_patchable_as_a_module_attribute(self):
+        """The mock target the E2E test relies on must actually exist."""
+        import eostudio.core.video.release_video as rv
+
+        assert hasattr(rv, "edge_tts")
+
+
 class TestE2EWithRealisticMocks:
     """End-to-end tests using argument-aware subprocess mocks that simulate
     real ffmpeg/manim output, create actual file artifacts, and exercise the
