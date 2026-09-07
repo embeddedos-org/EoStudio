@@ -3,6 +3,7 @@ EoStudio Electron Backend — Electron/Node.js display backend.
 
 Phase 3: Cross-Platform Universal Support.
 """
+
 from __future__ import annotations
 
 import json
@@ -22,6 +23,7 @@ from eostudio.platform.display_backend import (
 # ---------------------------------------------------------------------------
 # Configuration dataclasses
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ElectronConfig:
@@ -102,6 +104,7 @@ class AutoUpdateConfig:
 # ElectronBridge — IPC protocol between Python ↔ Node.js/Electron
 # ---------------------------------------------------------------------------
 
+
 class ElectronBridge:
     """Manages the IPC channel between the Python core and the Electron renderer."""
 
@@ -158,6 +161,7 @@ class ElectronBridge:
 # ElectronBackend
 # ---------------------------------------------------------------------------
 
+
 class ElectronBackend(DisplayBackend):
     """Display backend that renders the UI via an Electron shell."""
 
@@ -176,11 +180,14 @@ class ElectronBackend(DisplayBackend):
 
     def create_window(self, config: WindowConfig) -> bool:
         """Ask Electron to create a BrowserWindow."""
-        self._bridge.send("create-window", {
-            "title": config.title,
-            "width": config.width,
-            "height": config.height,
-        })
+        self._bridge.send(
+            "create-window",
+            {
+                "title": config.title,
+                "width": config.width,
+                "height": config.height,
+            },
+        )
         return True
 
     def destroy_window(self) -> None:
@@ -194,10 +201,12 @@ class ElectronBackend(DisplayBackend):
         while msg is not None:
             if msg.get("channel") == "input-event":
                 data = msg.get("data", {})
-                events.append(InputEvent(
-                    type=EventType(data.get("type", "unknown")),
-                    data=data,
-                ))
+                events.append(
+                    InputEvent(
+                        type=EventType(data.get("type", "unknown")),
+                        data=data,
+                    )
+                )
             msg = self._bridge.receive()
         return events
 

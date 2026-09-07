@@ -26,10 +26,13 @@ class FirmwareGenerator:
         self.arch = board_config.get("arch", "arm-cortex-m")
         self.cpu = board_config.get("cpu", "cortex-m4")
         self.clock_mhz: int = board_config.get("clock_mhz", 168)
-        self.memory: List[Dict[str, Any]] = board_config.get("memory", [
-            {"name": "FLASH", "base": 0x08000000, "size": 0x100000},
-            {"name": "SRAM", "base": 0x20000000, "size": 0x20000},
-        ])
+        self.memory: List[Dict[str, Any]] = board_config.get(
+            "memory",
+            [
+                {"name": "FLASH", "base": 0x08000000, "size": 0x100000},
+                {"name": "SRAM", "base": 0x20000000, "size": 0x20000},
+            ],
+        )
         self.peripherals: List[Dict[str, Any]] = board_config.get("peripherals", [])
 
     # ------------------------------------------------------------------
@@ -49,10 +52,14 @@ class FirmwareGenerator:
         files["README.md"] = self._gen_readme(app_name)
 
         _dispatch = {
-            "uart": self.generate_uart_driver, "spi": self.generate_spi_driver,
-            "i2c": self.generate_i2c_driver, "gpio": self.generate_gpio_driver,
-            "adc": self.generate_adc_driver, "pwm": self.generate_pwm_driver,
-            "timer": self.generate_timer_driver, "can": self.generate_can_driver,
+            "uart": self.generate_uart_driver,
+            "spi": self.generate_spi_driver,
+            "i2c": self.generate_i2c_driver,
+            "gpio": self.generate_gpio_driver,
+            "adc": self.generate_adc_driver,
+            "pwm": self.generate_pwm_driver,
+            "timer": self.generate_timer_driver,
+            "can": self.generate_can_driver,
             "ethernet": self.generate_ethernet_driver,
         }
         for p in active:
@@ -63,9 +70,13 @@ class FirmwareGenerator:
                 files[f"drivers/{pn}.c"] = fn(p)
                 files[f"drivers/{pn}.h"] = self._gen_driver_header(pn, pt)
 
-        tgt = {"eos": self._gen_eos, "baremetal": self._gen_baremetal,
-               "freertos": self._gen_freertos, "zephyr": self._gen_zephyr,
-               "linux": self._gen_linux}
+        tgt = {
+            "eos": self._gen_eos,
+            "baremetal": self._gen_baremetal,
+            "freertos": self._gen_freertos,
+            "zephyr": self._gen_zephyr,
+            "linux": self._gen_linux,
+        }
         files.update(tgt[self.target](app_name))
         return files
 
@@ -94,11 +105,17 @@ class FirmwareGenerator:
 
     def _gen_board_h(self, app_name: str) -> str:
         g = f"BOARD_{self.name.upper().replace('-', '_')}_H"
-        L = [f"#ifndef {g}", f"#define {g}", "",
-             f"/* Board: {self.name}  CPU: {self.cpu}  Clock: {self.clock_mhz} MHz */", "",
-             f"#define SYSTEM_CLOCK_HZ   ({self.clock_mhz}000000UL)",
-             f"#define HSE_VALUE         ({self.board.get('hse_mhz', 8)}000000UL)",
-             f"#define HSI_VALUE         (16000000UL)", ""]
+        L = [
+            f"#ifndef {g}",
+            f"#define {g}",
+            "",
+            f"/* Board: {self.name}  CPU: {self.cpu}  Clock: {self.clock_mhz} MHz */",
+            "",
+            f"#define SYSTEM_CLOCK_HZ   ({self.clock_mhz}000000UL)",
+            f"#define HSE_VALUE         ({self.board.get('hse_mhz', 8)}000000UL)",
+            f"#define HSI_VALUE         (16000000UL)",
+            "",
+        ]
         for m in self.memory:
             t = m["name"].upper().replace(" ", "_")
             L += [f"#define {t}_BASE   (0x{m['base']:08X}UL)", f"#define {t}_SIZE   (0x{m['size']:08X}UL)"]
@@ -112,9 +129,11 @@ class FirmwareGenerator:
         for p in self.peripherals:
             for pin in p.get("pins", []):
                 pn = pin.get("name", "PIN").upper()
-                L += [f"#define {pn}_PORT   GPIO{pin.get('port', 'A')}",
-                      f"#define {pn}_PIN    ({pin.get('pin', 0)})",
-                      f"#define {pn}_AF     ({pin.get('af', 0)})"]
+                L += [
+                    f"#define {pn}_PORT   GPIO{pin.get('port', 'A')}",
+                    f"#define {pn}_PIN    ({pin.get('pin', 0)})",
+                    f"#define {pn}_AF     ({pin.get('af', 0)})",
+                ]
         L += ["", f"#endif /* {g} */", ""]
         return "\n".join(L)
 
@@ -203,7 +222,7 @@ class FirmwareGenerator:
                 #include "board.h"
                 #include <stdint.h>
                 void SystemInit(void) {{
-                    /* PLL: M=/{self.board.get('pll_m', 8)} N=*{self.board.get('pll_n', 336)} P=/{self.board.get('pll_p', 2)} */
+                    /* PLL: M=/{self.board.get("pll_m", 8)} N=*{self.board.get("pll_n", 336)} P=/{self.board.get("pll_p", 2)} */
                     /* Target: {self.clock_mhz} MHz */
                 }}
                 void BSP_Init(void) {{ /* peripheral init */ }}
@@ -270,8 +289,13 @@ class FirmwareGenerator:
     # ------------------------------------------------------------------
 
     def _gen_zephyr(self, app_name: str) -> Dict[str, str]:
-        conf = [f"# Zephyr config for {app_name}", "CONFIG_PRINTK=y", "CONFIG_LOG=y",
-                "CONFIG_GPIO=y", "CONFIG_SERIAL=y"]
+        conf = [
+            f"# Zephyr config for {app_name}",
+            "CONFIG_PRINTK=y",
+            "CONFIG_LOG=y",
+            "CONFIG_GPIO=y",
+            "CONFIG_SERIAL=y",
+        ]
         for p in self.peripherals:
             if p.get("type") in ("spi", "i2c", "adc", "pwm", "can"):
                 conf.append(f"CONFIG_{p['type'].upper()}=y")
@@ -298,6 +322,7 @@ class FirmwareGenerator:
         files: Dict[str, str] = {}
         try:
             from eostudio.codegen.device_tree import DeviceTreeGenerator
+
             root = DeviceTreeGenerator.from_board_config(self.board)
             files[f"{self.name}.dts"] = DeviceTreeGenerator.to_dts(root)
         except ImportError:
@@ -351,7 +376,7 @@ class FirmwareGenerator:
         b = config.get("base", 0x40011000)
         return (
             f"/* UART driver — {n} @ 0x{b:08X} */\n"
-            f"#include \"board.h\"\n#include <stdint.h>\n#include <stddef.h>\n\n"
+            f'#include "board.h"\n#include <stdint.h>\n#include <stddef.h>\n\n'
             f"#define {N}_BASE  (0x{b:08X}UL)\n"
             f"#define {N}_SR    (*(volatile uint32_t *)({N}_BASE + 0x00))\n"
             f"#define {N}_DR    (*(volatile uint32_t *)({N}_BASE + 0x04))\n"
@@ -384,7 +409,7 @@ class FirmwareGenerator:
         b = config.get("base", 0x40013000)
         return (
             f"/* SPI driver — {n} @ 0x{b:08X} */\n"
-            f"#include \"board.h\"\n#include <stdint.h>\n\n"
+            f'#include "board.h"\n#include <stdint.h>\n\n'
             f"#define {N}_BASE  (0x{b:08X}UL)\n"
             f"#define {N}_CR1   (*(volatile uint32_t *)({N}_BASE + 0x00))\n"
             f"#define {N}_SR    (*(volatile uint32_t *)({N}_BASE + 0x08))\n"
@@ -406,7 +431,7 @@ class FirmwareGenerator:
         b = config.get("base", 0x40005400)
         return (
             f"/* I2C driver — {n} @ 0x{b:08X} */\n"
-            f"#include \"board.h\"\n#include <stdint.h>\n\n"
+            f'#include "board.h"\n#include <stdint.h>\n\n'
             f"#define {N}_BASE  (0x{b:08X}UL)\n"
             f"#define {N}_CR1   (*(volatile uint32_t *)({N}_BASE + 0x00))\n"
             f"#define {N}_DR    (*(volatile uint32_t *)({N}_BASE + 0x10))\n"
@@ -457,7 +482,7 @@ class FirmwareGenerator:
         b = config.get("base", 0x40020000)
         return (
             f"/* GPIO driver — {n} @ 0x{b:08X} */\n"
-            f"#include \"board.h\"\n#include <stdint.h>\n\n"
+            f'#include "board.h"\n#include <stdint.h>\n\n'
             f"#define {N}_BASE   (0x{b:08X}UL)\n"
             f"#define {N}_MODER  (*(volatile uint32_t *)({N}_BASE + 0x00))\n"
             f"#define {N}_ODR    (*(volatile uint32_t *)({N}_BASE + 0x14))\n"
@@ -479,7 +504,7 @@ class FirmwareGenerator:
         b = config.get("base", 0x40012000)
         return (
             f"/* ADC driver — {n} @ 0x{b:08X} */\n"
-            f"#include \"board.h\"\n#include <stdint.h>\n\n"
+            f'#include "board.h"\n#include <stdint.h>\n\n'
             f"#define {N}_BASE  (0x{b:08X}UL)\n"
             f"#define {N}_SR    (*(volatile uint32_t *)({N}_BASE + 0x00))\n"
             f"#define {N}_CR2   (*(volatile uint32_t *)({N}_BASE + 0x08))\n"
@@ -502,7 +527,7 @@ class FirmwareGenerator:
         b = config.get("base", 0x40000000)
         return (
             f"/* PWM driver — {n} @ 0x{b:08X} */\n"
-            f"#include \"board.h\"\n#include <stdint.h>\n\n"
+            f'#include "board.h"\n#include <stdint.h>\n\n'
             f"#define {N}_BASE  (0x{b:08X}UL)\n"
             f"#define {N}_CR1   (*(volatile uint32_t *)({N}_BASE + 0x00))\n"
             f"#define {N}_ARR   (*(volatile uint32_t *)({N}_BASE + 0x2C))\n"
@@ -524,7 +549,7 @@ class FirmwareGenerator:
         b = config.get("base", 0x40000400)
         return (
             f"/* Timer driver — {n} @ 0x{b:08X} */\n"
-            f"#include \"board.h\"\n#include <stdint.h>\n\n"
+            f'#include "board.h"\n#include <stdint.h>\n\n'
             f"#define {N}_BASE  (0x{b:08X}UL)\n"
             f"#define {N}_CR1   (*(volatile uint32_t *)({N}_BASE + 0x00))\n"
             f"#define {N}_DIER  (*(volatile uint32_t *)({N}_BASE + 0x0C))\n"
@@ -549,7 +574,7 @@ class FirmwareGenerator:
         b = config.get("base", 0x40006400)
         return (
             f"/* CAN driver — {n} @ 0x{b:08X} */\n"
-            f"#include \"board.h\"\n#include <stdint.h>\n\n"
+            f'#include "board.h"\n#include <stdint.h>\n\n'
             f"#define {N}_BASE  (0x{b:08X}UL)\n"
             f"#define {N}_MCR   (*(volatile uint32_t *)({N}_BASE + 0x00))\n"
             f"#define {N}_MSR   (*(volatile uint32_t *)({N}_BASE + 0x04))\n"
@@ -575,7 +600,7 @@ class FirmwareGenerator:
         b = config.get("base", 0x40028000)
         return (
             f"/* Ethernet driver — {n} @ 0x{b:08X} */\n"
-            f"#include \"board.h\"\n#include <stdint.h>\n#include <string.h>\n\n"
+            f'#include "board.h"\n#include <stdint.h>\n#include <string.h>\n\n'
             f"#define {N}_BASE    (0x{b:08X}UL)\n"
             f"#define {N}_MACCR   (*(volatile uint32_t *)({N}_BASE + 0x00))\n"
             f"#define {N}_MACADDR (*(volatile uint32_t *)({N}_BASE + 0x40))\n\n"
@@ -609,7 +634,9 @@ class FirmwareGenerator:
         lines += ["}", "", "SECTIONS", "{"]
 
         flash_name = next((n.upper().replace(" ", "_") for n in memory_map if "flash" in n.lower()), "FLASH")
-        sram_name = next((n.upper().replace(" ", "_") for n in memory_map if "sram" in n.lower() or "ram" in n.lower()), "SRAM")
+        sram_name = next(
+            (n.upper().replace(" ", "_") for n in memory_map if "sram" in n.lower() or "ram" in n.lower()), "SRAM"
+        )
 
         lines += [
             f"    .isr_vector : {{ KEEP(*(.isr_vector)) }} > {flash_name}",
@@ -617,7 +644,8 @@ class FirmwareGenerator:
             f"    .data : {{ _sdata = .; *(.data*) _edata = .; }} > {sram_name} AT> {flash_name}",
             f"    .bss (NOLOAD) : {{ _sbss = .; *(.bss*) *(COMMON) _ebss = .; }} > {sram_name}",
             f"    _estack = ORIGIN({sram_name}) + LENGTH({sram_name});",
-            "}", "",
+            "}",
+            "",
         ]
         return "\n".join(lines)
 
@@ -627,7 +655,7 @@ class FirmwareGenerator:
         if "riscv" in arch.lower():
             return (
                 "/* RISC-V startup — auto-generated by EoStudio */\n"
-                ".section .init, \"ax\"\n.global _start\n_start:\n"
+                '.section .init, "ax"\n.global _start\n_start:\n'
                 "    la sp, _estack\n"
                 "    call SystemInit\n"
                 "    call main\n"
@@ -636,26 +664,50 @@ class FirmwareGenerator:
         # ARM Cortex-M
         lines = [
             "/* ARM Cortex-M startup — auto-generated by EoStudio */",
-            ".syntax unified", ".cpu cortex-m4", ".thumb", "",
-            ".section .isr_vector, \"a\"",
+            ".syntax unified",
+            ".cpu cortex-m4",
+            ".thumb",
+            "",
+            '.section .isr_vector, "a"',
             ".word _estack",
             ".word Reset_Handler",
         ]
         for i in range(2, min(vector_table_size, 256)):
             lines.append(f".word Default_Handler  /* IRQ {i - 2} */")
         lines += [
-            "", ".section .text", ".thumb_func", ".global Reset_Handler",
+            "",
+            ".section .text",
+            ".thumb_func",
+            ".global Reset_Handler",
             "Reset_Handler:",
-            "    ldr r0, =_sdata", "    ldr r1, =_edata", "    ldr r2, =_sidata",
-            "copy_loop:", "    cmp r0, r1", "    bge zero_bss",
-            "    ldr r3, [r2], #4", "    str r3, [r0], #4", "    b copy_loop",
-            "zero_bss:", "    ldr r0, =_sbss", "    ldr r1, =_ebss",
+            "    ldr r0, =_sdata",
+            "    ldr r1, =_edata",
+            "    ldr r2, =_sidata",
+            "copy_loop:",
+            "    cmp r0, r1",
+            "    bge zero_bss",
+            "    ldr r3, [r2], #4",
+            "    str r3, [r0], #4",
+            "    b copy_loop",
+            "zero_bss:",
+            "    ldr r0, =_sbss",
+            "    ldr r1, =_ebss",
             "    movs r2, #0",
-            "bss_loop:", "    cmp r0, r1", "    bge call_main",
-            "    str r2, [r0], #4", "    b bss_loop",
-            "call_main:", "    bl SystemInit", "    bl main", "    b .",
-            "", ".thumb_func", ".weak Default_Handler",
-            "Default_Handler:", "    b .", "",
+            "bss_loop:",
+            "    cmp r0, r1",
+            "    bge call_main",
+            "    str r2, [r0], #4",
+            "    b bss_loop",
+            "call_main:",
+            "    bl SystemInit",
+            "    bl main",
+            "    b .",
+            "",
+            ".thumb_func",
+            ".weak Default_Handler",
+            "Default_Handler:",
+            "    b .",
+            "",
         ]
         return "\n".join(lines)
 

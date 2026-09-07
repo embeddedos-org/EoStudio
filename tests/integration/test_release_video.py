@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 import tempfile
 import textwrap
 from unittest.mock import MagicMock, patch
@@ -928,71 +929,79 @@ class TestE2EWithRealisticMocks:
         assert "30" in manim_args
         assert "ReleaseVideo" in manim_args
 
-    @patch("eostudio.core.video.release_video.edge_tts", create=True)
     @patch("subprocess.run")
-    def test_full_pipeline_with_narration(self, mock_run, mock_edge_tts, output_dir):
+    def test_full_pipeline_with_narration(self, mock_run, output_dir):
         """E2E: changelog → manim → narration (edge_tts) → combine → manifest."""
         router = _SubprocessRouter(output_dir)
         mock_run.side_effect = router
 
-        # Mock edge_tts.Communicate to write fake audio
+        # `_generate_narration_async` does `import edge_tts` inside the function
+        # body, because edge_tts is an optional dependency (the `video` extra).
+        # A function-local import resolves through sys.modules and never reads a
+        # patched module attribute, so patching
+        # `release_video.edge_tts` was a no-op and the test failed with
+        # ModuleNotFoundError wherever edge_tts was not actually installed.
+        # Injecting the stub into sys.modules is what that import really reads.
+        mock_edge_tts = MagicMock()
         mock_edge_tts.Communicate = _MockCommunicate
 
-        config = ReleaseVideoConfig(
-            version="2.1.0",
-            product_name="EoStudio",
-            tagline="Design Everything.",
-            changelog=_make_changelog(),
-            output_dir=output_dir,
-            include_narration=True,
-            voice="en-US-GuyNeural",
-            voice_rate="-5%",
-        )
+        with patch.dict(sys.modules, {"edge_tts": mock_edge_tts}):
 
-        gen = ReleaseVideoGenerator(config)
-        result = gen.generate()
+            config = ReleaseVideoConfig(
+                version="2.1.0",
+                product_name="EoStudio",
+                tagline="Design Everything.",
+                changelog=_make_changelog(),
+                output_dir=output_dir,
+                include_narration=True,
+                voice="en-US-GuyNeural",
+                voice_rate="-5%",
+            )
 
-        # Full pipeline results
-        assert result["version"] == "2.1.0"
-        assert result["video_path"].endswith(".mp4")
-        assert result["audio_path"].endswith(".mp3")
-        assert result["final_video_path"].endswith("_release.mp4")
-        assert result["final_video_path"] != result["video_path"]
+            gen = ReleaseVideoGenerator(config)
+            result = gen.generate()
 
-        # Narration script was generated
-        segments = result["narration_script"]
-        assert isinstance(segments, list)
-        assert len(segments) >= 4  # intro, features, fixes, stats, breaking, outro
-        assert "EoStudio" in segments[0]["text"]
-        assert "2.1.0" in segments[0]["text"]
+            # Full pipeline results
+            assert result["version"] == "2.1.0"
+            assert result["video_path"].endswith(".mp4")
+            assert result["audio_path"].endswith(".mp3")
+            assert result["final_video_path"].endswith("_release.mp4")
+            assert result["final_video_path"] != result["video_path"]
 
-        # Audio file created
-        assert os.path.exists(result["audio_path"])
+            # Narration script was generated
+            segments = result["narration_script"]
+            assert isinstance(segments, list)
+            assert len(segments) >= 4  # intro, features, fixes, stats, breaking, outro
+            assert "EoStudio" in segments[0]["text"]
+            assert "2.1.0" in segments[0]["text"]
 
-        # Final combined video created
-        assert os.path.exists(result["final_video_path"])
-        assert "EoStudio_v2.1.0_release.mp4" in result["final_video_path"]
+            # Audio file created
+            assert os.path.exists(result["audio_path"])
 
-        # Narration segments dir was created with segment files
-        narration_dir = os.path.join(output_dir, "narration_segments")
-        assert os.path.isdir(narration_dir)
-        seg_files = [f for f in os.listdir(narration_dir) if f.startswith("seg_")]
-        assert len(seg_files) >= 4  # one per narration segment
+            # Final combined video created
+            assert os.path.exists(result["final_video_path"])
+            assert "EoStudio_v2.1.0_release.mp4" in result["final_video_path"]
 
-        # Concat list was created
-        concat_list = os.path.join(narration_dir, "concat_list.txt")
-        assert os.path.exists(concat_list)
-        with open(concat_list) as f:
-            lines = f.readlines()
-        assert len(lines) >= len(seg_files)  # segments + silence gaps
+            # Narration segments dir was created with segment files
+            narration_dir = os.path.join(output_dir, "narration_segments")
+            assert os.path.isdir(narration_dir)
+            seg_files = [f for f in os.listdir(narration_dir) if f.startswith("seg_")]
+            assert len(seg_files) >= 4  # one per narration segment
 
-        # Manifest has duration from ffmpeg probe
-        manifest = result["manifest"]
-        assert manifest["duration_seconds"] == 42.5
+            # Concat list was created
+            concat_list = os.path.join(narration_dir, "concat_list.txt")
+            assert os.path.exists(concat_list)
+            with open(concat_list) as f:
+                lines = f.readlines()
+            assert len(lines) >= len(seg_files)  # segments + silence gaps
 
-        # Verify subprocess call sequence: ffmpeg probe, manim, silences, concat, duration, combine, duration
-        cmd_names = [c[0] for c in router.calls]
-        assert "manim" in cmd_names
+            # Manifest has duration from ffmpeg probe
+            manifest = result["manifest"]
+            assert manifest["duration_seconds"] == 42.5
+
+            # Verify subprocess call sequence: ffmpeg probe, manim, silences, concat, duration, combine, duration
+            cmd_names = [c[0] for c in router.calls]
+            assert "manim" in cmd_names
 
     @patch("subprocess.run")
     def test_full_pipeline_with_git_parsing(self, mock_run, output_dir):

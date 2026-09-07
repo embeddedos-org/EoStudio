@@ -12,6 +12,7 @@ NumericValue = Union[float, Tuple[float, ...], List[float]]
 
 class EasingFunction(Enum):
     """Built-in easing functions."""
+
     LINEAR = "linear"
     EASE_IN = "ease_in"
     EASE_OUT = "ease_out"
@@ -60,36 +61,37 @@ EASING_FUNCTIONS: Dict[EasingFunction, Callable[[float], float]] = {
     EasingFunction.EASE_IN_QUAD: lambda t: t * t,
     EasingFunction.EASE_OUT_QUAD: lambda t: 1 - (1 - t) ** 2,
     EasingFunction.EASE_IN_OUT_QUAD: lambda t: 2 * t * t if t < 0.5 else 1 - (-2 * t + 2) ** 2 / 2,
-    EasingFunction.EASE_IN_CUBIC: lambda t: t ** 3,
+    EasingFunction.EASE_IN_CUBIC: lambda t: t**3,
     EasingFunction.EASE_OUT_CUBIC: lambda t: 1 - (1 - t) ** 3,
-    EasingFunction.EASE_IN_OUT_CUBIC: lambda t: 4 * t ** 3 if t < 0.5 else 1 - (-2 * t + 2) ** 3 / 2,
-    EasingFunction.EASE_IN_QUART: lambda t: t ** 4,
+    EasingFunction.EASE_IN_OUT_CUBIC: lambda t: 4 * t**3 if t < 0.5 else 1 - (-2 * t + 2) ** 3 / 2,
+    EasingFunction.EASE_IN_QUART: lambda t: t**4,
     EasingFunction.EASE_OUT_QUART: lambda t: 1 - (1 - t) ** 4,
-    EasingFunction.EASE_IN_OUT_QUART: lambda t: 8 * t ** 4 if t < 0.5 else 1 - (-2 * t + 2) ** 4 / 2,
+    EasingFunction.EASE_IN_OUT_QUART: lambda t: 8 * t**4 if t < 0.5 else 1 - (-2 * t + 2) ** 4 / 2,
     EasingFunction.EASE_IN_EXPO: lambda t: 0.0 if t == 0 else 2 ** (10 * t - 10),
     EasingFunction.EASE_OUT_EXPO: lambda t: 1.0 if t == 1 else 1 - 2 ** (-10 * t),
     EasingFunction.EASE_IN_OUT_EXPO: lambda t: (
-        0.0 if t == 0 else 1.0 if t == 1
-        else 2 ** (20 * t - 10) / 2 if t < 0.5
-        else (2 - 2 ** (-20 * t + 10)) / 2
+        0.0 if t == 0 else 1.0 if t == 1 else 2 ** (20 * t - 10) / 2 if t < 0.5 else (2 - 2 ** (-20 * t + 10)) / 2
     ),
-    EasingFunction.EASE_IN_BACK: lambda t: 2.70158 * t ** 3 - 1.70158 * t ** 2,
+    EasingFunction.EASE_IN_BACK: lambda t: 2.70158 * t**3 - 1.70158 * t**2,
     EasingFunction.EASE_OUT_BACK: lambda t: 1 + 2.70158 * (t - 1) ** 3 + 1.70158 * (t - 1) ** 2,
     EasingFunction.EASE_IN_OUT_BACK: lambda t: (
-        ((2 * t) ** 2 * (3.5949095 * 2 * t - 2.5949095)) / 2 if t < 0.5
+        ((2 * t) ** 2 * (3.5949095 * 2 * t - 2.5949095)) / 2
+        if t < 0.5
         else ((2 * t - 2) ** 2 * (3.5949095 * (2 * t - 2) + 2.5949095) + 2) / 2
     ),
     EasingFunction.EASE_IN_ELASTIC: lambda t: (
-        0.0 if t == 0 else 1.0 if t == 1
-        else -(2 ** (10 * t - 10)) * math.sin((t * 10 - 10.75) * (2 * math.pi) / 3)
+        0.0 if t == 0 else 1.0 if t == 1 else -(2 ** (10 * t - 10)) * math.sin((t * 10 - 10.75) * (2 * math.pi) / 3)
     ),
     EasingFunction.EASE_OUT_ELASTIC: lambda t: (
-        0.0 if t == 0 else 1.0 if t == 1
-        else 2 ** (-10 * t) * math.sin((t * 10 - 0.75) * (2 * math.pi) / 3) + 1
+        0.0 if t == 0 else 1.0 if t == 1 else 2 ** (-10 * t) * math.sin((t * 10 - 0.75) * (2 * math.pi) / 3) + 1
     ),
     EasingFunction.EASE_IN_OUT_ELASTIC: lambda t: (
-        0.0 if t == 0 else 1.0 if t == 1
-        else -(2 ** (20 * t - 10) * math.sin((20 * t - 11.125) * (2 * math.pi) / 4.5)) / 2 if t < 0.5
+        0.0
+        if t == 0
+        else 1.0
+        if t == 1
+        else -(2 ** (20 * t - 10) * math.sin((20 * t - 11.125) * (2 * math.pi) / 4.5)) / 2
+        if t < 0.5
         else (2 ** (-20 * t + 10) * math.sin((20 * t - 11.125) * (2 * math.pi) / 4.5)) / 2 + 1
     ),
     EasingFunction.EASE_OUT_BOUNCE: _bounce_out,
@@ -98,25 +100,28 @@ EASING_FUNCTIONS: Dict[EasingFunction, Callable[[float], float]] = {
 
 def cubic_bezier(p1x: float, p1y: float, p2x: float, p2y: float) -> Callable[[float], float]:
     """Create a cubic-bezier easing function with control points (p1x, p1y) and (p2x, p2y)."""
+
     def _eval(t: float) -> float:
         # Newton-Raphson to solve for parameter from x, then evaluate y
         u = t
         for _ in range(8):
-            x_est = 3 * p1x * u * (1 - u) ** 2 + 3 * p2x * (1 - u) * u ** 2 + u ** 3
+            x_est = 3 * p1x * u * (1 - u) ** 2 + 3 * p2x * (1 - u) * u**2 + u**3
             if abs(x_est - t) < 1e-6:
                 break
-            dx = 3 * p1x * (1 - u) ** 2 - 6 * p1x * u * (1 - u) + 3 * p2x * 2 * u * (1 - u) - 3 * p2x * u ** 2 + 3 * u ** 2
+            dx = 3 * p1x * (1 - u) ** 2 - 6 * p1x * u * (1 - u) + 3 * p2x * 2 * u * (1 - u) - 3 * p2x * u**2 + 3 * u**2
             if abs(dx) < 1e-6:
                 break
             u -= (x_est - t) / dx
             u = max(0.0, min(1.0, u))
-        return 3 * p1y * u * (1 - u) ** 2 + 3 * p2y * (1 - u) * u ** 2 + u ** 3
+        return 3 * p1y * u * (1 - u) ** 2 + 3 * p2y * (1 - u) * u**2 + u**3
+
     return _eval
 
 
 @dataclass
 class Keyframe:
     """A single keyframe at a specific time with a value and easing."""
+
     time: float  # seconds
     value: NumericValue
     easing: EasingFunction = EasingFunction.EASE_IN_OUT
@@ -131,12 +136,17 @@ class Keyframe:
 @dataclass
 class KeyframeTrack:
     """A track of keyframes for a single property (e.g., 'opacity', 'x', 'scale')."""
+
     property_name: str
     keyframes: List[Keyframe] = field(default_factory=list)
 
-    def add_keyframe(self, time: float, value: NumericValue,
-                     easing: EasingFunction = EasingFunction.EASE_IN_OUT,
-                     bezier_points: Optional[Tuple[float, float, float, float]] = None) -> Keyframe:
+    def add_keyframe(
+        self,
+        time: float,
+        value: NumericValue,
+        easing: EasingFunction = EasingFunction.EASE_IN_OUT,
+        bezier_points: Optional[Tuple[float, float, float, float]] = None,
+    ) -> Keyframe:
         kf = Keyframe(time=time, value=value, easing=easing, bezier_points=bezier_points)
         self.keyframes.append(kf)
         self.keyframes.sort(key=lambda k: k.time)

@@ -70,19 +70,23 @@ class ClassDiagram(UMLDiagram):
     def from_dict(cls, data: Dict[str, Any]) -> ClassDiagram:
         diagram = cls(name=data.get("name", ""))
         for c in data.get("classes", []):
-            diagram.classes.append(UMLClass(
-                name=c.get("name", ""),
-                attributes=c.get("attributes", []),
-                methods=c.get("methods", []),
-                stereotype=c.get("stereotype", ""),
-                x=c.get("x", 0.0),
-                y=c.get("y", 0.0),
-            ))
+            diagram.classes.append(
+                UMLClass(
+                    name=c.get("name", ""),
+                    attributes=c.get("attributes", []),
+                    methods=c.get("methods", []),
+                    stereotype=c.get("stereotype", ""),
+                    x=c.get("x", 0.0),
+                    y=c.get("y", 0.0),
+                )
+            )
         for r in data.get("relations", []):
-            diagram.relations.append(UMLRelation(
-                source=r.get("source", ""),
-                target=r.get("target", ""),
-                relation_type=r.get("relation_type", "association"),
-                label=r.get("label", ""),
-            ))
+            diagram.relations.append(
+                UMLRelation(
+                    source=r.get("source", ""),
+                    target=r.get("target", ""),
+                    relation_type=r.get("relation_type", "association"),
+                    label=r.get("label", ""),
+                )
+            )
         return diagram

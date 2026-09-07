@@ -20,6 +20,7 @@ Features:
 - Auto-fix suggestions for all diagnostics
 - Incremental analysis (only re-analyze changed files)
 """
+
 from __future__ import annotations
 
 import ast
@@ -55,6 +56,7 @@ class DiagnosticCategory(Enum):
 @dataclass
 class Diagnostic:
     """A single code diagnostic (error/warning/hint)."""
+
     file: str
     line: int
     column: int
@@ -62,7 +64,7 @@ class Diagnostic:
     end_column: int
     severity: DiagnosticSeverity
     category: DiagnosticCategory
-    code: str           # e.g. "E001", "W042"
+    code: str  # e.g. "E001", "W042"
     message: str
     source: str = "eostudio"
     fix_available: bool = False
@@ -73,6 +75,7 @@ class Diagnostic:
 @dataclass
 class RefactorEdit:
     """A single edit in a refactoring operation."""
+
     file: str
     start_line: int
     start_column: int
@@ -84,6 +87,7 @@ class RefactorEdit:
 @dataclass
 class RefactorResult:
     """Result of a refactoring operation."""
+
     success: bool
     operation: str
     edits: List[RefactorEdit]
@@ -95,6 +99,7 @@ class RefactorResult:
 @dataclass
 class TestSuite:
     """A generated test suite."""
+
     file: str
     framework: str
     language: str
@@ -107,6 +112,7 @@ class TestSuite:
 @dataclass
 class ComplexityMetrics:
     """Code complexity metrics for a file or function."""
+
     file: str
     function: str = ""
     cyclomatic: int = 1
@@ -116,12 +122,13 @@ class ComplexityMetrics:
     comment_ratio: float = 0.0
     max_nesting: int = 0
     parameters: int = 0
-    is_complex: bool = False    # cyclomatic > 10
+    is_complex: bool = False  # cyclomatic > 10
 
 
 @dataclass
 class ProfileResult:
     """Performance profiling result."""
+
     file: str
     total_time_ms: float
     hotspots: List[Dict[str, Any]]
@@ -133,18 +140,20 @@ class ProfileResult:
 @dataclass
 class DuplicateBlock:
     """A detected duplicate code block."""
+
     file_a: str
     start_a: int
     file_b: str
     start_b: int
     lines: int
-    similarity: float   # 0.0 - 1.0
+    similarity: float  # 0.0 - 1.0
     code: str
 
 
 # ------------------------------------------------------------------
 # Diagnostic Engine
 # ------------------------------------------------------------------
+
 
 class DiagnosticEngine:
     """LSP-compatible diagnostic engine for Python and TypeScript."""
@@ -194,13 +203,19 @@ class DiagnosticEngine:
         try:
             ast.parse(content)
         except SyntaxError as e:
-            return [Diagnostic(
-                file=path, line=e.lineno or 1, column=(e.offset or 1) - 1,
-                end_line=e.lineno or 1, end_column=(e.offset or 1),
-                severity=DiagnosticSeverity.ERROR,
-                category=DiagnosticCategory.SYNTAX,
-                code="E001", message=f"SyntaxError: {e.msg}",
-            )]
+            return [
+                Diagnostic(
+                    file=path,
+                    line=e.lineno or 1,
+                    column=(e.offset or 1) - 1,
+                    end_line=e.lineno or 1,
+                    end_column=(e.offset or 1),
+                    severity=DiagnosticSeverity.ERROR,
+                    category=DiagnosticCategory.SYNTAX,
+                    code="E001",
+                    message=f"SyntaxError: {e.msg}",
+                )
+            ]
         return []
 
     def _python_style(self, path: str, content: str) -> List[Diagnostic]:
@@ -212,44 +227,72 @@ class DiagnosticEngine:
             stripped = line.rstrip()
             # Long lines
             if len(stripped) > 120:
-                diags.append(Diagnostic(
-                    file=path, line=i, column=120,
-                    end_line=i, end_column=len(stripped),
-                    severity=DiagnosticSeverity.WARNING,
-                    category=DiagnosticCategory.STYLE,
-                    code="W001", message=f"Line too long ({len(stripped)} > 120 chars)",
-                    fix_available=True, fix_description="Wrap line",
-                ))
+                diags.append(
+                    Diagnostic(
+                        file=path,
+                        line=i,
+                        column=120,
+                        end_line=i,
+                        end_column=len(stripped),
+                        severity=DiagnosticSeverity.WARNING,
+                        category=DiagnosticCategory.STYLE,
+                        code="W001",
+                        message=f"Line too long ({len(stripped)} > 120 chars)",
+                        fix_available=True,
+                        fix_description="Wrap line",
+                    )
+                )
             # Trailing whitespace
             if line != stripped and line.strip():
-                diags.append(Diagnostic(
-                    file=path, line=i, column=len(stripped),
-                    end_line=i, end_column=len(line),
-                    severity=DiagnosticSeverity.HINT,
-                    category=DiagnosticCategory.STYLE,
-                    code="H001", message="Trailing whitespace",
-                    fix_available=True, fix_description="Remove trailing whitespace",
-                ))
+                diags.append(
+                    Diagnostic(
+                        file=path,
+                        line=i,
+                        column=len(stripped),
+                        end_line=i,
+                        end_column=len(line),
+                        severity=DiagnosticSeverity.HINT,
+                        category=DiagnosticCategory.STYLE,
+                        code="H001",
+                        message="Trailing whitespace",
+                        fix_available=True,
+                        fix_description="Remove trailing whitespace",
+                    )
+                )
             # Bare except
             if re.match(r"\s*except\s*:", line):
-                diags.append(Diagnostic(
-                    file=path, line=i, column=0,
-                    end_line=i, end_column=len(stripped),
-                    severity=DiagnosticSeverity.WARNING,
-                    category=DiagnosticCategory.STYLE,
-                    code="W002", message="Bare except: catches all exceptions including SystemExit",
-                    fix_available=True, fix_description="Specify exception type",
-                ))
+                diags.append(
+                    Diagnostic(
+                        file=path,
+                        line=i,
+                        column=0,
+                        end_line=i,
+                        end_column=len(stripped),
+                        severity=DiagnosticSeverity.WARNING,
+                        category=DiagnosticCategory.STYLE,
+                        code="W002",
+                        message="Bare except: catches all exceptions including SystemExit",
+                        fix_available=True,
+                        fix_description="Specify exception type",
+                    )
+                )
             # print() in non-test files
             if re.search(r"\bprint\s*\(", line) and "test" not in path.lower():
-                diags.append(Diagnostic(
-                    file=path, line=i, column=line.index("print"),
-                    end_line=i, end_column=line.index("print") + 5,
-                    severity=DiagnosticSeverity.HINT,
-                    category=DiagnosticCategory.STYLE,
-                    code="H002", message="Use logging instead of print()",
-                    fix_available=True, fix_description="Replace with log.info()",
-                ))
+                diags.append(
+                    Diagnostic(
+                        file=path,
+                        line=i,
+                        column=line.index("print"),
+                        end_line=i,
+                        end_column=line.index("print") + 5,
+                        severity=DiagnosticSeverity.HINT,
+                        category=DiagnosticCategory.STYLE,
+                        code="H002",
+                        message="Use logging instead of print()",
+                        fix_available=True,
+                        fix_description="Replace with log.info()",
+                    )
+                )
 
         return diags
 
@@ -276,10 +319,7 @@ class DiagnosticEngine:
 
         # Check usage
         # Remove import lines from content for usage check
-        non_import_lines = [
-            l for l in content.splitlines()
-            if not l.strip().startswith(("import ", "from "))
-        ]
+        non_import_lines = [l for l in content.splitlines() if not l.strip().startswith(("import ", "from "))]
         body = "\n".join(non_import_lines)
 
         for name, line in imported.items():
@@ -287,14 +327,21 @@ class DiagnosticEngine:
                 continue
             # Simple check: name appears in body
             if not re.search(r"\b" + re.escape(name) + r"\b", body):
-                diags.append(Diagnostic(
-                    file=path, line=line, column=0,
-                    end_line=line, end_column=0,
-                    severity=DiagnosticSeverity.WARNING,
-                    category=DiagnosticCategory.UNUSED,
-                    code="W003", message=f"'{name}' imported but unused",
-                    fix_available=True, fix_description=f"Remove unused import '{name}'",
-                ))
+                diags.append(
+                    Diagnostic(
+                        file=path,
+                        line=line,
+                        column=0,
+                        end_line=line,
+                        end_column=0,
+                        severity=DiagnosticSeverity.WARNING,
+                        category=DiagnosticCategory.UNUSED,
+                        code="W003",
+                        message=f"'{name}' imported but unused",
+                        fix_available=True,
+                        fix_description=f"Remove unused import '{name}'",
+                    )
+                )
 
         return diags
 
@@ -310,25 +357,35 @@ class DiagnosticEngine:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 cc = self._cyclomatic_complexity(node)
                 if cc > 10:
-                    diags.append(Diagnostic(
-                        file=path, line=node.lineno, column=0,
-                        end_line=node.lineno, end_column=0,
-                        severity=DiagnosticSeverity.WARNING,
-                        category=DiagnosticCategory.COMPLEXITY,
-                        code="W004",
-                        message=f"Function '{node.name}' has cyclomatic complexity {cc} (> 10)",
-                        fix_available=False,
-                    ))
+                    diags.append(
+                        Diagnostic(
+                            file=path,
+                            line=node.lineno,
+                            column=0,
+                            end_line=node.lineno,
+                            end_column=0,
+                            severity=DiagnosticSeverity.WARNING,
+                            category=DiagnosticCategory.COMPLEXITY,
+                            code="W004",
+                            message=f"Function '{node.name}' has cyclomatic complexity {cc} (> 10)",
+                            fix_available=False,
+                        )
+                    )
                 # Too many parameters
                 if len(node.args.args) > 7:
-                    diags.append(Diagnostic(
-                        file=path, line=node.lineno, column=0,
-                        end_line=node.lineno, end_column=0,
-                        severity=DiagnosticSeverity.INFO,
-                        category=DiagnosticCategory.SMELL,
-                        code="I001",
-                        message=f"Function '{node.name}' has {len(node.args.args)} parameters (> 7) — consider a config object",
-                    ))
+                    diags.append(
+                        Diagnostic(
+                            file=path,
+                            line=node.lineno,
+                            column=0,
+                            end_line=node.lineno,
+                            end_column=0,
+                            severity=DiagnosticSeverity.INFO,
+                            category=DiagnosticCategory.SMELL,
+                            code="I001",
+                            message=f"Function '{node.name}' has {len(node.args.args)} parameters (> 7) — consider a config object",
+                        )
+                    )
 
         return diags
 
@@ -338,30 +395,49 @@ class DiagnosticEngine:
         lines = content.splitlines()
         for i, line in enumerate(lines, 1):
             if len(line) > 120:
-                diags.append(Diagnostic(
-                    file=path, line=i, column=120,
-                    end_line=i, end_column=len(line),
-                    severity=DiagnosticSeverity.WARNING,
-                    category=DiagnosticCategory.STYLE,
-                    code="W001", message=f"Line too long ({len(line)} > 120 chars)",
-                ))
+                diags.append(
+                    Diagnostic(
+                        file=path,
+                        line=i,
+                        column=120,
+                        end_line=i,
+                        end_column=len(line),
+                        severity=DiagnosticSeverity.WARNING,
+                        category=DiagnosticCategory.STYLE,
+                        code="W001",
+                        message=f"Line too long ({len(line)} > 120 chars)",
+                    )
+                )
             if re.search(r"\bconsole\.log\(", line):
-                diags.append(Diagnostic(
-                    file=path, line=i, column=0,
-                    end_line=i, end_column=len(line),
-                    severity=DiagnosticSeverity.HINT,
-                    category=DiagnosticCategory.STYLE,
-                    code="H003", message="Remove console.log() before production",
-                ))
+                diags.append(
+                    Diagnostic(
+                        file=path,
+                        line=i,
+                        column=0,
+                        end_line=i,
+                        end_column=len(line),
+                        severity=DiagnosticSeverity.HINT,
+                        category=DiagnosticCategory.STYLE,
+                        code="H003",
+                        message="Remove console.log() before production",
+                    )
+                )
             if re.search(r"\bvar\s+\w", line):
-                diags.append(Diagnostic(
-                    file=path, line=i, column=0,
-                    end_line=i, end_column=len(line),
-                    severity=DiagnosticSeverity.WARNING,
-                    category=DiagnosticCategory.STYLE,
-                    code="W005", message="Use 'const' or 'let' instead of 'var'",
-                    fix_available=True, fix_description="Replace var with const/let",
-                ))
+                diags.append(
+                    Diagnostic(
+                        file=path,
+                        line=i,
+                        column=0,
+                        end_line=i,
+                        end_column=len(line),
+                        severity=DiagnosticSeverity.WARNING,
+                        category=DiagnosticCategory.STYLE,
+                        code="W005",
+                        message="Use 'const' or 'let' instead of 'var'",
+                        fix_available=True,
+                        fix_description="Replace var with const/let",
+                    )
+                )
         return diags
 
     def _universal_checks(self, path: str, content: str) -> List[Diagnostic]:
@@ -370,13 +446,19 @@ class DiagnosticEngine:
         lines = content.splitlines()
         for i, line in enumerate(lines, 1):
             if re.search(r"\bTODO\b|\bFIXME\b|\bHACK\b|\bXXX\b", line, re.I):
-                diags.append(Diagnostic(
-                    file=path, line=i, column=0,
-                    end_line=i, end_column=len(line),
-                    severity=DiagnosticSeverity.INFO,
-                    category=DiagnosticCategory.SMELL,
-                    code="I002", message="Technical debt marker — resolve before release",
-                ))
+                diags.append(
+                    Diagnostic(
+                        file=path,
+                        line=i,
+                        column=0,
+                        end_line=i,
+                        end_column=len(line),
+                        severity=DiagnosticSeverity.INFO,
+                        category=DiagnosticCategory.SMELL,
+                        code="I002",
+                        message="Technical debt marker — resolve before release",
+                    )
+                )
         return diags
 
     @staticmethod
@@ -384,8 +466,9 @@ class DiagnosticEngine:
         """Calculate cyclomatic complexity of a function."""
         complexity = 1
         for child in ast.walk(node):
-            if isinstance(child, (ast.If, ast.While, ast.For, ast.ExceptHandler,
-                                   ast.With, ast.Assert, ast.comprehension)):
+            if isinstance(
+                child, (ast.If, ast.While, ast.For, ast.ExceptHandler, ast.With, ast.Assert, ast.comprehension)
+            ):
                 complexity += 1
             elif isinstance(child, ast.BoolOp):
                 complexity += len(child.values) - 1
@@ -395,6 +478,7 @@ class DiagnosticEngine:
 # ------------------------------------------------------------------
 # Test Generator
 # ------------------------------------------------------------------
+
 
 class TestGenerator:
     """AI-powered test generator — creates comprehensive test suites.
@@ -440,8 +524,13 @@ class TestGenerator:
         content = path.read_text(encoding="utf-8")
         ext = path.suffix.lower()
 
-        lang_map = {".py": "python", ".ts": "typescript", ".tsx": "typescript",
-                    ".js": "javascript", ".jsx": "javascript"}
+        lang_map = {
+            ".py": "python",
+            ".ts": "typescript",
+            ".tsx": "typescript",
+            ".js": "javascript",
+            ".jsx": "javascript",
+        }
         language = lang_map.get(ext, "python")
 
         if framework is None:
@@ -452,13 +541,16 @@ class TestGenerator:
 
         if self._router:
             test_code = self._ai_generate(
-                content, language, framework, functions, classes,
-                include_edge_cases, include_mocks,
+                content,
+                language,
+                framework,
+                functions,
+                classes,
+                include_edge_cases,
+                include_mocks,
             )
         else:
-            test_code = self._template_generate(
-                path.stem, language, framework, functions, classes
-            )
+            test_code = self._template_generate(path.stem, language, framework, functions, classes)
 
         return TestSuite(
             file=file_path,
@@ -471,12 +563,18 @@ class TestGenerator:
         )
 
     def _ai_generate(
-        self, content: str, language: str, framework: str,
-        functions: List[str], classes: List[str],
-        edge_cases: bool, mocks: bool,
+        self,
+        content: str,
+        language: str,
+        framework: str,
+        functions: List[str],
+        classes: List[str],
+        edge_cases: bool,
+        mocks: bool,
     ) -> str:
         """Use AI to generate comprehensive tests."""
         from eostudio.core.ai.multi_model_router import TaskType
+
         prompt = (
             f"Generate a comprehensive {framework} test suite for this {language} code.\n\n"
             f"Requirements:\n"
@@ -496,8 +594,12 @@ class TestGenerator:
         return code.strip()
 
     def _template_generate(
-        self, module_name: str, language: str, framework: str,
-        functions: List[str], classes: List[str],
+        self,
+        module_name: str,
+        language: str,
+        framework: str,
+        functions: List[str],
+        classes: List[str],
     ) -> str:
         """Generate template-based tests as fallback."""
         if language == "python" and framework == "pytest":
@@ -508,41 +610,51 @@ class TestGenerator:
                 "",
             ]
             for fn in functions[:10]:
-                lines.extend([
-                    f"def test_{fn}_basic():",
-                    f'    """Test basic functionality of {fn}."""',
-                    f"    # TODO: Add test implementation",
-                    f"    pass",
-                    "",
-                    f"def test_{fn}_edge_cases():",
-                    f'    """Test edge cases for {fn}."""',
-                    f"    # TODO: Test with None, empty, boundary values",
-                    f"    pass",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"def test_{fn}_basic():",
+                        f'    """Test basic functionality of {fn}."""',
+                        f"    # TODO: Add test implementation",
+                        f"    pass",
+                        "",
+                        f"def test_{fn}_edge_cases():",
+                        f'    """Test edge cases for {fn}."""',
+                        f"    # TODO: Test with None, empty, boundary values",
+                        f"    pass",
+                        "",
+                    ]
+                )
             for cls in classes[:5]:
-                lines.extend([
-                    f"class Test{cls}:",
-                    f'    """Tests for {cls}."""',
-                    "",
-                    f"    def test_init(self):",
-                    f'        """Test {cls} initialization."""',
-                    f"        # TODO: Add test implementation",
-                    f"        pass",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"class Test{cls}:",
+                        f'    """Tests for {cls}."""',
+                        "",
+                        f"    def test_init(self):",
+                        f'        """Test {cls} initialization."""',
+                        f"        # TODO: Add test implementation",
+                        f"        pass",
+                        "",
+                    ]
+                )
             return "\n".join(lines)
         elif language in ("typescript", "javascript"):
-            lines = [f"// Tests for {module_name}", f"import {{ {', '.join(functions[:5])} }} from './{module_name}';", ""]
+            lines = [
+                f"// Tests for {module_name}",
+                f"import {{ {', '.join(functions[:5])} }} from './{module_name}';",
+                "",
+            ]
             for fn in functions[:10]:
-                lines.extend([
-                    f"describe('{fn}', () => {{",
-                    f"  it('should work correctly', () => {{",
-                    f"    // TODO: Add test implementation",
-                    f"  }});",
-                    f"}});",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"describe('{fn}', () => {{",
+                        f"  it('should work correctly', () => {{",
+                        f"    // TODO: Add test implementation",
+                        f"  }});",
+                        f"}});",
+                        "",
+                    ]
+                )
             return "\n".join(lines)
         return f"# Tests for {module_name}\n# TODO: Implement tests\n"
 
@@ -574,6 +686,7 @@ class TestGenerator:
 # ------------------------------------------------------------------
 # Performance Profiler
 # ------------------------------------------------------------------
+
 
 class PerformanceProfiler:
     """Built-in performance profiler with AI-powered recommendations."""
@@ -611,9 +724,12 @@ class PerformanceProfiler:
             profiler.disable()
         except Exception as exc:
             return ProfileResult(
-                file=file_path, total_time_ms=0,
-                hotspots=[], memory_peak_mb=0,
-                call_count=0, recommendations=[f"Profiling failed: {exc}"],
+                file=file_path,
+                total_time_ms=0,
+                hotspots=[],
+                memory_peak_mb=0,
+                call_count=0,
+                recommendations=[f"Profiling failed: {exc}"],
             )
 
         stats = pstats.Stats(profiler, stream=output)
@@ -645,14 +761,16 @@ class PerformanceProfiler:
                 line,
             )
             if m:
-                hotspots.append({
-                    "calls": int(m.group(1)),
-                    "tottime": float(m.group(2)),
-                    "cumtime": float(m.group(4)),
-                    "file": m.group(6),
-                    "line": int(m.group(7)),
-                    "function": m.group(8),
-                })
+                hotspots.append(
+                    {
+                        "calls": int(m.group(1)),
+                        "tottime": float(m.group(2)),
+                        "cumtime": float(m.group(4)),
+                        "file": m.group(6),
+                        "line": int(m.group(7)),
+                        "function": m.group(8),
+                    }
+                )
         return hotspots
 
     def _generate_recommendations(self, hotspots: List[Dict[str, Any]]) -> List[str]:
@@ -681,10 +799,11 @@ class PerformanceProfiler:
 # Duplicate Code Detector
 # ------------------------------------------------------------------
 
+
 class DuplicateDetector:
     """Detects duplicate code blocks across the codebase."""
 
-    MIN_LINES = 6       # Minimum block size to flag
+    MIN_LINES = 6  # Minimum block size to flag
     SIMILARITY_THRESHOLD = 0.85
 
     def detect(self, workspace: str) -> List[DuplicateBlock]:
@@ -706,7 +825,7 @@ class DuplicateDetector:
         file_list = list(files.items())
 
         for i, (path_a, lines_a) in enumerate(file_list):
-            for path_b, lines_b in file_list[i + 1:]:
+            for path_b, lines_b in file_list[i + 1 :]:
                 blocks = self._find_duplicates(path_a, lines_a, path_b, lines_b)
                 duplicates.extend(blocks)
 
@@ -716,8 +835,10 @@ class DuplicateDetector:
 
     def _find_duplicates(
         self,
-        path_a: str, lines_a: List[str],
-        path_b: str, lines_b: List[str],
+        path_a: str,
+        lines_a: List[str],
+        path_b: str,
+        lines_b: List[str],
     ) -> List[DuplicateBlock]:
         """Find duplicate blocks between two files using sliding window."""
         duplicates: List[DuplicateBlock] = []
@@ -725,13 +846,13 @@ class DuplicateDetector:
         min_lines = self.MIN_LINES
 
         for i in range(n - min_lines + 1):
-            window_a = lines_a[i:i + min_lines]
+            window_a = lines_a[i : i + min_lines]
             norm_a = [l.strip() for l in window_a if l.strip()]
             if len(norm_a) < min_lines:
                 continue
 
             for j in range(m - min_lines + 1):
-                window_b = lines_b[j:j + min_lines]
+                window_b = lines_b[j : j + min_lines]
                 norm_b = [l.strip() for l in window_b if l.strip()]
                 if len(norm_b) < min_lines:
                     continue
@@ -741,13 +862,17 @@ class DuplicateDetector:
                 similarity = matches / max(len(norm_a), len(norm_b))
 
                 if similarity >= self.SIMILARITY_THRESHOLD:
-                    duplicates.append(DuplicateBlock(
-                        file_a=path_a, start_a=i + 1,
-                        file_b=path_b, start_b=j + 1,
-                        lines=min_lines,
-                        similarity=similarity,
-                        code="\n".join(window_a),
-                    ))
+                    duplicates.append(
+                        DuplicateBlock(
+                            file_a=path_a,
+                            start_a=i + 1,
+                            file_b=path_b,
+                            start_b=j + 1,
+                            lines=min_lines,
+                            similarity=similarity,
+                            code="\n".join(window_a),
+                        )
+                    )
 
         return duplicates[:3]  # Limit per file pair
 
@@ -755,6 +880,7 @@ class DuplicateDetector:
 # ------------------------------------------------------------------
 # Code Intelligence Hub
 # ------------------------------------------------------------------
+
 
 class CodeIntelligence:
     """Unified code intelligence hub — the single entry point.
@@ -834,14 +960,16 @@ class CodeIntelligence:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 cc = DiagnosticEngine._cyclomatic_complexity(node)
                 fn_lines = getattr(node, "end_lineno", node.lineno) - node.lineno + 1
-                metrics.append(ComplexityMetrics(
-                    file=file_path,
-                    function=node.name,
-                    cyclomatic=cc,
-                    lines_of_code=fn_lines,
-                    parameters=len(node.args.args),
-                    is_complex=cc > 10,
-                ))
+                metrics.append(
+                    ComplexityMetrics(
+                        file=file_path,
+                        function=node.name,
+                        cyclomatic=cc,
+                        lines_of_code=fn_lines,
+                        parameters=len(node.args.args),
+                        is_complex=cc > 10,
+                    )
+                )
 
         return metrics
 

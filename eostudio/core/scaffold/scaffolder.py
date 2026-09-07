@@ -3,6 +3,7 @@ EoStudio Scaffolder — template engine for project scaffolding.
 
 Phase 3: Cross-Platform Universal Support.
 """
+
 from __future__ import annotations
 
 import os
@@ -19,6 +20,7 @@ from eostudio.core.scaffold.templates import ProjectTemplate, TemplateRegistry
 # ---------------------------------------------------------------------------
 # Data classes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ScaffoldConfig:
@@ -43,6 +45,7 @@ class TemplateFile:
 # ---------------------------------------------------------------------------
 # Scaffolder
 # ---------------------------------------------------------------------------
+
 
 class Scaffolder:
     """Create projects from registered templates."""
@@ -168,6 +171,7 @@ class Scaffolder:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _slugify(value: str) -> str:
     """Convert *value* to a filesystem-safe slug."""

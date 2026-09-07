@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 @dataclass
 class Breakpoint:
     """A responsive breakpoint definition."""
+
     name: str
     min_width: int
     max_width: Optional[int] = None
@@ -38,22 +39,18 @@ class Breakpoint:
 
 # Standard breakpoints
 BREAKPOINTS: Dict[str, Breakpoint] = {
-    "mobile_sm": Breakpoint("mobile_sm", 320, 374, "Small Phone", "phone",
-                            device_frame=(320, 568)),
-    "mobile": Breakpoint("mobile", 375, 767, "Phone", "phone",
-                         device_frame=(375, 812)),
-    "tablet": Breakpoint("tablet", 768, 1023, "Tablet", "tablet",
-                         device_frame=(768, 1024)),
-    "desktop": Breakpoint("desktop", 1024, 1439, "Desktop", "monitor",
-                          device_frame=(1440, 900)),
-    "desktop_lg": Breakpoint("desktop_lg", 1440, None, "Large Desktop", "monitor",
-                             device_frame=(1920, 1080)),
+    "mobile_sm": Breakpoint("mobile_sm", 320, 374, "Small Phone", "phone", device_frame=(320, 568)),
+    "mobile": Breakpoint("mobile", 375, 767, "Phone", "phone", device_frame=(375, 812)),
+    "tablet": Breakpoint("tablet", 768, 1023, "Tablet", "tablet", device_frame=(768, 1024)),
+    "desktop": Breakpoint("desktop", 1024, 1439, "Desktop", "monitor", device_frame=(1440, 900)),
+    "desktop_lg": Breakpoint("desktop_lg", 1440, None, "Large Desktop", "monitor", device_frame=(1920, 1080)),
 }
 
 
 @dataclass
 class ResponsiveOverride:
     """Property overrides for a specific breakpoint."""
+
     breakpoint: str
     properties: Dict[str, Any] = field(default_factory=dict)
     layout_overrides: Dict[str, Any] = field(default_factory=dict)
@@ -71,6 +68,7 @@ class ResponsiveOverride:
 @dataclass
 class ResponsiveConfig:
     """Responsive configuration for a component with per-breakpoint overrides."""
+
     base_breakpoint: str = "desktop"
     overrides: List[ResponsiveOverride] = field(default_factory=list)
     fluid_scaling: bool = False
@@ -89,8 +87,7 @@ class ResponsiveConfig:
                 return o
         return None
 
-    def resolve_properties(self, breakpoint: str,
-                           base_props: Dict[str, Any]) -> Dict[str, Any]:
+    def resolve_properties(self, breakpoint: str, base_props: Dict[str, Any]) -> Dict[str, Any]:
         """Resolve properties for a given breakpoint by merging base + overrides."""
         result = dict(base_props)
         bp = BREAKPOINTS.get(breakpoint)
@@ -110,8 +107,7 @@ class ResponsiveConfig:
                 result.update(override.properties)
         return result
 
-    def generate_media_queries(self, class_name: str,
-                               base_css: Dict[str, str]) -> str:
+    def generate_media_queries(self, class_name: str, base_css: Dict[str, str]) -> str:
         """Generate CSS with media queries for all breakpoints."""
         lines = []
         # Base styles
@@ -120,8 +116,9 @@ class ResponsiveConfig:
             lines.append(f"  {prop}: {val};")
         lines.append("}")
 
-        for override in sorted(self.overrides,
-                                key=lambda o: BREAKPOINTS.get(o.breakpoint, Breakpoint("", 0)).min_width):
+        for override in sorted(
+            self.overrides, key=lambda o: BREAKPOINTS.get(o.breakpoint, Breakpoint("", 0)).min_width
+        ):
             bp = BREAKPOINTS.get(override.breakpoint)
             if not bp or not override.properties:
                 continue
@@ -151,10 +148,12 @@ class ResponsiveConfig:
             fluid_scaling=data.get("fluid_scaling", False),
         )
         for o_data in data.get("overrides", []):
-            cfg.overrides.append(ResponsiveOverride(
-                breakpoint=o_data["breakpoint"],
-                properties=o_data.get("properties", {}),
-                layout_overrides=o_data.get("layout_overrides", {}),
-                visibility=o_data.get("visibility", True),
-            ))
+            cfg.overrides.append(
+                ResponsiveOverride(
+                    breakpoint=o_data["breakpoint"],
+                    properties=o_data.get("properties", {}),
+                    layout_overrides=o_data.get("layout_overrides", {}),
+                    visibility=o_data.get("visibility", True),
+                )
+            )
         return cfg

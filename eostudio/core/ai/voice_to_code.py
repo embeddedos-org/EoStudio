@@ -9,6 +9,7 @@ Features:
 - Hotword detection ("Hey EoStudio")
 - Integration with all editors (UI, CAD, code, game)
 """
+
 from __future__ import annotations
 
 import json
@@ -26,17 +27,19 @@ log = logging.getLogger(__name__)
 
 class VoiceCommandType(Enum):
     """Categories of voice commands."""
-    EDITOR_ACTION = auto()     # "undo", "redo", "save", "open file"
-    CODE_DICTATION = auto()    # "define function called get user"
-    DESIGN_COMMAND = auto()    # "add a button", "change color to blue"
-    AI_QUERY = auto()          # "explain this function", "fix the error"
-    NAVIGATION = auto()        # "go to line 42", "open settings"
+
+    EDITOR_ACTION = auto()  # "undo", "redo", "save", "open file"
+    CODE_DICTATION = auto()  # "define function called get user"
+    DESIGN_COMMAND = auto()  # "add a button", "change color to blue"
+    AI_QUERY = auto()  # "explain this function", "fix the error"
+    NAVIGATION = auto()  # "go to line 42", "open settings"
     UNKNOWN = auto()
 
 
 @dataclass
 class VoiceCommand:
     """A recognized voice command."""
+
     raw_text: str
     command_type: VoiceCommandType
     intent: str
@@ -48,6 +51,7 @@ class VoiceCommand:
 @dataclass
 class TranscriptionResult:
     """Result from speech-to-text."""
+
     text: str
     confidence: float
     language: str = "en"
@@ -238,10 +242,18 @@ class DesignCommandExecutor:
     """Executes design commands on the active editor."""
 
     _COLOR_MAP = {
-        "red": "#EF4444", "blue": "#3B82F6", "green": "#22C55E",
-        "yellow": "#EAB308", "purple": "#A855F7", "orange": "#F97316",
-        "pink": "#EC4899", "gray": "#6B7280", "white": "#FFFFFF",
-        "black": "#000000", "teal": "#14B8A6", "indigo": "#6366F1",
+        "red": "#EF4444",
+        "blue": "#3B82F6",
+        "green": "#22C55E",
+        "yellow": "#EAB308",
+        "purple": "#A855F7",
+        "orange": "#F97316",
+        "pink": "#EC4899",
+        "gray": "#6B7280",
+        "white": "#FFFFFF",
+        "black": "#000000",
+        "teal": "#14B8A6",
+        "indigo": "#6366F1",
     }
 
     def execute(
@@ -279,8 +291,10 @@ class DesignCommandExecutor:
         elif intent == "move":
             direction = params.get("target", "right").lower()
             delta_map = {
-                "left": (-10, 0), "right": (10, 0),
-                "up": (0, -10), "down": (0, 10),
+                "left": (-10, 0),
+                "right": (10, 0),
+                "up": (0, -10),
+                "down": (0, 10),
                 "center": (0, 0),
             }
             dx, dy = delta_map.get(direction, (0, 0))
@@ -357,9 +371,8 @@ class VoiceToCode:
 
         elif command.command_type == VoiceCommandType.AI_QUERY and self._router:
             from eostudio.core.ai.multi_model_router import TaskType
-            command.parameters["response"] = self._router.complete(
-                text, task=TaskType.CHAT, complexity=4
-            )
+
+            command.parameters["response"] = self._router.complete(text, task=TaskType.CHAT, complexity=4)
 
         if self._on_command:
             try:
@@ -393,9 +406,12 @@ class VoiceToCode:
         """Transcribe audio to text using available backend."""
         try:
             import subprocess
+
             result = subprocess.run(
                 ["manus-speech-to-text", audio_path],
-                capture_output=True, text=True, timeout=60,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             text = result.stdout.strip()
             return TranscriptionResult(text=text, confidence=0.9)
@@ -409,10 +425,8 @@ class VoiceToCode:
             return f"# {description}\npass\n"
 
         from eostudio.core.ai.multi_model_router import TaskType
-        prompt = (
-            f"Generate {self.language} code for: {description}\n"
-            f"Return only the code, no explanations."
-        )
+
+        prompt = f"Generate {self.language} code for: {description}\nReturn only the code, no explanations."
         code = self._router.complete(prompt, task=TaskType.CODE_GENERATION, complexity=5)
         # Strip fences
         code = re.sub(r"^```[a-zA-Z]*\n?", "", code.strip())
@@ -423,8 +437,14 @@ class VoiceToCode:
         """Return a dict of supported command categories and examples."""
         return {
             "Editor Actions": [
-                "undo", "redo", "save", "open file", "close",
-                "run", "format code", "go to line 42",
+                "undo",
+                "redo",
+                "save",
+                "open file",
+                "close",
+                "run",
+                "format code",
+                "go to line 42",
             ],
             "Code Dictation": [
                 "define a function called get_user",

@@ -13,10 +13,20 @@ from eostudio.core.video.release_video import (
 )
 
 __all__ = [
-    "ScreenRecorder", "RecordingConfig",
-    "VideoCompositor", "Layer", "LayerType",
-    "VideoExporter", "ExportFormat", "ExportConfig",
-    "PromoTemplate", "PROMO_TEMPLATES", "get_template",
-    "ReleaseVideoGenerator", "ReleaseVideoConfig",
-    "ReleaseChangelog", "ChangelogParser", "ChangelogEntry",
+    "ScreenRecorder",
+    "RecordingConfig",
+    "VideoCompositor",
+    "Layer",
+    "LayerType",
+    "VideoExporter",
+    "ExportFormat",
+    "ExportConfig",
+    "PromoTemplate",
+    "PROMO_TEMPLATES",
+    "get_template",
+    "ReleaseVideoGenerator",
+    "ReleaseVideoConfig",
+    "ReleaseChangelog",
+    "ChangelogParser",
+    "ChangelogEntry",
 ]

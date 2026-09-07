@@ -21,9 +21,14 @@ _DOMAIN_PROMPTS = {
 
 
 class DesignAgent:
-    def __init__(self, domain: str = "general", endpoint: Optional[str] = None,
-                 model: Optional[str] = None, provider: Optional[str] = None,
-                 api_key: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        domain: str = "general",
+        endpoint: Optional[str] = None,
+        model: Optional[str] = None,
+        provider: Optional[str] = None,
+        api_key: Optional[str] = None,
+    ) -> None:
         self.domain = domain
         system_prompt = _DOMAIN_PROMPTS.get(domain, _DOMAIN_PROMPTS["general"])
         config = LLMConfig(
@@ -77,10 +82,14 @@ class DesignAgent:
     def generate_design_brief(self, prompt: str) -> Dict[str, Any]:
         prompt = sanitize_input(prompt)
         check_pii(prompt)
-        messages = [{"role": "user", "content": (
-            f"Generate a design brief as JSON with keys: name, type, components, layout.\n"
-            f"Prompt: {prompt}"
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"Generate a design brief as JSON with keys: name, type, components, layout.\nPrompt: {prompt}"
+                ),
+            }
+        ]
         messages = self._client._prepend_system(messages)
         raw = self._client.chat(messages)
         try:

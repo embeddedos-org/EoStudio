@@ -34,6 +34,7 @@ class BlendMode(Enum):
 @dataclass
 class LayerTransform:
     """Transform properties for a compositor layer."""
+
     x: float = 0.0
     y: float = 0.0
     width: float = 100.0
@@ -57,8 +58,13 @@ class LayerTransform:
 
     def to_dict(self) -> Dict[str, float]:
         return {
-            "x": self.x, "y": self.y, "width": self.width, "height": self.height,
-            "rotation": self.rotation, "scale_x": self.scale_x, "scale_y": self.scale_y,
+            "x": self.x,
+            "y": self.y,
+            "width": self.width,
+            "height": self.height,
+            "rotation": self.rotation,
+            "scale_x": self.scale_x,
+            "scale_y": self.scale_y,
             "opacity": self.opacity,
         }
 
@@ -66,6 +72,7 @@ class LayerTransform:
 @dataclass
 class LayerKeyframe:
     """A keyframe for animating layer properties over time."""
+
     time: float  # seconds
     transform: LayerTransform = field(default_factory=LayerTransform)
     easing: str = "ease_in_out"
@@ -74,6 +81,7 @@ class LayerKeyframe:
 @dataclass
 class Layer:
     """A single layer in the video compositor."""
+
     id: str
     name: str
     layer_type: LayerType
@@ -121,25 +129,32 @@ class Layer:
                 return self._interpolate_transform(k0.transform, k1.transform, t)
         return self.transform
 
-    def _interpolate_transform(self, a: LayerTransform, b: LayerTransform,
-                                t: float) -> LayerTransform:
+    def _interpolate_transform(self, a: LayerTransform, b: LayerTransform, t: float) -> LayerTransform:
         def lerp(v0: float, v1: float) -> float:
             return v0 + (v1 - v0) * t
 
         return LayerTransform(
-            x=lerp(a.x, b.x), y=lerp(a.y, b.y),
-            width=lerp(a.width, b.width), height=lerp(a.height, b.height),
+            x=lerp(a.x, b.x),
+            y=lerp(a.y, b.y),
+            width=lerp(a.width, b.width),
+            height=lerp(a.height, b.height),
             rotation=lerp(a.rotation, b.rotation),
-            scale_x=lerp(a.scale_x, b.scale_x), scale_y=lerp(a.scale_y, b.scale_y),
+            scale_x=lerp(a.scale_x, b.scale_x),
+            scale_y=lerp(a.scale_y, b.scale_y),
             opacity=lerp(a.opacity, b.opacity),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "id": self.id, "name": self.name, "type": self.layer_type.value,
-            "transform": self.transform.to_dict(), "content": self.content,
-            "start_time": self.start_time, "end_time": self.end_time,
-            "blend_mode": self.blend_mode.value, "visible": self.visible,
+            "id": self.id,
+            "name": self.name,
+            "type": self.layer_type.value,
+            "transform": self.transform.to_dict(),
+            "content": self.content,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "blend_mode": self.blend_mode.value,
+            "visible": self.visible,
             "effects": self.effects,
             "keyframes": [{"time": kf.time, "transform": kf.transform.to_dict()} for kf in self.keyframes],
         }
@@ -148,8 +163,7 @@ class Layer:
 class VideoCompositor:
     """Layer-based video compositor for creating promotional content."""
 
-    def __init__(self, width: int = 1920, height: int = 1080, fps: int = 30,
-                 duration: float = 10.0) -> None:
+    def __init__(self, width: int = 1920, height: int = 1080, fps: int = 30, duration: float = 10.0) -> None:
         self.width = width
         self.height = height
         self.fps = fps
@@ -177,40 +191,57 @@ class VideoCompositor:
             self.layers.remove(layer)
             self.layers.insert(min(new_index, len(self.layers)), layer)
 
-    def add_text_layer(self, text: str, x: float = 0, y: float = 0,
-                       font_size: int = 48, color: str = "#ffffff",
-                       font_family: str = "Inter", font_weight: int = 700,
-                       start: float = 0, end: float = 10) -> Layer:
+    def add_text_layer(
+        self,
+        text: str,
+        x: float = 0,
+        y: float = 0,
+        font_size: int = 48,
+        color: str = "#ffffff",
+        font_family: str = "Inter",
+        font_weight: int = 700,
+        start: float = 0,
+        end: float = 10,
+    ) -> Layer:
         return self.create_layer(
-            name=f"Text: {text[:20]}", layer_type=LayerType.TEXT,
+            name=f"Text: {text[:20]}",
+            layer_type=LayerType.TEXT,
             transform=LayerTransform(x=x, y=y),
-            content={"text": text, "font_size": font_size, "color": color,
-                     "font_family": font_family, "font_weight": font_weight},
-            start_time=start, end_time=end,
+            content={
+                "text": text,
+                "font_size": font_size,
+                "color": color,
+                "font_family": font_family,
+                "font_weight": font_weight,
+            },
+            start_time=start,
+            end_time=end,
         )
 
-    def add_device_mockup(self, device: str = "iphone_14",
-                          x: float = 0, y: float = 0,
-                          scale: float = 1.0) -> Layer:
+    def add_device_mockup(self, device: str = "iphone_14", x: float = 0, y: float = 0, scale: float = 1.0) -> Layer:
         return self.create_layer(
-            name=f"Device: {device}", layer_type=LayerType.DEVICE_FRAME,
+            name=f"Device: {device}",
+            layer_type=LayerType.DEVICE_FRAME,
             transform=LayerTransform(x=x, y=y, scale_x=scale, scale_y=scale),
             content={"device": device},
         )
 
-    def add_background_gradient(self, colors: List[str],
-                                 direction: str = "to bottom") -> Layer:
+    def add_background_gradient(self, colors: List[str], direction: str = "to bottom") -> Layer:
         return self.create_layer(
-            name="Gradient BG", layer_type=LayerType.GRADIENT,
+            name="Gradient BG",
+            layer_type=LayerType.GRADIENT,
             transform=LayerTransform(width=self.width, height=self.height),
             content={"colors": colors, "direction": direction},
         )
 
-    def add_audio(self, audio_path: str, start: float = 0,
-                  volume: float = 1.0) -> None:
-        self.audio_tracks.append({
-            "path": audio_path, "start": start, "volume": volume,
-        })
+    def add_audio(self, audio_path: str, start: float = 0, volume: float = 1.0) -> None:
+        self.audio_tracks.append(
+            {
+                "path": audio_path,
+                "start": start,
+                "volume": volume,
+            }
+        )
 
     def render_frame(self, time: float) -> Dict[str, Any]:
         """Render a single frame at the given time. Returns layer data for rendering."""
@@ -221,14 +252,16 @@ class VideoCompositor:
             if time < layer.start_time or time > layer.end_time:
                 continue
             transform = layer.evaluate_transform(time - layer.start_time)
-            frame_layers.append({
-                "id": layer.id,
-                "type": layer.layer_type.value,
-                "transform": transform.to_dict(),
-                "content": layer.content,
-                "blend_mode": layer.blend_mode.value,
-                "effects": layer.effects,
-            })
+            frame_layers.append(
+                {
+                    "id": layer.id,
+                    "type": layer.layer_type.value,
+                    "transform": transform.to_dict(),
+                    "content": layer.content,
+                    "blend_mode": layer.blend_mode.value,
+                    "effects": layer.effects,
+                }
+            )
         return {
             "time": time,
             "width": self.width,
@@ -247,8 +280,7 @@ class VideoCompositor:
             t += dt
         return frames
 
-    def generate_ffmpeg_command(self, output_path: str,
-                                frame_dir: str = "./frames") -> str:
+    def generate_ffmpeg_command(self, output_path: str, frame_dir: str = "./frames") -> str:
         """Generate ffmpeg command for rendering frames to video."""
         audio_input = ""
         audio_map = ""
@@ -258,17 +290,19 @@ class VideoCompositor:
 
         return (
             f'ffmpeg -y -framerate {self.fps} -i "{frame_dir}/frame_%06d.png"'
-            f'{audio_input}'
-            f' -c:v libx264 -pix_fmt yuv420p -crf 18'
-            f'{audio_map}'
-            f' -s {self.width}x{self.height}'
+            f"{audio_input}"
+            f" -c:v libx264 -pix_fmt yuv420p -crf 18"
+            f"{audio_map}"
+            f" -s {self.width}x{self.height}"
             f' "{output_path}"'
         )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "width": self.width, "height": self.height,
-            "fps": self.fps, "duration": self.duration,
+            "width": self.width,
+            "height": self.height,
+            "fps": self.fps,
+            "duration": self.duration,
             "background": self.background_color,
             "layers": [l.to_dict() for l in self.layers],
             "audio": self.audio_tracks,

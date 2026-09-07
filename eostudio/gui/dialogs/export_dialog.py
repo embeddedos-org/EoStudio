@@ -1,6 +1,5 @@
 """Export dialog — format selection, options, output path, and progress bar."""
 
-
 from __future__ import annotations
 
 try:
@@ -8,7 +7,9 @@ try:
     import tkinter.ttk as ttk
     from tkinter import filedialog
 except ImportError:
-    import sys as _sys, types as _types
+    import sys as _sys
+    import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -49,34 +50,48 @@ class ExportDialog(tk.Toplevel):
         self._update_options()
 
     def _build_ui(self) -> None:
-        tk.Label(self, text="Export Design", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 14, "bold")).pack(padx=16, pady=(16, 8), anchor=tk.W)
+        tk.Label(self, text="Export Design", bg=self._bg, fg=self._fg, font=("Segoe UI", 14, "bold")).pack(
+            padx=16, pady=(16, 8), anchor=tk.W
+        )
 
         fmt_frame = tk.Frame(self, bg=self._bg)
         fmt_frame.pack(fill=tk.X, padx=16, pady=4)
-        tk.Label(fmt_frame, text="Format:", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 10)).pack(side=tk.LEFT)
+        tk.Label(fmt_frame, text="Format:", bg=self._bg, fg=self._fg, font=("Segoe UI", 10)).pack(side=tk.LEFT)
         self._format_var = tk.StringVar(value="STL")
-        fmt_combo = ttk.Combobox(fmt_frame, textvariable=self._format_var,
-                                 values=list(self.FORMATS.keys()), width=12, state="readonly")
+        fmt_combo = ttk.Combobox(
+            fmt_frame, textvariable=self._format_var, values=list(self.FORMATS.keys()), width=12, state="readonly"
+        )
         fmt_combo.pack(side=tk.LEFT, padx=8)
         fmt_combo.bind("<<ComboboxSelected>>", lambda e: self._update_options())
 
         path_frame = tk.Frame(self, bg=self._bg)
         path_frame.pack(fill=tk.X, padx=16, pady=4)
-        tk.Label(path_frame, text="Output:", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 10)).pack(side=tk.LEFT)
+        tk.Label(path_frame, text="Output:", bg=self._bg, fg=self._fg, font=("Segoe UI", 10)).pack(side=tk.LEFT)
         self._path_var = tk.StringVar(value="")
-        tk.Entry(path_frame, textvariable=self._path_var, width=28,
-                 bg="#313244", fg=self._fg, insertbackground=self._fg,
-                 font=("Consolas", 9), relief=tk.FLAT).pack(side=tk.LEFT, padx=8)
-        tk.Button(path_frame, text="Browse…", bg="#313244", fg=self._fg,
-                  relief=tk.FLAT, font=("Segoe UI", 8), padx=6,
-                  command=self._browse).pack(side=tk.LEFT)
+        tk.Entry(
+            path_frame,
+            textvariable=self._path_var,
+            width=28,
+            bg="#313244",
+            fg=self._fg,
+            insertbackground=self._fg,
+            font=("Consolas", 9),
+            relief=tk.FLAT,
+        ).pack(side=tk.LEFT, padx=8)
+        tk.Button(
+            path_frame,
+            text="Browse…",
+            bg="#313244",
+            fg=self._fg,
+            relief=tk.FLAT,
+            font=("Segoe UI", 8),
+            padx=6,
+            command=self._browse,
+        ).pack(side=tk.LEFT)
 
-        self._options_frame = tk.LabelFrame(self, text="Format Options", bg=self._bg,
-                                            fg="#f9e2af", font=("Segoe UI", 9, "bold"),
-                                            bd=1, relief=tk.GROOVE)
+        self._options_frame = tk.LabelFrame(
+            self, text="Format Options", bg=self._bg, fg="#f9e2af", font=("Segoe UI", 9, "bold"), bd=1, relief=tk.GROOVE
+        )
         self._options_frame.pack(fill=tk.BOTH, expand=True, padx=16, pady=8)
 
         self._stl_mode_var = tk.StringVar(value="Binary")
@@ -87,18 +102,33 @@ class ExportDialog(tk.Toplevel):
 
         prog_frame = tk.Frame(self, bg=self._bg)
         prog_frame.pack(fill=tk.X, padx=16, pady=4)
-        self._progress = ttk.Progressbar(prog_frame, orient=tk.HORIZONTAL,
-                                         length=300, mode="determinate")
+        self._progress = ttk.Progressbar(prog_frame, orient=tk.HORIZONTAL, length=300, mode="determinate")
         self._progress.pack(fill=tk.X)
 
         btn_frame = tk.Frame(self, bg=self._bg)
         btn_frame.pack(fill=tk.X, padx=16, pady=(8, 16))
-        tk.Button(btn_frame, text="Cancel", bg="#313244", fg=self._fg,
-                  relief=tk.FLAT, font=("Segoe UI", 10), padx=16, pady=4,
-                  command=self.destroy).pack(side=tk.RIGHT, padx=4)
-        tk.Button(btn_frame, text="Export", bg="#89b4fa", fg="#1e1e2e",
-                  relief=tk.FLAT, font=("Segoe UI", 10, "bold"), padx=16, pady=4,
-                  command=self._do_export).pack(side=tk.RIGHT, padx=4)
+        tk.Button(
+            btn_frame,
+            text="Cancel",
+            bg="#313244",
+            fg=self._fg,
+            relief=tk.FLAT,
+            font=("Segoe UI", 10),
+            padx=16,
+            pady=4,
+            command=self.destroy,
+        ).pack(side=tk.RIGHT, padx=4)
+        tk.Button(
+            btn_frame,
+            text="Export",
+            bg="#89b4fa",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 10, "bold"),
+            padx=16,
+            pady=4,
+            command=self._do_export,
+        ).pack(side=tk.RIGHT, padx=4)
 
     def _update_options(self) -> None:
         for w in self._options_frame.winfo_children():
@@ -106,44 +136,82 @@ class ExportDialog(tk.Toplevel):
 
         fmt = self._format_var.get()
         if fmt == "STL":
-            tk.Label(self._options_frame, text="Mode:", bg=self._bg, fg=self._fg,
-                     font=("Segoe UI", 9)).pack(anchor=tk.W, padx=8, pady=4)
+            tk.Label(self._options_frame, text="Mode:", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(
+                anchor=tk.W, padx=8, pady=4
+            )
             for mode in ["Binary", "ASCII"]:
-                tk.Radiobutton(self._options_frame, text=mode, variable=self._stl_mode_var,
-                               value=mode, bg=self._bg, fg=self._fg, selectcolor="#313244",
-                               activebackground=self._bg, font=("Segoe UI", 9)).pack(
-                    anchor=tk.W, padx=20)
+                tk.Radiobutton(
+                    self._options_frame,
+                    text=mode,
+                    variable=self._stl_mode_var,
+                    value=mode,
+                    bg=self._bg,
+                    fg=self._fg,
+                    selectcolor="#313244",
+                    activebackground=self._bg,
+                    font=("Segoe UI", 9),
+                ).pack(anchor=tk.W, padx=20)
 
         elif fmt == "PNG":
             res_row = tk.Frame(self._options_frame, bg=self._bg)
             res_row.pack(fill=tk.X, padx=8, pady=8)
-            tk.Label(res_row, text="Width:", bg=self._bg, fg=self._fg,
-                     font=("Segoe UI", 9)).pack(side=tk.LEFT)
-            tk.Entry(res_row, textvariable=self._png_width_var, width=6,
-                     bg="#313244", fg=self._fg, insertbackground=self._fg,
-                     font=("Consolas", 9), relief=tk.FLAT).pack(side=tk.LEFT, padx=4)
-            tk.Label(res_row, text="Height:", bg=self._bg, fg=self._fg,
-                     font=("Segoe UI", 9)).pack(side=tk.LEFT, padx=(8, 0))
-            tk.Entry(res_row, textvariable=self._png_height_var, width=6,
-                     bg="#313244", fg=self._fg, insertbackground=self._fg,
-                     font=("Consolas", 9), relief=tk.FLAT).pack(side=tk.LEFT, padx=4)
+            tk.Label(res_row, text="Width:", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(side=tk.LEFT)
+            tk.Entry(
+                res_row,
+                textvariable=self._png_width_var,
+                width=6,
+                bg="#313244",
+                fg=self._fg,
+                insertbackground=self._fg,
+                font=("Consolas", 9),
+                relief=tk.FLAT,
+            ).pack(side=tk.LEFT, padx=4)
+            tk.Label(res_row, text="Height:", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(
+                side=tk.LEFT, padx=(8, 0)
+            )
+            tk.Entry(
+                res_row,
+                textvariable=self._png_height_var,
+                width=6,
+                bg="#313244",
+                fg=self._fg,
+                insertbackground=self._fg,
+                font=("Consolas", 9),
+                relief=tk.FLAT,
+            ).pack(side=tk.LEFT, padx=4)
 
         elif fmt == "glTF":
-            tk.Checkbutton(self._options_frame, text="Embed textures",
-                           variable=self._gltf_embed_var, bg=self._bg, fg=self._fg,
-                           selectcolor="#313244", activebackground=self._bg,
-                           font=("Segoe UI", 9)).pack(anchor=tk.W, padx=8, pady=8)
+            tk.Checkbutton(
+                self._options_frame,
+                text="Embed textures",
+                variable=self._gltf_embed_var,
+                bg=self._bg,
+                fg=self._fg,
+                selectcolor="#313244",
+                activebackground=self._bg,
+                font=("Segoe UI", 9),
+            ).pack(anchor=tk.W, padx=8, pady=8)
 
         elif fmt == "DXF":
-            tk.Label(self._options_frame, text="DXF Version:", bg=self._bg, fg=self._fg,
-                     font=("Segoe UI", 9)).pack(anchor=tk.W, padx=8, pady=4)
-            ttk.Combobox(self._options_frame, textvariable=self._dxf_ver_var,
-                         values=["R12", "R2000", "R2007", "R2010", "R2018"],
-                         width=10, state="readonly").pack(anchor=tk.W, padx=8, pady=4)
+            tk.Label(self._options_frame, text="DXF Version:", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(
+                anchor=tk.W, padx=8, pady=4
+            )
+            ttk.Combobox(
+                self._options_frame,
+                textvariable=self._dxf_ver_var,
+                values=["R12", "R2000", "R2007", "R2010", "R2018"],
+                width=10,
+                state="readonly",
+            ).pack(anchor=tk.W, padx=8, pady=4)
 
         else:
-            tk.Label(self._options_frame, text="No additional options for this format.",
-                     bg=self._bg, fg="#6c7086", font=("Segoe UI", 9)).pack(pady=20)
+            tk.Label(
+                self._options_frame,
+                text="No additional options for this format.",
+                bg=self._bg,
+                fg="#6c7086",
+                font=("Segoe UI", 9),
+            ).pack(pady=20)
 
     def _browse(self) -> None:
         fmt = self._format_var.get()
@@ -188,5 +256,4 @@ class ExportDialog(tk.Toplevel):
             self._on_export(fmt, path, options)
 
         self._progress["value"] = 100
-        tk.Label(self, text=f"✅ Exported to {path}", bg=self._bg, fg="#a6e3a1",
-                 font=("Segoe UI", 9)).pack(pady=4)
+        tk.Label(self, text=f"✅ Exported to {path}", bg=self._bg, fg="#a6e3a1", font=("Segoe UI", 9)).pack(pady=4)

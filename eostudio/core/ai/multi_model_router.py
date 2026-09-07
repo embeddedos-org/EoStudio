@@ -11,6 +11,7 @@ Features:
 - Latency tracking and adaptive routing
 - Context window management (auto-truncation)
 """
+
 from __future__ import annotations
 
 import json
@@ -26,21 +27,23 @@ log = logging.getLogger(__name__)
 
 class TaskType(Enum):
     """Task categories that influence model selection."""
-    CODE_COMPLETION = auto()    # Fast, short completions (nano/mini)
-    CODE_GENERATION = auto()    # Full function/class generation (gpt-4.1)
-    CODE_REVIEW = auto()        # Deep analysis (gpt-4.1 / gemini)
-    DESIGN_BRIEF = auto()       # Creative design tasks (gemini / claude)
-    CHAT = auto()               # General conversation (mini)
-    AGENT_LOOP = auto()         # Autonomous multi-step (gpt-4.1 / claude)
-    DOCUMENTATION = auto()      # Doc generation (mini)
-    REFACTOR = auto()           # Code refactoring (gpt-4.1)
-    DEBUG = auto()              # Error diagnosis (gpt-4.1)
+
+    CODE_COMPLETION = auto()  # Fast, short completions (nano/mini)
+    CODE_GENERATION = auto()  # Full function/class generation (gpt-4.1)
+    CODE_REVIEW = auto()  # Deep analysis (gpt-4.1 / gemini)
+    DESIGN_BRIEF = auto()  # Creative design tasks (gemini / claude)
+    CHAT = auto()  # General conversation (mini)
+    AGENT_LOOP = auto()  # Autonomous multi-step (gpt-4.1 / claude)
+    DOCUMENTATION = auto()  # Doc generation (mini)
+    REFACTOR = auto()  # Code refactoring (gpt-4.1)
+    DEBUG = auto()  # Error diagnosis (gpt-4.1)
     VOICE_TRANSCRIPTION = auto()  # Voice-to-text (whisper)
 
 
 @dataclass
 class ModelProfile:
     """Describes a model's capabilities and cost characteristics."""
+
     name: str
     provider: str
     context_window: int
@@ -54,31 +57,51 @@ class ModelProfile:
 # Registry of known models
 MODEL_REGISTRY: Dict[str, ModelProfile] = {
     "gpt-4.1": ModelProfile(
-        name="gpt-4.1", provider="openai", context_window=1_000_000,
-        cost_per_1k_tokens=0.002, avg_latency_ms=1200,
+        name="gpt-4.1",
+        provider="openai",
+        context_window=1_000_000,
+        cost_per_1k_tokens=0.002,
+        avg_latency_ms=1200,
         supports_vision=True,
-        best_for=[TaskType.CODE_GENERATION, TaskType.CODE_REVIEW,
-                  TaskType.AGENT_LOOP, TaskType.REFACTOR, TaskType.DEBUG],
+        best_for=[
+            TaskType.CODE_GENERATION,
+            TaskType.CODE_REVIEW,
+            TaskType.AGENT_LOOP,
+            TaskType.REFACTOR,
+            TaskType.DEBUG,
+        ],
     ),
     "gpt-4.1-mini": ModelProfile(
-        name="gpt-4.1-mini", provider="openai", context_window=1_000_000,
-        cost_per_1k_tokens=0.0004, avg_latency_ms=600,
+        name="gpt-4.1-mini",
+        provider="openai",
+        context_window=1_000_000,
+        cost_per_1k_tokens=0.0004,
+        avg_latency_ms=600,
         best_for=[TaskType.CHAT, TaskType.DOCUMENTATION, TaskType.DESIGN_BRIEF],
     ),
     "gpt-4.1-nano": ModelProfile(
-        name="gpt-4.1-nano", provider="openai", context_window=128_000,
-        cost_per_1k_tokens=0.0001, avg_latency_ms=200,
+        name="gpt-4.1-nano",
+        provider="openai",
+        context_window=128_000,
+        cost_per_1k_tokens=0.0001,
+        avg_latency_ms=200,
         best_for=[TaskType.CODE_COMPLETION],
     ),
     "gemini-2.5-flash": ModelProfile(
-        name="gemini-2.5-flash", provider="openai_compat", context_window=1_000_000,
-        cost_per_1k_tokens=0.00015, avg_latency_ms=400,
+        name="gemini-2.5-flash",
+        provider="openai_compat",
+        context_window=1_000_000,
+        cost_per_1k_tokens=0.00015,
+        avg_latency_ms=400,
         supports_vision=True,
         best_for=[TaskType.CODE_REVIEW, TaskType.DESIGN_BRIEF, TaskType.DOCUMENTATION],
     ),
     "llama3": ModelProfile(
-        name="llama3", provider="ollama", context_window=8_192,
-        cost_per_1k_tokens=0.0, avg_latency_ms=800,
+        name="llama3",
+        provider="ollama",
+        context_window=8_192,
+        cost_per_1k_tokens=0.0,
+        avg_latency_ms=800,
         best_for=[TaskType.CHAT, TaskType.CODE_COMPLETION],
     ),
 }
@@ -87,6 +110,7 @@ MODEL_REGISTRY: Dict[str, ModelProfile] = {
 @dataclass
 class RouterConfig:
     """Configuration for the multi-model router."""
+
     primary_model: str = "gpt-4.1-mini"
     fallback_model: str = "gpt-4.1-nano"
     local_model: str = "llama3"
@@ -122,6 +146,7 @@ class MultiModelRouter:
         """Initialize API clients based on available credentials."""
         try:
             from openai import OpenAI
+
             api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("EOSTUDIO_API_KEY")
             if api_key:
                 self._openai_client = OpenAI(api_key=api_key)
@@ -143,10 +168,7 @@ class MultiModelRouter:
             return self.config.local_model
 
         # Find models best suited for this task
-        candidates = [
-            name for name, profile in MODEL_REGISTRY.items()
-            if task in profile.best_for
-        ]
+        candidates = [name for name, profile in MODEL_REGISTRY.items() if task in profile.best_for]
 
         if not candidates:
             candidates = [self.config.primary_model]
@@ -230,7 +252,11 @@ class MultiModelRouter:
             if self.config.enable_fallback and model != self.config.fallback_model:
                 log.info("Falling back to %s", self.config.fallback_model)
                 return self.complete(
-                    prompt, task, complexity, system, messages,
+                    prompt,
+                    task,
+                    complexity,
+                    system,
+                    messages,
                     model_override=self.config.fallback_model,
                 )
             raise
@@ -307,6 +333,7 @@ class MultiModelRouter:
         """Call local Ollama instance."""
         try:
             import httpx
+
             payload = {
                 "model": model,
                 "messages": messages,

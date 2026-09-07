@@ -19,6 +19,7 @@ class VariableType(Enum):
 @dataclass
 class PrototypeVariable:
     """A variable in the prototype state machine."""
+
     name: str
     value: Any
     var_type: VariableType = VariableType.STRING
@@ -48,6 +49,7 @@ class PrototypeVariable:
 @dataclass
 class PrototypeState:
     """A state in the prototype state machine."""
+
     name: str
     screen_id: str = ""
     variables: Dict[str, Any] = field(default_factory=dict)
@@ -73,6 +75,7 @@ class PrototypeState:
 @dataclass
 class StateTransition:
     """A transition between prototype states."""
+
     from_state: str
     to_state: str
     trigger: str = ""  # event name or interaction ID

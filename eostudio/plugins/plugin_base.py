@@ -37,9 +37,15 @@ security_log = logging.getLogger("eostudio.security")
 
 #: Builtins that plugins are NOT allowed to call directly.
 RESTRICTED_BUILTINS: Set[str] = {
-    "eval", "exec", "compile", "__import__",
-    "globals", "locals", "vars",
-    "open", "breakpoint",
+    "eval",
+    "exec",
+    "compile",
+    "__import__",
+    "globals",
+    "locals",
+    "vars",
+    "open",
+    "breakpoint",
 }
 
 #: Maximum seconds a plugin hook handler is allowed to run.
@@ -52,6 +58,7 @@ MAX_HOOK_DATA_SIZE: int = 10 * 1024 * 1024  # 10 MB
 # ------------------------------------------------------------------
 # Enumerations
 # ------------------------------------------------------------------
+
 
 class PluginState(Enum):
     """Lifecycle states for a plugin."""
@@ -81,6 +88,7 @@ class PluginHook(Enum):
 # Plugin sandbox
 # ------------------------------------------------------------------
 
+
 class PluginSandbox:
     """Provides sandboxed execution for plugin code.
 
@@ -98,6 +106,7 @@ class PluginSandbox:
         source: Optional[str] = None
         try:
             import inspect
+
             source = inspect.getsource(module)
         except (OSError, TypeError):
             pass
@@ -105,9 +114,7 @@ class PluginSandbox:
         if source:
             for builtin_name in RESTRICTED_BUILTINS:
                 if builtin_name + "(" in source:
-                    warnings.append(
-                        f"Plugin source uses restricted builtin '{builtin_name}'"
-                    )
+                    warnings.append(f"Plugin source uses restricted builtin '{builtin_name}'")
         return warnings
 
     @staticmethod
@@ -137,12 +144,8 @@ class PluginSandbox:
         thread.join(timeout=timeout)
 
         if thread.is_alive():
-            security_log.warning(
-                "Plugin hook execution timed out after %ds", timeout
-            )
-            raise TimeoutError(
-                f"Plugin hook execution exceeded {timeout}s timeout"
-            )
+            security_log.warning("Plugin hook execution timed out after %ds", timeout)
+            raise TimeoutError(f"Plugin hook execution exceeded {timeout}s timeout")
 
         if exception:
             raise exception[0]
@@ -154,6 +157,7 @@ class PluginSandbox:
 # Input / output validation
 # ------------------------------------------------------------------
 
+
 def _validate_hook_data(data: Any, label: str = "hook data") -> Dict[str, Any]:
     """Validate that hook data is a reasonable dict payload."""
     if not isinstance(data, dict):
@@ -164,11 +168,11 @@ def _validate_hook_data(data: Any, label: str = "hook data") -> Dict[str, Any]:
     if len(serialized) > MAX_HOOK_DATA_SIZE:
         security_log.warning(
             "%s exceeds max size (%d > %d bytes)",
-            label, len(serialized), MAX_HOOK_DATA_SIZE,
+            label,
+            len(serialized),
+            MAX_HOOK_DATA_SIZE,
         )
-        raise ValueError(
-            f"{label} exceeds maximum allowed size of {MAX_HOOK_DATA_SIZE} bytes"
-        )
+        raise ValueError(f"{label} exceeds maximum allowed size of {MAX_HOOK_DATA_SIZE} bytes")
 
     return data
 
@@ -180,7 +184,8 @@ def _validate_hook_result(result: Any, plugin_id: str) -> Dict[str, Any]:
     if not isinstance(result, dict):
         security_log.warning(
             "Plugin %s returned non-dict from hook: %s",
-            plugin_id, type(result).__name__,
+            plugin_id,
+            type(result).__name__,
         )
         return {}
     return result
@@ -189,6 +194,7 @@ def _validate_hook_result(result: Any, plugin_id: str) -> Dict[str, Any]:
 # ------------------------------------------------------------------
 # Manifest
 # ------------------------------------------------------------------
+
 
 @dataclass
 class PluginManifest:
@@ -238,6 +244,7 @@ class PluginManifest:
 # ------------------------------------------------------------------
 # Plugin base class
 # ------------------------------------------------------------------
+
 
 class Plugin:
     """Base class for all EoStudio plugins.
@@ -305,6 +312,7 @@ class Plugin:
 # Plugin manager
 # ------------------------------------------------------------------
 
+
 class PluginManager:
     """Discovers, loads, and manages the lifecycle of plugins."""
 
@@ -367,11 +375,7 @@ class PluginManager:
             plugin_cls: Optional[Type[Plugin]] = None
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
-                if (
-                    isinstance(attr, type)
-                    and issubclass(attr, Plugin)
-                    and attr is not Plugin
-                ):
+                if isinstance(attr, type) and issubclass(attr, Plugin) and attr is not Plugin:
                     plugin_cls = attr
                     break
 
@@ -462,13 +466,16 @@ class PluginManager:
             except TimeoutError:
                 security_log.error(
                     "Plugin %s timed out on hook %s",
-                    plugin.manifest.id, hook.value,
+                    plugin.manifest.id,
+                    hook.value,
                 )
                 results.append({"error": "timeout", "plugin": plugin.manifest.id})
             except Exception as exc:
                 security_log.error(
                     "Plugin %s hook %s error: %s",
-                    plugin.manifest.id, hook.value, exc,
+                    plugin.manifest.id,
+                    hook.value,
+                    exc,
                 )
                 results.append({"error": str(exc), "plugin": plugin.manifest.id})
         return results

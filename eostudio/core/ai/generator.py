@@ -13,10 +13,15 @@ class AIDesignGenerator:
         self._client = llm_client or LLMClient(LLMConfig())
 
     def text_to_ui(self, prompt: str) -> Dict[str, Any]:
-        messages = [{"role": "user", "content": (
-            f"Generate a UI design as JSON with keys: name, components (list of dicts with type/label), layout.\n"
-            f"Prompt: {prompt}"
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"Generate a UI design as JSON with keys: name, components (list of dicts with type/label), layout.\n"
+                    f"Prompt: {prompt}"
+                ),
+            }
+        ]
         raw = self._client.chat(messages)
         try:
             result = json.loads(raw)
@@ -32,10 +37,9 @@ class AIDesignGenerator:
         }
 
     def text_to_3d(self, prompt: str) -> Dict[str, Any]:
-        messages = [{"role": "user", "content": (
-            f"Generate a 3D scene as JSON with keys: name, objects.\n"
-            f"Prompt: {prompt}"
-        )}]
+        messages = [
+            {"role": "user", "content": (f"Generate a 3D scene as JSON with keys: name, objects.\nPrompt: {prompt}")}
+        ]
         raw = self._client.chat(messages)
         try:
             result = json.loads(raw)
@@ -46,10 +50,12 @@ class AIDesignGenerator:
         return result
 
     def text_to_cad(self, prompt: str) -> Dict[str, Any]:
-        messages = [{"role": "user", "content": (
-            f"Generate a CAD design as JSON with keys: name, features, parameters.\n"
-            f"Prompt: {prompt}"
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (f"Generate a CAD design as JSON with keys: name, features, parameters.\nPrompt: {prompt}"),
+            }
+        ]
         raw = self._client.chat(messages)
         try:
             result = json.loads(raw)
@@ -59,11 +65,16 @@ class AIDesignGenerator:
         return result
 
     def refine_design(self, original: Dict[str, Any], instruction: str) -> Dict[str, Any]:
-        messages = [{"role": "user", "content": (
-            f"Refine this design:\n{json.dumps(original, indent=2)}\n\n"
-            f"Instruction: {instruction}\n"
-            f"Return the updated design as JSON."
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"Refine this design:\n{json.dumps(original, indent=2)}\n\n"
+                    f"Instruction: {instruction}\n"
+                    f"Return the updated design as JSON."
+                ),
+            }
+        ]
         raw = self._client.chat(messages)
         try:
             return json.loads(raw)

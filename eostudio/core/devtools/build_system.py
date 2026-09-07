@@ -1,4 +1,5 @@
 """Universal build system integration for EoStudio devtools."""
+
 from __future__ import annotations
 
 import json
@@ -14,6 +15,15 @@ from typing import Callable, Dict, List, Optional
 
 class BuildSystem(Enum):
     """Supported build systems."""
+
+    # The EmbeddedOS build control plane. EoStudio is specified as a graphical
+    # IDE over eBuild and EoSim, and §15 of the platform design says it
+    # "invokes eBuild APIs/CLI; it does not duplicate build logic". Without
+    # this member the platform's own build tool was absent from the IDE's list
+    # of build systems while Buck and Bazel were present, and an ebuild project
+    # opened here fell through to the MAKE fallback — running `make` in a
+    # directory with no Makefile.
+    EBUILD = "ebuild"
 
     NPM = "npm"
     YARN = "yarn"
@@ -80,6 +90,12 @@ class BuildTask:
 
 # Detection config: (marker file/dir, BuildSystem)
 _DETECTION_ORDER: List[tuple] = [
+    # First, deliberately. An ebuild project is described by build.yaml and has
+    # no CMakeLists.txt at its root — ebuild generates the build files into the
+    # build directory — so anything matching later would either miss it or,
+    # once a project has been configured once, claim it for CMake and bypass
+    # the toolchain that owns it.
+    ("build.yaml", BuildSystem.EBUILD),
     ("pnpm-lock.yaml", BuildSystem.PNPM),
     ("yarn.lock", BuildSystem.YARN),
     ("package-lock.json", BuildSystem.NPM),
@@ -105,6 +121,22 @@ _DETECTION_ORDER: List[tuple] = [
 ]
 
 _DEFAULT_CONFIGS: Dict[BuildSystem, BuildConfig] = {
+    # These are ebuild's actual verbs, checked against `ebuild --help`. The one
+    # place this repository previously named the tool it is a front end for, it
+    # named an invocation that does not exist:
+    #
+    #     f"ebuild --platform {platform} --config board.yaml {source_dir}"
+    #
+    # ebuild has no top-level --platform or --config; the board is selected by
+    # `ebuild configure --board <board>`. That string was stored in a dict and
+    # never executed, so nothing ever found out.
+    BuildSystem.EBUILD: BuildConfig(
+        system=BuildSystem.EBUILD,
+        build_command="ebuild build",
+        test_command="ebuild test",
+        clean_command="ebuild clean",
+        run_command="ebuild monitor",
+    ),
     BuildSystem.NPM: BuildConfig(
         system=BuildSystem.NPM,
         build_command="npm run build",
@@ -430,34 +462,40 @@ class BuildSystemManager:
 
         # Always add standard lifecycle tasks
         config = self.get_config()
-        tasks.extend([
-            BuildTask(name="build", command=config.build_command, description="Build the project", group="build"),
-            BuildTask(name="test", command=config.test_command, description="Run tests", group="test"),
-            BuildTask(name="clean", command=config.clean_command, description="Clean artifacts", group="clean"),
-            BuildTask(name="run", command=config.run_command, description="Run the project", group="run"),
-        ])
+        tasks.extend(
+            [
+                BuildTask(name="build", command=config.build_command, description="Build the project", group="build"),
+                BuildTask(name="test", command=config.test_command, description="Run tests", group="test"),
+                BuildTask(name="clean", command=config.clean_command, description="Clean artifacts", group="clean"),
+                BuildTask(name="run", command=config.run_command, description="Run the project", group="run"),
+            ]
+        )
 
         # Add system-specific tasks
         if system in (BuildSystem.NPM, BuildSystem.YARN, BuildSystem.PNPM):
             for name, script_cmd in self.get_scripts_from_package_json().items():
                 prefix = {BuildSystem.NPM: "npm run", BuildSystem.YARN: "yarn", BuildSystem.PNPM: "pnpm"}[system]
                 group = "test" if "test" in name else "build" if "build" in name else "run"
-                tasks.append(BuildTask(
-                    name=name,
-                    command=f"{prefix} {name}",
-                    description=f"npm script: {script_cmd}",
-                    group=group,
-                ))
+                tasks.append(
+                    BuildTask(
+                        name=name,
+                        command=f"{prefix} {name}",
+                        description=f"npm script: {script_cmd}",
+                        group=group,
+                    )
+                )
 
         if system == BuildSystem.MAKE:
             for target_name in self.get_targets_from_makefile():
                 group = "test" if "test" in target_name else "clean" if "clean" in target_name else "build"
-                tasks.append(BuildTask(
-                    name=target_name,
-                    command=f"make {target_name}",
-                    description=f"Makefile target: {target_name}",
-                    group=group,
-                ))
+                tasks.append(
+                    BuildTask(
+                        name=target_name,
+                        command=f"make {target_name}",
+                        description=f"Makefile target: {target_name}",
+                        group=group,
+                    )
+                )
 
         return tasks
 
@@ -494,13 +532,15 @@ class BuildSystemManager:
                     key = (file_path, line_num, col, msg)
                     if key not in seen:
                         seen.add(key)
-                        diagnostics.append(BuildDiagnostic(
-                            file=file_path,
-                            line=line_num,
-                            column=col,
-                            message=msg,
-                            severity=severity,
-                        ))
+                        diagnostics.append(
+                            BuildDiagnostic(
+                                file=file_path,
+                                line=line_num,
+                                column=col,
+                                message=msg,
+                                severity=severity,
+                            )
+                        )
                     break
 
         return diagnostics
@@ -524,7 +564,9 @@ class BuildSystemManager:
         # Build initial snapshot
         watch_extensions = {".py", ".js", ".ts", ".jsx", ".tsx", ".rs", ".go", ".java", ".c", ".cpp", ".h"}
         for root, dirs, files in os.walk(self.workspace_path):
-            dirs[:] = [d for d in dirs if d not in {".git", "node_modules", "__pycache__", ".venv", "dist", "build", "target"}]
+            dirs[:] = [
+                d for d in dirs if d not in {".git", "node_modules", "__pycache__", ".venv", "dist", "build", "target"}
+            ]
             for fname in files:
                 fpath = Path(root) / fname
                 if fpath.suffix in watch_extensions:
@@ -535,7 +577,11 @@ class BuildSystemManager:
                 time.sleep(1)
                 changed = False
                 for root, dirs, files in os.walk(self.workspace_path):
-                    dirs[:] = [d for d in dirs if d not in {".git", "node_modules", "__pycache__", ".venv", "dist", "build", "target"}]
+                    dirs[:] = [
+                        d
+                        for d in dirs
+                        if d not in {".git", "node_modules", "__pycache__", ".venv", "dist", "build", "target"}
+                    ]
                     for fname in files:
                         fpath = Path(root) / fname
                         if fpath.suffix not in watch_extensions:

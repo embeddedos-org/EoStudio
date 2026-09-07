@@ -3,6 +3,7 @@ EoStudio Remote Development — SSH, WSL, Container, and DevContainer support.
 
 Phase 3: Cross-Platform Universal Support.
 """
+
 from __future__ import annotations
 
 import os
@@ -16,6 +17,7 @@ from typing import Dict, List, Optional
 # ---------------------------------------------------------------------------
 # Enums & Config
 # ---------------------------------------------------------------------------
+
 
 class RemoteType(Enum):
     """Supported remote development connection types."""
@@ -77,6 +79,7 @@ class DevContainerConfig:
 # RemoteConnection
 # ---------------------------------------------------------------------------
 
+
 class RemoteConnection:
     """Manage a single remote development connection."""
 
@@ -124,21 +127,27 @@ class RemoteConnection:
         if self._config.type == RemoteType.SSH:
             result = subprocess.run(
                 self._ssh_base_cmd() + [command],
-                capture_output=True, text=True, check=False,
+                capture_output=True,
+                text=True,
+                check=False,
             )
             return result.stdout
 
         if self._config.type == RemoteType.WSL:
             result = subprocess.run(
                 ["wsl", "-d", self._config.wsl_distro, "--", "bash", "-c", command],
-                capture_output=True, text=True, check=False,
+                capture_output=True,
+                text=True,
+                check=False,
             )
             return result.stdout
 
         if self._config.type in (RemoteType.CONTAINER, RemoteType.DEVCONTAINER):
             result = subprocess.run(
                 ["docker", "exec", self._config.container_id, "bash", "-c", command],
-                capture_output=True, text=True, check=False,
+                capture_output=True,
+                text=True,
+                check=False,
             )
             return result.stdout
 
@@ -159,16 +168,24 @@ class RemoteConnection:
 
         if self._config.type == RemoteType.WSL:
             win_path = local_path.replace("\\", "/")
-            return subprocess.run(
-                ["wsl", "-d", self._config.wsl_distro, "--", "cp", f"/mnt/{win_path}", remote_path],
-                capture_output=True, check=False,
-            ).returncode == 0
+            return (
+                subprocess.run(
+                    ["wsl", "-d", self._config.wsl_distro, "--", "cp", f"/mnt/{win_path}", remote_path],
+                    capture_output=True,
+                    check=False,
+                ).returncode
+                == 0
+            )
 
         if self._config.type in (RemoteType.CONTAINER, RemoteType.DEVCONTAINER):
-            return subprocess.run(
-                ["docker", "cp", local_path, f"{self._config.container_id}:{remote_path}"],
-                capture_output=True, check=False,
-            ).returncode == 0
+            return (
+                subprocess.run(
+                    ["docker", "cp", local_path, f"{self._config.container_id}:{remote_path}"],
+                    capture_output=True,
+                    check=False,
+                ).returncode
+                == 0
+            )
 
         return False
 
@@ -186,16 +203,24 @@ class RemoteConnection:
             return subprocess.run(cmd, capture_output=True, check=False).returncode == 0
 
         if self._config.type == RemoteType.WSL:
-            return subprocess.run(
-                ["wsl", "-d", self._config.wsl_distro, "--", "cp", remote_path, f"/mnt/{local_path}"],
-                capture_output=True, check=False,
-            ).returncode == 0
+            return (
+                subprocess.run(
+                    ["wsl", "-d", self._config.wsl_distro, "--", "cp", remote_path, f"/mnt/{local_path}"],
+                    capture_output=True,
+                    check=False,
+                ).returncode
+                == 0
+            )
 
         if self._config.type in (RemoteType.CONTAINER, RemoteType.DEVCONTAINER):
-            return subprocess.run(
-                ["docker", "cp", f"{self._config.container_id}:{remote_path}", local_path],
-                capture_output=True, check=False,
-            ).returncode == 0
+            return (
+                subprocess.run(
+                    ["docker", "cp", f"{self._config.container_id}:{remote_path}", local_path],
+                    capture_output=True,
+                    check=False,
+                ).returncode
+                == 0
+            )
 
         return False
 
@@ -219,9 +244,13 @@ class RemoteConnection:
         if self._config.type != RemoteType.SSH or not self._connected:
             return False
 
-        cmd = self._ssh_base_cmd(extra_flags=[
-            "-N", "-L", f"{local_port}:localhost:{remote_port}",
-        ])
+        cmd = self._ssh_base_cmd(
+            extra_flags=[
+                "-N",
+                "-L",
+                f"{local_port}:localhost:{remote_port}",
+            ]
+        )
         try:
             self._process = subprocess.Popen(cmd)
             return True
@@ -238,10 +267,14 @@ class RemoteConnection:
             if self._config.key_path:
                 ssh_cmd += f" -i {self._config.key_path}"
             target = f"{self._config.username}@{self._config.host}:{remote_dir}"
-            return subprocess.run(
-                ["rsync", "-avz", "-e", ssh_cmd, local_dir + "/", target + "/"],
-                capture_output=True, check=False,
-            ).returncode == 0
+            return (
+                subprocess.run(
+                    ["rsync", "-avz", "-e", ssh_cmd, local_dir + "/", target + "/"],
+                    capture_output=True,
+                    check=False,
+                ).returncode
+                == 0
+            )
 
         return False
 
@@ -260,7 +293,9 @@ class RemoteConnection:
     def _connect_ssh(self) -> bool:
         result = subprocess.run(
             self._ssh_base_cmd() + ["echo", "ok"],
-            capture_output=True, text=True, check=False,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         self._connected = result.returncode == 0
         return self._connected
@@ -268,7 +303,9 @@ class RemoteConnection:
     def _connect_wsl(self) -> bool:
         result = subprocess.run(
             ["wsl", "-d", self._config.wsl_distro, "--", "echo", "ok"],
-            capture_output=True, text=True, check=False,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         self._connected = result.returncode == 0
         return self._connected
@@ -276,7 +313,9 @@ class RemoteConnection:
     def _connect_container(self) -> bool:
         result = subprocess.run(
             ["docker", "exec", self._config.container_id, "echo", "ok"],
-            capture_output=True, text=True, check=False,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         self._connected = result.returncode == 0
         return self._connected
@@ -285,6 +324,7 @@ class RemoteConnection:
 # ---------------------------------------------------------------------------
 # RemoteManager
 # ---------------------------------------------------------------------------
+
 
 class RemoteManager:
     """Manage multiple named remote connections."""

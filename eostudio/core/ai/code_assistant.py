@@ -40,8 +40,7 @@ class CodeAssistant:
         if context_files:
             context = "\n".join(f"// File: {f}" for f in context_files)
         prompt = (
-            f"Complete the following {language} code at line {cursor_line}, "
-            f"column {cursor_col}.\n\n{context}\n\n{code}"
+            f"Complete the following {language} code at line {cursor_line}, column {cursor_col}.\n\n{context}\n\n{code}"
         )
         result = self._ask(prompt)
         return [
@@ -59,10 +58,7 @@ class CodeAssistant:
         return self._ask(prompt)
 
     def refactor(self, code: str, instruction: str, language: str) -> str:
-        prompt = (
-            f"Refactor the following {language} code according to this "
-            f"instruction: {instruction}\n\n{code}"
-        )
+        prompt = f"Refactor the following {language} code according to this instruction: {instruction}\n\n{code}"
         return self._ask(prompt)
 
     def translate(self, code: str, from_lang: str, to_lang: str) -> str:
@@ -70,16 +66,11 @@ class CodeAssistant:
         return self._ask(prompt)
 
     def generate_docstring(self, code: str, language: str) -> str:
-        prompt = (
-            f"Generate a docstring for the following {language} code:\n\n{code}"
-        )
+        prompt = f"Generate a docstring for the following {language} code:\n\n{code}"
         return self._ask(prompt)
 
     def fix_error(self, code: str, error_message: str, language: str) -> str:
-        prompt = (
-            f"Fix the following error in this {language} code.\n"
-            f"Error: {error_message}\n\nCode:\n{code}"
-        )
+        prompt = f"Fix the following error in this {language} code.\nError: {error_message}\n\nCode:\n{code}"
         return self._ask(prompt)
 
     def suggest_improvements(self, code: str, language: str) -> list[dict]:

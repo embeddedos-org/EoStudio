@@ -26,6 +26,7 @@ class GestureType(Enum):
 @dataclass
 class GestureEvent:
     """A detected gesture event with positional and timing data."""
+
     gesture_type: GestureType
     position: Tuple[float, float] = (0.0, 0.0)
     delta: Tuple[float, float] = (0.0, 0.0)
@@ -52,12 +53,13 @@ class GestureEvent:
 @dataclass
 class GestureConfig:
     """Configuration for gesture detection thresholds."""
-    swipe_threshold: float = 50.0       # minimum distance for swipe (px)
-    swipe_velocity: float = 0.3         # minimum velocity for swipe (px/ms)
+
+    swipe_threshold: float = 50.0  # minimum distance for swipe (px)
+    swipe_velocity: float = 0.3  # minimum velocity for swipe (px/ms)
     long_press_duration: float = 500.0  # long press threshold (ms)
     double_tap_interval: float = 300.0  # max interval between taps (ms)
-    pinch_threshold: float = 0.1        # minimum scale change for pinch
-    rotation_threshold: float = 5.0     # minimum rotation for rotate gesture (degrees)
+    pinch_threshold: float = 0.1  # minimum scale change for pinch
+    rotation_threshold: float = 5.0  # minimum rotation for rotate gesture (degrees)
 
 
 class GestureRecognizer:
@@ -73,8 +75,7 @@ class GestureRecognizer:
         self._long_press_timer: Optional[Any] = None
         self._active_gestures: List[GestureEvent] = []
 
-    def on_gesture(self, gesture_type: GestureType,
-                   callback: Callable[[GestureEvent], None]) -> None:
+    def on_gesture(self, gesture_type: GestureType, callback: Callable[[GestureEvent], None]) -> None:
         if gesture_type not in self._listeners:
             self._listeners[gesture_type] = []
         self._listeners[gesture_type].append(callback)
@@ -94,13 +95,15 @@ class GestureRecognizer:
             return
         dx = x - self._touch_start[0]
         dy = y - self._touch_start[1]
-        self._emit(GestureEvent(
-            gesture_type=GestureType.PAN,
-            position=(x, y),
-            delta=(dx, dy),
-            target_id=target_id,
-            phase="move",
-        ))
+        self._emit(
+            GestureEvent(
+                gesture_type=GestureType.PAN,
+                position=(x, y),
+                delta=(dx, dy),
+                target_id=target_id,
+                phase="move",
+            )
+        )
 
     def on_touch_end(self, x: float, y: float, target_id: str = "") -> None:
         if not self._touch_start:
@@ -110,7 +113,7 @@ class GestureRecognizer:
         duration = now - self._touch_start_time
         dx = x - self._touch_start[0]
         dy = y - self._touch_start[1]
-        distance = (dx ** 2 + dy ** 2) ** 0.5
+        distance = (dx**2 + dy**2) ** 0.5
 
         if duration > 0:
             vx = dx / duration
@@ -118,38 +121,51 @@ class GestureRecognizer:
         else:
             vx, vy = 0.0, 0.0
 
-        velocity = (vx ** 2 + vy ** 2) ** 0.5
+        velocity = (vx**2 + vy**2) ** 0.5
 
         # Long press
         if duration >= self.config.long_press_duration and distance < self.config.swipe_threshold:
-            self._emit(GestureEvent(
-                gesture_type=GestureType.LONG_PRESS,
-                position=(x, y), target_id=target_id,
-            ))
+            self._emit(
+                GestureEvent(
+                    gesture_type=GestureType.LONG_PRESS,
+                    position=(x, y),
+                    target_id=target_id,
+                )
+            )
         # Swipe
         elif distance >= self.config.swipe_threshold and velocity >= self.config.swipe_velocity:
             if abs(dx) > abs(dy):
                 gesture = GestureType.SWIPE_RIGHT if dx > 0 else GestureType.SWIPE_LEFT
             else:
                 gesture = GestureType.SWIPE_DOWN if dy > 0 else GestureType.SWIPE_UP
-            self._emit(GestureEvent(
-                gesture_type=gesture,
-                position=(x, y), delta=(dx, dy), velocity=(vx, vy),
-                target_id=target_id,
-            ))
+            self._emit(
+                GestureEvent(
+                    gesture_type=gesture,
+                    position=(x, y),
+                    delta=(dx, dy),
+                    velocity=(vx, vy),
+                    target_id=target_id,
+                )
+            )
         # Double tap
         elif now - self._last_tap_time < self.config.double_tap_interval:
-            self._emit(GestureEvent(
-                gesture_type=GestureType.DOUBLE_TAP,
-                position=(x, y), target_id=target_id,
-            ))
+            self._emit(
+                GestureEvent(
+                    gesture_type=GestureType.DOUBLE_TAP,
+                    position=(x, y),
+                    target_id=target_id,
+                )
+            )
             self._last_tap_time = 0
         # Tap
         else:
-            self._emit(GestureEvent(
-                gesture_type=GestureType.TAP,
-                position=(x, y), target_id=target_id,
-            ))
+            self._emit(
+                GestureEvent(
+                    gesture_type=GestureType.TAP,
+                    position=(x, y),
+                    target_id=target_id,
+                )
+            )
             self._last_tap_time = now
 
         self._touch_start = None
@@ -158,17 +174,23 @@ class GestureRecognizer:
     def on_pinch(self, scale: float, target_id: str = "") -> None:
         if abs(scale - 1.0) >= self.config.pinch_threshold:
             gesture = GestureType.PINCH_OUT if scale > 1.0 else GestureType.PINCH_IN
-            self._emit(GestureEvent(
-                gesture_type=gesture,
-                scale=scale, target_id=target_id,
-            ))
+            self._emit(
+                GestureEvent(
+                    gesture_type=gesture,
+                    scale=scale,
+                    target_id=target_id,
+                )
+            )
 
     def on_rotate(self, angle: float, target_id: str = "") -> None:
         if abs(angle) >= self.config.rotation_threshold:
-            self._emit(GestureEvent(
-                gesture_type=GestureType.ROTATE,
-                rotation=angle, target_id=target_id,
-            ))
+            self._emit(
+                GestureEvent(
+                    gesture_type=GestureType.ROTATE,
+                    rotation=angle,
+                    target_id=target_id,
+                )
+            )
 
     def get_recent_gestures(self, count: int = 10) -> List[GestureEvent]:
         return self._active_gestures[-count:]
@@ -176,8 +198,7 @@ class GestureRecognizer:
     def clear_history(self) -> None:
         self._active_gestures.clear()
 
-    def generate_js_handler(self, gesture_type: GestureType,
-                            action_code: str) -> str:
+    def generate_js_handler(self, gesture_type: GestureType, action_code: str) -> str:
         """Generate JavaScript code for gesture detection."""
         handlers: Dict[GestureType, str] = {
             GestureType.TAP: f"element.addEventListener('click', (e) => {{ {action_code} }});",

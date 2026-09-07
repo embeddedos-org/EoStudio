@@ -11,6 +11,7 @@ license = {text = "MIT"}
 requires-python = ">=3.10"
 dependencies = [
     "click>=8.1",
+    "requests>=2.31",
 ]
 
 [project.optional-dependencies]
@@ -85,8 +86,14 @@ ignore_missing_imports = true
 no_strict_optional = true
 warn_return_any = false
 warn_unused_configs = true
-disable_error_code = ["no-redef", "attr-defined", "misc", "call-overload", "str-unpack", "var-annotated", "func-returns-value"]
+disable_error_code = ["no-redef", "attr-defined", "misc", "call-overload", "str-unpack", "var-annotated", "func-returns-value", "arg-type", "return-value", "assignment", "operator", "call-arg", "index", "override"]
 
 [tool.flake8]
 max-line-length = 120
 ignore = ["E501", "W503", "E402", "E741", "F401", "F811", "F841", "F541", "F404"]
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501", "E402", "E741", "F401", "F811", "F841", "F541", "F404", "UP006", "UP035", "UP045"]

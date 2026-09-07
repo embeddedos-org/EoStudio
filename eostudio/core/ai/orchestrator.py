@@ -21,6 +21,7 @@ Features:
 - Diff-aware context: only send changed code
 - RAG (Retrieval-Augmented Generation) over the codebase
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -48,7 +49,8 @@ class AgentRole(Enum):
 @dataclass
 class Message:
     """A single message in the conversation."""
-    role: str           # "system" | "user" | "assistant" | "tool"
+
+    role: str  # "system" | "user" | "assistant" | "tool"
     content: str
     timestamp: float = field(default_factory=time.time)
     tokens: int = 0
@@ -61,6 +63,7 @@ class Message:
 @dataclass
 class MemoryEntry:
     """A compressed memory entry for long-term context."""
+
     summary: str
     original_messages: int
     timestamp: float
@@ -72,6 +75,7 @@ class MemoryEntry:
 @dataclass
 class AgentResult:
     """Result from an agent execution."""
+
     success: bool
     output: str
     agent: AgentRole
@@ -87,6 +91,7 @@ class AgentResult:
 @dataclass
 class SelfHealResult:
     """Result of a self-healing cycle."""
+
     success: bool
     iterations: int
     final_code: str
@@ -98,6 +103,7 @@ class SelfHealResult:
 # Token counting (approximate)
 # ------------------------------------------------------------------
 
+
 def _count_tokens(text: str) -> int:
     """Approximate token count (4 chars ≈ 1 token)."""
     return max(1, len(text) // 4)
@@ -107,6 +113,7 @@ def _count_tokens(text: str) -> int:
 # Conversation Memory
 # ------------------------------------------------------------------
 
+
 class ConversationMemory:
     """Persistent, compressible conversation memory.
 
@@ -114,8 +121,8 @@ class ConversationMemory:
     older messages into summaries to stay within context limits.
     """
 
-    MAX_RECENT = 20          # Keep last N messages verbatim
-    MAX_TOKENS = 12_000      # Target token budget for context
+    MAX_RECENT = 20  # Keep last N messages verbatim
+    MAX_TOKENS = 12_000  # Target token budget for context
     COMPRESS_THRESHOLD = 30  # Compress when > N messages
 
     def __init__(self, session_id: str) -> None:
@@ -204,21 +211,25 @@ class ConversationMemory:
                     if "file" in str(tc).lower():
                         files.append(str(tc))
 
-        self._memories.append(MemoryEntry(
-            summary=" | ".join(summary_parts[:3]),
-            original_messages=len(old),
-            timestamp=time.time(),
-            files_touched=files[:5],
-        ))
+        self._memories.append(
+            MemoryEntry(
+                summary=" | ".join(summary_parts[:3]),
+                original_messages=len(old),
+                timestamp=time.time(),
+                files_touched=files[:5],
+            )
+        )
 
 
 # ------------------------------------------------------------------
 # Tool Registry
 # ------------------------------------------------------------------
 
+
 @dataclass
 class Tool:
     """An AI-callable tool."""
+
     name: str
     description: str
     parameters: Dict[str, Any]
@@ -271,107 +282,145 @@ def _build_default_tools(workspace: str) -> ToolRegistry:
     registry = ToolRegistry()
     ws = Path(workspace)
 
-    registry.register(Tool(
-        name="read_file",
-        description="Read the contents of a file in the workspace.",
-        parameters={
-            "type": "object",
-            "properties": {
-                "path": {"type": "string", "description": "Relative path to the file"},
+    registry.register(
+        Tool(
+            name="read_file",
+            description="Read the contents of a file in the workspace.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Relative path to the file"},
+                },
+                "required": ["path"],
             },
-            "required": ["path"],
-        },
-        handler=lambda path: (ws / path).read_text(encoding="utf-8") if (ws / path).exists() else f"File not found: {path}",
-    ))
+            handler=lambda path: (
+                (ws / path).read_text(encoding="utf-8") if (ws / path).exists() else f"File not found: {path}"
+            ),
+        )
+    )
 
-    registry.register(Tool(
-        name="write_file",
-        description="Write content to a file in the workspace.",
-        parameters={
-            "type": "object",
-            "properties": {
-                "path": {"type": "string"},
-                "content": {"type": "string"},
+    registry.register(
+        Tool(
+            name="write_file",
+            description="Write content to a file in the workspace.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string"},
+                    "content": {"type": "string"},
+                },
+                "required": ["path", "content"],
             },
-            "required": ["path", "content"],
-        },
-        handler=lambda path, content: (ws / path).parent.mkdir(parents=True, exist_ok=True) or (ws / path).write_text(content, encoding="utf-8") or f"Written: {path}",
-    ))
+            handler=lambda path, content: (
+                (ws / path).parent.mkdir(parents=True, exist_ok=True)
+                or (ws / path).write_text(content, encoding="utf-8")
+                or f"Written: {path}"
+            ),
+        )
+    )
 
-    registry.register(Tool(
-        name="list_files",
-        description="List files in a directory.",
-        parameters={
-            "type": "object",
-            "properties": {
-                "directory": {"type": "string", "default": "."},
-                "pattern": {"type": "string", "default": "*"},
+    registry.register(
+        Tool(
+            name="list_files",
+            description="List files in a directory.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "directory": {"type": "string", "default": "."},
+                    "pattern": {"type": "string", "default": "*"},
+                },
             },
-        },
-        handler=lambda directory=".", pattern="*": [
-            str(p.relative_to(ws)) for p in (ws / directory).rglob(pattern)
-            if p.is_file() and ".git" not in str(p)
-        ][:50],
-    ))
+            handler=lambda directory=".", pattern="*": [
+                str(p.relative_to(ws)) for p in (ws / directory).rglob(pattern) if p.is_file() and ".git" not in str(p)
+            ][:50],
+        )
+    )
 
-    registry.register(Tool(
-        name="run_command",
-        description="Run a shell command in the workspace.",
-        parameters={
-            "type": "object",
-            "properties": {
-                "command": {"type": "string"},
-                "timeout": {"type": "integer", "default": 30},
+    registry.register(
+        Tool(
+            name="run_command",
+            description="Run a shell command in the workspace.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "command": {"type": "string"},
+                    "timeout": {"type": "integer", "default": 30},
+                },
+                "required": ["command"],
             },
-            "required": ["command"],
-        },
-        handler=lambda command, timeout=30: subprocess.run(
-            command, shell=True, capture_output=True, text=True,
-            cwd=str(ws), timeout=timeout,
-        ).stdout + subprocess.run(
-            command, shell=True, capture_output=True, text=True,
-            cwd=str(ws), timeout=timeout,
-        ).stderr,
-    ))
+            handler=lambda command, timeout=30: (
+                subprocess.run(
+                    command,
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    cwd=str(ws),
+                    timeout=timeout,
+                ).stdout
+                + subprocess.run(
+                    command,
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    cwd=str(ws),
+                    timeout=timeout,
+                ).stderr
+            ),
+        )
+    )
 
-    registry.register(Tool(
-        name="search_code",
-        description="Search for text patterns in the codebase.",
-        parameters={
-            "type": "object",
-            "properties": {
-                "pattern": {"type": "string"},
-                "file_pattern": {"type": "string", "default": "*.py"},
+    registry.register(
+        Tool(
+            name="search_code",
+            description="Search for text patterns in the codebase.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "pattern": {"type": "string"},
+                    "file_pattern": {"type": "string", "default": "*.py"},
+                },
+                "required": ["pattern"],
             },
-            "required": ["pattern"],
-        },
-        handler=lambda pattern, file_pattern="*.py": subprocess.run(
-            ["grep", "-rn", "--include", file_pattern, pattern, str(ws)],
-            capture_output=True, text=True,
-        ).stdout[:3000],
-    ))
+            handler=lambda pattern, file_pattern="*.py": subprocess.run(
+                ["grep", "-rn", "--include", file_pattern, pattern, str(ws)],
+                capture_output=True,
+                text=True,
+            ).stdout[:3000],
+        )
+    )
 
-    registry.register(Tool(
-        name="git_status",
-        description="Get the git status of the workspace.",
-        parameters={"type": "object", "properties": {}},
-        handler=lambda: subprocess.run(
-            ["git", "status", "--short"], capture_output=True, text=True, cwd=str(ws),
-        ).stdout,
-    ))
+    registry.register(
+        Tool(
+            name="git_status",
+            description="Get the git status of the workspace.",
+            parameters={"type": "object", "properties": {}},
+            handler=lambda: (
+                subprocess.run(
+                    ["git", "status", "--short"],
+                    capture_output=True,
+                    text=True,
+                    cwd=str(ws),
+                ).stdout
+            ),
+        )
+    )
 
-    registry.register(Tool(
-        name="git_diff",
-        description="Get the git diff of staged or unstaged changes.",
-        parameters={
-            "type": "object",
-            "properties": {"staged": {"type": "boolean", "default": False}},
-        },
-        handler=lambda staged=False: subprocess.run(
-            ["git", "diff"] + (["--staged"] if staged else []),
-            capture_output=True, text=True, cwd=str(ws),
-        ).stdout[:5000],
-    ))
+    registry.register(
+        Tool(
+            name="git_diff",
+            description="Get the git diff of staged or unstaged changes.",
+            parameters={
+                "type": "object",
+                "properties": {"staged": {"type": "boolean", "default": False}},
+            },
+            handler=lambda staged=False: subprocess.run(
+                ["git", "diff"] + (["--staged"] if staged else []),
+                capture_output=True,
+                text=True,
+                cwd=str(ws),
+            ).stdout[:5000],
+        )
+    )
 
     return registry
 
@@ -379,6 +428,7 @@ def _build_default_tools(workspace: str) -> ToolRegistry:
 # ------------------------------------------------------------------
 # Self-Healing Code Engine
 # ------------------------------------------------------------------
+
 
 class SelfHealingEngine:
     """Automatically detects and fixes code errors in a loop.
@@ -456,6 +506,7 @@ class SelfHealingEngine:
 
             # Ask AI to fix
             from eostudio.core.ai.multi_model_router import TaskType
+
             fix_prompt = (
                 f"Fix this {language} code error. Return ONLY the corrected code, no explanations.\n\n"
                 f"Error:\n{error}\n\n"
@@ -465,6 +516,7 @@ class SelfHealingEngine:
 
             # Strip markdown fences
             import re
+
             fixed = re.sub(r"^```[a-zA-Z]*\n?", "", fixed.strip())
             fixed = re.sub(r"\n?```$", "", fixed.strip())
             current_code = fixed.strip()
@@ -484,6 +536,7 @@ class SelfHealingEngine:
 # RAG over Codebase
 # ------------------------------------------------------------------
 
+
 class CodebaseRAG:
     """Retrieval-Augmented Generation over the project codebase.
 
@@ -492,8 +545,8 @@ class CodebaseRAG:
     accuracy for project-specific questions.
     """
 
-    CHUNK_SIZE = 50   # Lines per chunk
-    MAX_CHUNKS = 5    # Max chunks to retrieve
+    CHUNK_SIZE = 50  # Lines per chunk
+    MAX_CHUNKS = 5  # Max chunks to retrieve
 
     def __init__(self, workspace: str) -> None:
         self._workspace = workspace
@@ -503,6 +556,7 @@ class CodebaseRAG:
     def index(self) -> int:
         """Index all source files into chunks."""
         from pathlib import Path
+
         self._chunks = []
         root = Path(self._workspace)
         exts = {".py", ".ts", ".tsx", ".js", ".jsx", ".rs", ".go", ".cpp", ".c"}
@@ -517,13 +571,15 @@ class CodebaseRAG:
                 lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
                 rel_path = str(path.relative_to(root))
                 for i in range(0, len(lines), self.CHUNK_SIZE):
-                    chunk_lines = lines[i:i + self.CHUNK_SIZE]
-                    self._chunks.append({
-                        "file": rel_path,
-                        "start_line": i + 1,
-                        "content": "\n".join(chunk_lines),
-                        "checksum": hashlib.md5("\n".join(chunk_lines).encode()).hexdigest(),
-                    })
+                    chunk_lines = lines[i : i + self.CHUNK_SIZE]
+                    self._chunks.append(
+                        {
+                            "file": rel_path,
+                            "start_line": i + 1,
+                            "content": "\n".join(chunk_lines),
+                            "checksum": hashlib.md5("\n".join(chunk_lines).encode()).hexdigest(),
+                        }
+                    )
             except Exception:
                 pass
 
@@ -569,6 +625,7 @@ class CodebaseRAG:
 # Multi-Agent Orchestrator
 # ------------------------------------------------------------------
 
+
 class AIOrchestrator:
     """The world's most advanced AI orchestration engine for IDEs.
 
@@ -608,6 +665,7 @@ class AIOrchestrator:
         if router is None:
             try:
                 from eostudio.core.ai.multi_model_router import get_router
+
                 self._router = get_router()
             except Exception:
                 self._router = None
@@ -668,6 +726,7 @@ class AIOrchestrator:
         messages[-1]["content"] = augmented
 
         from eostudio.core.ai.multi_model_router import TaskType
+
         try:
             response = self._router.complete(
                 augmented,
@@ -722,8 +781,10 @@ class AIOrchestrator:
         """Self-heal broken code."""
         if not self._healer:
             return SelfHealResult(
-                success=False, iterations=0,
-                final_code=code, errors_fixed=[],
+                success=False,
+                iterations=0,
+                final_code=code,
+                errors_fixed=[],
                 final_error="No AI router configured",
             )
         return self._healer.heal(code, language, on_iteration=on_iteration)
@@ -745,9 +806,7 @@ class AIOrchestrator:
     def _run_agent(self, role: AgentRole, context: str, original_task: str) -> AgentResult:
         """Run a single specialized agent."""
         if not self._router:
-            return AgentResult(
-                success=False, output="No router", agent=role, confidence=0.0
-            )
+            return AgentResult(success=False, output="No router", agent=role, confidence=0.0)
 
         from eostudio.core.ai.multi_model_router import TaskType
 

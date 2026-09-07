@@ -1,4 +1,5 @@
 """EoStudio project file format (.EoStudio JSON)."""
+
 from __future__ import annotations
 import json
 import os
@@ -25,13 +26,15 @@ class EoStudioProject:
     active_scene: str = ""
     components: List[Dict[str, Any]] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
-    settings: Dict[str, Any] = field(default_factory=lambda: {
-        "units": "mm",
-        "grid_size": 10.0,
-        "theme": "dark",
-        "ai_endpoint": "",
-        "ai_model": "gpt-4",
-    })
+    settings: Dict[str, Any] = field(
+        default_factory=lambda: {
+            "units": "mm",
+            "grid_size": 10.0,
+            "theme": "dark",
+            "ai_endpoint": "",
+            "ai_model": "gpt-4",
+        }
+    )
 
     def __post_init__(self) -> None:
         if not self.project_name:

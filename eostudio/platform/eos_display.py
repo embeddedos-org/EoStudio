@@ -15,14 +15,14 @@ from typing import Optional
 
 class EosDisplayError(Exception):
     """Raised when an EoS display operation fails."""
+
     pass
 
 
 class EosFrameBuffer:
     """Framebuffer surface backed by EoS HAL display via ctypes."""
 
-    def __init__(self, width: int = 800, height: int = 480,
-                 display_id: int = 0, backend: str = "auto"):
+    def __init__(self, width: int = 800, height: int = 480, display_id: int = 0, backend: str = "auto"):
         self.width = width
         self.height = height
         self.display_id = display_id
@@ -58,9 +58,7 @@ class EosFrameBuffer:
         if found:
             return found
 
-        raise EosDisplayError(
-            f"Cannot find {lib_name}. Set EOS_LIB_PATH or build the library."
-        )
+        raise EosDisplayError(f"Cannot find {lib_name}. Set EOS_LIB_PATH or build the library.")
 
     def _load_library(self):
         """Load the shared library and set up function prototypes."""
@@ -82,20 +80,26 @@ class EosFrameBuffer:
         self._lib.eos_display_deinit.argtypes = [ctypes.c_uint8]
 
         self._lib.eos_display_draw_pixel.restype = ctypes.c_int
-        self._lib.eos_display_draw_pixel.argtypes = [
-            ctypes.c_uint8, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32
-        ]
+        self._lib.eos_display_draw_pixel.argtypes = [ctypes.c_uint8, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32]
 
         self._lib.eos_display_draw_rect.restype = ctypes.c_int
         self._lib.eos_display_draw_rect.argtypes = [
-            ctypes.c_uint8, ctypes.c_uint16, ctypes.c_uint16,
-            ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint32
+            ctypes.c_uint8,
+            ctypes.c_uint16,
+            ctypes.c_uint16,
+            ctypes.c_uint16,
+            ctypes.c_uint16,
+            ctypes.c_uint32,
         ]
 
         self._lib.eos_display_draw_bitmap.restype = ctypes.c_int
         self._lib.eos_display_draw_bitmap.argtypes = [
-            ctypes.c_uint8, ctypes.c_uint16, ctypes.c_uint16,
-            ctypes.c_uint16, ctypes.c_uint16, ctypes.POINTER(ctypes.c_uint8)
+            ctypes.c_uint8,
+            ctypes.c_uint16,
+            ctypes.c_uint16,
+            ctypes.c_uint16,
+            ctypes.c_uint16,
+            ctypes.POINTER(ctypes.c_uint8),
         ]
 
         self._lib.eos_display_flush.restype = ctypes.c_int
@@ -105,9 +109,7 @@ class EosFrameBuffer:
         self._lib.eos_display_clear.argtypes = [ctypes.c_uint8, ctypes.c_uint32]
 
         self._lib.eos_display_set_brightness.restype = ctypes.c_int
-        self._lib.eos_display_set_brightness.argtypes = [
-            ctypes.c_uint8, ctypes.c_uint8
-        ]
+        self._lib.eos_display_set_brightness.argtypes = [ctypes.c_uint8, ctypes.c_uint8]
 
     def init(self):
         """Initialize the display backend and framebuffer."""
@@ -117,17 +119,12 @@ class EosFrameBuffer:
         self._load_library()
 
         # Register backend
-        if self._backend == "sdl2" or (
-            self._backend == "auto"
-            and os.environ.get("EOS_DISPLAY", "").lower() == "sdl2"
-        ):
+        if self._backend == "sdl2" or (self._backend == "auto" and os.environ.get("EOS_DISPLAY", "").lower() == "sdl2"):
             if hasattr(self._lib, "eos_display_setup_sdl2_backend"):
                 rc = self._lib.eos_display_setup_sdl2_backend()
                 if rc != 0:
                     raise EosDisplayError("Failed to register SDL2 backend")
-        elif self._backend == "linux" or (
-            self._backend == "auto" and os.path.exists("/dev/fb0")
-        ):
+        elif self._backend == "linux" or (self._backend == "auto" and os.path.exists("/dev/fb0")):
             if hasattr(self._lib, "eos_display_setup_linux_backend"):
                 rc = self._lib.eos_display_setup_linux_backend()
                 if rc != 0:
@@ -169,18 +166,13 @@ class EosFrameBuffer:
     def draw_rect(self, x: int, y: int, w: int, h: int, color: int) -> int:
         if not self._initialized:
             return -1
-        return int(self._lib.eos_display_draw_rect(
-            self.display_id, x, y, w, h, color
-        ))
+        return int(self._lib.eos_display_draw_rect(self.display_id, x, y, w, h, color))
 
-    def draw_bitmap(self, x: int, y: int, w: int, h: int,
-                    data: bytes) -> int:
+    def draw_bitmap(self, x: int, y: int, w: int, h: int, data: bytes) -> int:
         if not self._initialized:
             return -1
         buf = (ctypes.c_uint8 * len(data)).from_buffer_copy(data)
-        return int(self._lib.eos_display_draw_bitmap(
-            self.display_id, x, y, w, h, buf
-        ))
+        return int(self._lib.eos_display_draw_bitmap(self.display_id, x, y, w, h, buf))
 
     def flush(self) -> int:
         if not self._initialized:

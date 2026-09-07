@@ -29,9 +29,7 @@ class CommentManager:
     def __init__(self) -> None:
         self._threads: dict[str, CommentThread] = {}
 
-    def create_thread(
-        self, file: str, line_start: int, line_end: int, author: str, text: str
-    ) -> CommentThread:
+    def create_thread(self, file: str, line_start: int, line_end: int, author: str, text: str) -> CommentThread:
         comment = Comment(
             id=str(uuid.uuid4()),
             author=author,

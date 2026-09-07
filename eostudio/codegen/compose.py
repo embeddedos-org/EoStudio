@@ -44,9 +44,7 @@ class ComposeGenerator:
         for screen in screens:
             cname = self._class_name(screen.get("name", "Home"))
             screen_comps = screen.get("components", components)
-            files[f"screens/{cname}Screen.kt"] = self._generate_screen(
-                cname, screen_comps
-            )
+            files[f"screens/{cname}Screen.kt"] = self._generate_screen(cname, screen_comps)
 
         return files
 
@@ -82,13 +80,9 @@ class ComposeGenerator:
             route = self._route(screen.get("name", "home"))
             imports.append(f"import com.example.eostudio.screens.{cname}Screen")
             if i == 0:
-                destinations.append(
-                    f'        composable("{route}") {{ {cname}Screen(navController) }}'
-                )
+                destinations.append(f'        composable("{route}") {{ {cname}Screen(navController) }}')
             else:
-                destinations.append(
-                    f'        composable("{route}") {{ {cname}Screen(navController) }}'
-                )
+                destinations.append(f'        composable("{route}") {{ {cname}Screen(navController) }}')
 
         imports_str = "\n".join(imports)
         dests_str = "\n".join(destinations)
@@ -110,9 +104,7 @@ class ComposeGenerator:
             "}\n"
         )
 
-    def _generate_screen(
-        self, class_name: str, components: List[Dict[str, Any]]
-    ) -> str:
+    def _generate_screen(self, class_name: str, components: List[Dict[str, Any]]) -> str:
         body = self._render_composables(components, indent=4)
         state_vars = self._collect_state_vars(components)
 
@@ -148,15 +140,9 @@ class ComposeGenerator:
             children = comp.get("children", [])
 
             if ctype == "Button":
-                lines.append(
-                    f"{pad}Button(onClick = {{ /* TODO */ }}) {{\n"
-                    f'{pad}    Text("{label}")\n'
-                    f"{pad}}}\n"
-                )
+                lines.append(f'{pad}Button(onClick = {{ /* TODO */ }}) {{\n{pad}    Text("{label}")\n{pad}}}\n')
             elif ctype == "Heading":
-                lines.append(
-                    f'{pad}Text("{label}", style = MaterialTheme.typography.headlineMedium)\n'
-                )
+                lines.append(f'{pad}Text("{label}", style = MaterialTheme.typography.headlineMedium)\n')
             elif ctype == "Text":
                 lines.append(f'{pad}Text("{label}")\n')
             elif ctype == "Input":
@@ -183,12 +169,10 @@ class ComposeGenerator:
                 )
             elif ctype == "Image":
                 src = comp.get("src", "")
-                lines.append(f'{pad}// Image: {src}\n')
+                lines.append(f"{pad}// Image: {src}\n")
             elif ctype == "Card":
                 child_body = (
-                    self._render_composables(children, indent + 4)
-                    if children
-                    else f'{pad}    Text("{label}")\n'
+                    self._render_composables(children, indent + 4) if children else f'{pad}    Text("{label}")\n'
                 )
                 lines.append(
                     f"{pad}Card(modifier = Modifier.fillMaxWidth()) {{\n"
@@ -220,18 +204,14 @@ class ComposeGenerator:
             if ctype in ("Input", "TextArea"):
                 label = comp.get("label", comp.get("text", ""))
                 var_name = self._var_name(label)
-                lines.append(
-                    f'    var {var_name} by remember {{ mutableStateOf("") }}\n'
-                )
+                lines.append(f'    var {var_name} by remember {{ mutableStateOf("") }}\n')
             for child in comp.get("children", []):
                 lines.append(self._collect_state_vars([child]))
         return "".join(lines)
 
     @staticmethod
     def _class_name(name: str) -> str:
-        return "".join(
-            w.capitalize() for w in name.replace("-", " ").replace("_", " ").split()
-        )
+        return "".join(w.capitalize() for w in name.replace("-", " ").replace("_", " ").split())
 
     @staticmethod
     def _route(name: str) -> str:

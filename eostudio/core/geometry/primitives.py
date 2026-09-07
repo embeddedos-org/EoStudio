@@ -178,19 +178,32 @@ class Mesh:
 # Factory functions
 # ---------------------------------------------------------------------------
 
+
 def create_cube(size: float = 1.0) -> Mesh:
     h = size / 2.0
     vertices = [
-        Vec3(-h, -h, -h), Vec3(h, -h, -h), Vec3(h, h, -h), Vec3(-h, h, -h),
-        Vec3(-h, -h, h), Vec3(h, -h, h), Vec3(h, h, h), Vec3(-h, h, h),
+        Vec3(-h, -h, -h),
+        Vec3(h, -h, -h),
+        Vec3(h, h, -h),
+        Vec3(-h, h, -h),
+        Vec3(-h, -h, h),
+        Vec3(h, -h, h),
+        Vec3(h, h, h),
+        Vec3(-h, h, h),
     ]
     faces = [
-        Face(0, 1, 2), Face(0, 2, 3),
-        Face(4, 6, 5), Face(4, 7, 6),
-        Face(0, 4, 5), Face(0, 5, 1),
-        Face(2, 6, 7), Face(2, 7, 3),
-        Face(0, 3, 7), Face(0, 7, 4),
-        Face(1, 5, 6), Face(1, 6, 2),
+        Face(0, 1, 2),
+        Face(0, 2, 3),
+        Face(4, 6, 5),
+        Face(4, 7, 6),
+        Face(0, 4, 5),
+        Face(0, 5, 1),
+        Face(2, 6, 7),
+        Face(2, 7, 3),
+        Face(0, 3, 7),
+        Face(0, 7, 4),
+        Face(1, 5, 6),
+        Face(1, 6, 2),
     ]
     return Mesh(name="Cube", vertices=vertices, faces=faces)
 
@@ -253,8 +266,9 @@ def create_cone(radius: float = 1.0, height: float = 2.0, segments: int = 16) ->
     return Mesh(name="Cone", vertices=vertices, faces=faces)
 
 
-def create_torus(major_radius: float = 2.0, minor_radius: float = 0.5,
-                 major_segments: int = 24, minor_segments: int = 12) -> Mesh:
+def create_torus(
+    major_radius: float = 2.0, minor_radius: float = 0.5, major_segments: int = 24, minor_segments: int = 12
+) -> Mesh:
     vertices: List[Vec3] = []
     faces: List[Face] = []
     for i in range(major_segments):
@@ -279,8 +293,10 @@ def create_torus(major_radius: float = 2.0, minor_radius: float = 0.5,
 def create_plane(width: float = 1.0, height: float = 1.0) -> Mesh:
     hw, hh = width / 2.0, height / 2.0
     vertices = [
-        Vec3(-hw, 0, -hh), Vec3(hw, 0, -hh),
-        Vec3(hw, 0, hh), Vec3(-hw, 0, hh),
+        Vec3(-hw, 0, -hh),
+        Vec3(hw, 0, -hh),
+        Vec3(hw, 0, hh),
+        Vec3(-hw, 0, hh),
     ]
     faces = [Face(0, 1, 2), Face(0, 2, 3)]
     return Mesh(name="Plane", vertices=vertices, faces=faces)

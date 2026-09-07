@@ -1,16 +1,19 @@
 """HSV color wheel picker with RGB sliders, hex input, preview swatch, and recent colors."""
 
-
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -44,8 +47,7 @@ class ColorPicker(tk.Frame):
         self._on_color_change = on_color_change
         self._current_color = initial_color
         self._previous_color = initial_color
-        self._recent_colors: List[str] = ["#ff0000", "#00ff00", "#0000ff",
-                                          "#ffff00", "#ff00ff", "#00ffff"]
+        self._recent_colors: List[str] = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"]
         self._hue: float = 0.0
         self._sat: float = 1.0
         self._val: float = 1.0
@@ -60,29 +62,31 @@ class ColorPicker(tk.Frame):
     # ------------------------------------------------------------------
 
     def _build_ui(self) -> None:
-        tk.Label(self, text="Color Picker", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 10, "bold"), anchor=tk.W).pack(fill=tk.X, padx=6, pady=(6, 2))
+        tk.Label(self, text="Color Picker", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold"), anchor=tk.W).pack(
+            fill=tk.X, padx=6, pady=(6, 2)
+        )
 
         wheel_frame = tk.Frame(self, bg=self._bg)
         wheel_frame.pack(padx=6, pady=4)
-        self._wheel_canvas = tk.Canvas(wheel_frame, width=150, height=150,
-                                       bg=self._bg, highlightthickness=0)
+        self._wheel_canvas = tk.Canvas(wheel_frame, width=150, height=150, bg=self._bg, highlightthickness=0)
         self._wheel_canvas.pack()
         self._wheel_canvas.bind("<ButtonPress-1>", self._on_wheel_click)
         self._wheel_canvas.bind("<B1-Motion>", self._on_wheel_click)
 
         preview_frame = tk.Frame(self, bg=self._bg)
         preview_frame.pack(fill=tk.X, padx=6, pady=2)
-        tk.Label(preview_frame, text="Current", bg=self._bg, fg="#6c7086",
-                 font=("Segoe UI", 7)).pack(side=tk.LEFT)
-        self._current_swatch = tk.Frame(preview_frame, bg=self._current_color,
-                                        width=30, height=20, relief=tk.SUNKEN, bd=1)
+        tk.Label(preview_frame, text="Current", bg=self._bg, fg="#6c7086", font=("Segoe UI", 7)).pack(side=tk.LEFT)
+        self._current_swatch = tk.Frame(
+            preview_frame, bg=self._current_color, width=30, height=20, relief=tk.SUNKEN, bd=1
+        )
         self._current_swatch.pack(side=tk.LEFT, padx=2)
         self._current_swatch.pack_propagate(False)
-        tk.Label(preview_frame, text="Prev", bg=self._bg, fg="#6c7086",
-                 font=("Segoe UI", 7)).pack(side=tk.LEFT, padx=(8, 0))
-        self._prev_swatch = tk.Frame(preview_frame, bg=self._previous_color,
-                                     width=30, height=20, relief=tk.SUNKEN, bd=1)
+        tk.Label(preview_frame, text="Prev", bg=self._bg, fg="#6c7086", font=("Segoe UI", 7)).pack(
+            side=tk.LEFT, padx=(8, 0)
+        )
+        self._prev_swatch = tk.Frame(
+            preview_frame, bg=self._previous_color, width=30, height=20, relief=tk.SUNKEN, bd=1
+        )
         self._prev_swatch.pack(side=tk.LEFT, padx=2)
         self._prev_swatch.pack_propagate(False)
         self._prev_swatch.bind("<Button-1>", self._make_prev_swatch_handler())
@@ -94,43 +98,65 @@ class ColorPicker(tk.Frame):
         self._g_var = tk.IntVar(value=0)
         self._b_var = tk.IntVar(value=0)
 
-        for label, var, color in [("R", self._r_var, "#f38ba8"),
-                                  ("G", self._g_var, "#a6e3a1"),
-                                  ("B", self._b_var, "#89b4fa")]:
+        for label, var, color in [
+            ("R", self._r_var, "#f38ba8"),
+            ("G", self._g_var, "#a6e3a1"),
+            ("B", self._b_var, "#89b4fa"),
+        ]:
             row = tk.Frame(sliders_frame, bg=self._bg)
             row.pack(fill=tk.X, pady=1)
-            tk.Label(row, text=label, bg=self._bg, fg=color,
-                     font=("Consolas", 8, "bold"), width=2).pack(side=tk.LEFT)
-            scale = tk.Scale(row, variable=var, from_=0, to=255, orient=tk.HORIZONTAL,
-                             bg=self._bg, fg=self._fg, troughcolor="#313244",
-                             highlightthickness=0, length=110, showvalue=False,
-                             font=("Consolas", 7),
-                             command=self._make_slider_cmd())
+            tk.Label(row, text=label, bg=self._bg, fg=color, font=("Consolas", 8, "bold"), width=2).pack(side=tk.LEFT)
+            scale = tk.Scale(
+                row,
+                variable=var,
+                from_=0,
+                to=255,
+                orient=tk.HORIZONTAL,
+                bg=self._bg,
+                fg=self._fg,
+                troughcolor="#313244",
+                highlightthickness=0,
+                length=110,
+                showvalue=False,
+                font=("Consolas", 7),
+                command=self._make_slider_cmd(),
+            )
             scale.pack(side=tk.LEFT, fill=tk.X, expand=True)
-            val_lbl = tk.Label(row, textvariable=var, bg=self._bg, fg=self._fg,
-                               font=("Consolas", 7), width=4)
+            val_lbl = tk.Label(row, textvariable=var, bg=self._bg, fg=self._fg, font=("Consolas", 7), width=4)
             val_lbl.pack(side=tk.LEFT)
 
         hex_frame = tk.Frame(self, bg=self._bg)
         hex_frame.pack(fill=tk.X, padx=6, pady=2)
-        tk.Label(hex_frame, text="Hex:", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 8)).pack(side=tk.LEFT)
+        tk.Label(hex_frame, text="Hex:", bg=self._bg, fg=self._fg, font=("Segoe UI", 8)).pack(side=tk.LEFT)
         self._hex_var = tk.StringVar(value=self._current_color)
-        hex_entry = tk.Entry(hex_frame, textvariable=self._hex_var, width=8,
-                             bg="#313244", fg=self._fg, insertbackground=self._fg,
-                             font=("Consolas", 9), relief=tk.FLAT)
+        hex_entry = tk.Entry(
+            hex_frame,
+            textvariable=self._hex_var,
+            width=8,
+            bg="#313244",
+            fg=self._fg,
+            insertbackground=self._fg,
+            font=("Consolas", 9),
+            relief=tk.FLAT,
+        )
         hex_entry.pack(side=tk.LEFT, padx=4)
         hex_entry.bind("<Return>", self._on_hex_entry)
 
-        eyedropper_btn = tk.Button(hex_frame, text="🔍", bg="#313244", fg=self._fg,
-                                   relief=tk.FLAT, font=("Segoe UI", 9),
-                                   command=self._eyedropper, padx=4)
+        eyedropper_btn = tk.Button(
+            hex_frame,
+            text="🔍",
+            bg="#313244",
+            fg=self._fg,
+            relief=tk.FLAT,
+            font=("Segoe UI", 9),
+            command=self._eyedropper,
+            padx=4,
+        )
         eyedropper_btn.pack(side=tk.LEFT)
 
         recent_frame = tk.Frame(self, bg=self._bg)
         recent_frame.pack(fill=tk.X, padx=6, pady=(4, 6))
-        tk.Label(recent_frame, text="Recent:", bg=self._bg, fg="#6c7086",
-                 font=("Segoe UI", 7)).pack(side=tk.LEFT)
+        tk.Label(recent_frame, text="Recent:", bg=self._bg, fg="#6c7086", font=("Segoe UI", 7)).pack(side=tk.LEFT)
         self._recent_frame_inner = tk.Frame(recent_frame, bg=self._bg)
         self._recent_frame_inner.pack(side=tk.LEFT, padx=4)
         self._draw_recent()
@@ -153,19 +179,16 @@ class ColorPicker(tk.Frame):
                 s = r / radius
                 v = self._val
                 rgb = colorsys.hsv_to_rgb(h, s, v)
-                color = "#{:02x}{:02x}{:02x}".format(
-                    int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255))
+                color = "#{:02x}{:02x}{:02x}".format(int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255))
                 x = cx + r * math.cos(rad)
                 y = cy - r * math.sin(rad)
-                self._wheel_canvas.create_rectangle(x - 2, y - 2, x + 2, y + 2,
-                                                    fill=color, outline="")
+                self._wheel_canvas.create_rectangle(x - 2, y - 2, x + 2, y + 2, fill=color, outline="")
 
         sel_angle = self._hue * 2 * math.pi
         sel_r = self._sat * radius
         sx = cx + sel_r * math.cos(sel_angle)
         sy = cy - sel_r * math.sin(sel_angle)
-        self._wheel_canvas.create_oval(sx - 5, sy - 5, sx + 5, sy + 5,
-                                       outline="white", width=2)
+        self._wheel_canvas.create_oval(sx - 5, sy - 5, sx + 5, sy + 5, outline="white", width=2)
 
     def _on_wheel_click(self, event: tk.Event) -> None:
         cx, cy = 75, 75
@@ -197,8 +220,7 @@ class ColorPicker(tk.Frame):
         self._r_var.set(int(r * 255))
         self._g_var.set(int(g * 255))
         self._b_var.set(int(b * 255))
-        self._current_color = "#{:02x}{:02x}{:02x}".format(
-            int(r * 255), int(g * 255), int(b * 255))
+        self._current_color = "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
         self._hex_var.set(self._current_color)
         self._current_swatch.config(bg=self._current_color)
         self._draw_wheel()
@@ -212,8 +234,7 @@ class ColorPicker(tk.Frame):
         g = self._g_var.get() / 255.0
         b = self._b_var.get() / 255.0
         self._hue, self._sat, self._val = colorsys.rgb_to_hsv(r, g, b)
-        self._current_color = "#{:02x}{:02x}{:02x}".format(
-            int(r * 255), int(g * 255), int(b * 255))
+        self._current_color = "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
         self._hex_var.set(self._current_color)
         self._current_swatch.config(bg=self._current_color)
         self._draw_wheel()
@@ -268,15 +289,14 @@ class ColorPicker(tk.Frame):
         if color in self._recent_colors:
             self._recent_colors.remove(color)
         self._recent_colors.insert(0, color)
-        self._recent_colors = self._recent_colors[:self.MAX_RECENT]
+        self._recent_colors = self._recent_colors[: self.MAX_RECENT]
         self._draw_recent()
 
     def _draw_recent(self) -> None:
         for w in self._recent_frame_inner.winfo_children():
             w.destroy()
-        for color in self._recent_colors[:self.MAX_RECENT]:
-            swatch = tk.Frame(self._recent_frame_inner, bg=color,
-                              width=14, height=14, relief=tk.RAISED, bd=1)
+        for color in self._recent_colors[: self.MAX_RECENT]:
+            swatch = tk.Frame(self._recent_frame_inner, bg=color, width=14, height=14, relief=tk.RAISED, bd=1)
             swatch.pack(side=tk.LEFT, padx=1)
             swatch.pack_propagate(False)
             swatch.bind("<Button-1>", self._make_swatch_handler(color))
@@ -284,16 +304,19 @@ class ColorPicker(tk.Frame):
     def _make_slider_cmd(self) -> Callable[[str], None]:
         def cmd(v: str) -> None:
             self._on_slider_change()
+
         return cmd
 
     def _make_prev_swatch_handler(self) -> Callable[[tk.Event], None]:
         def handler(event: tk.Event) -> None:
             self.set_color(self._previous_color)
+
         return handler
 
     def _make_swatch_handler(self, color: str) -> Callable[[tk.Event], None]:
         def handler(event: tk.Event) -> None:
             self.set_color(color)
+
         return handler
 
     def _eyedropper(self) -> None:

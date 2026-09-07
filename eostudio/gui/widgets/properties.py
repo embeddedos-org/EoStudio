@@ -1,16 +1,19 @@
 """Dynamic properties panel — adapts to the selected object type."""
 
-
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -41,15 +44,15 @@ class PropertiesPanel(tk.Frame):
         self._widgets: Dict[str, tk.Widget] = {}
         self._sections: List[tk.Frame] = []
 
-        self._header = tk.Label(self, text="Properties", bg=bg, fg=fg,
-                                font=("Segoe UI", 11, "bold"), anchor=tk.W)
+        self._header = tk.Label(self, text="Properties", bg=bg, fg=fg, font=("Segoe UI", 11, "bold"), anchor=tk.W)
         self._header.pack(fill=tk.X, padx=8, pady=(8, 4))
 
         self._scroll_frame = tk.Frame(self, bg=bg)
         self._scroll_frame.pack(fill=tk.BOTH, expand=True, padx=4)
 
-        self._no_sel_label = tk.Label(self._scroll_frame, text="No object selected",
-                                      bg=bg, fg="#6c7086", font=("Segoe UI", 9))
+        self._no_sel_label = tk.Label(
+            self._scroll_frame, text="No object selected", bg=bg, fg="#6c7086", font=("Segoe UI", 9)
+        )
         self._no_sel_label.pack(pady=20)
 
     # ------------------------------------------------------------------
@@ -60,8 +63,9 @@ class PropertiesPanel(tk.Frame):
         self._clear()
         self._no_sel_label.pack_forget()
 
-        type_label = tk.Label(self._scroll_frame, text=f"Type: {obj_type}",
-                              bg=self._bg, fg="#89b4fa", font=("Segoe UI", 9, "bold"))
+        type_label = tk.Label(
+            self._scroll_frame, text=f"Type: {obj_type}", bg=self._bg, fg="#89b4fa", font=("Segoe UI", 9, "bold")
+        )
         type_label.pack(fill=tk.X, padx=4, pady=(4, 8))
         self._sections.append(type_label)
 
@@ -81,8 +85,7 @@ class PropertiesPanel(tk.Frame):
             if "shininess" in props:
                 self._add_slider_field("shininess", "Shininess", props["shininess"], 0, 128)
 
-        custom_keys = [k for k in props if k not in
-                       ("position", "rotation", "scale", "color", "shininess")]
+        custom_keys = [k for k in props if k not in ("position", "rotation", "scale", "color", "shininess")]
         if custom_keys:
             self._add_section("Properties")
             for key in custom_keys:
@@ -114,8 +117,9 @@ class PropertiesPanel(tk.Frame):
         sep = ttk.Separator(self._scroll_frame, orient=tk.HORIZONTAL)
         sep.pack(fill=tk.X, padx=4, pady=4)
         self._sections.append(sep)
-        lbl = tk.Label(self._scroll_frame, text=title, bg=self._bg, fg="#f9e2af",
-                       font=("Segoe UI", 9, "bold"), anchor=tk.W)
+        lbl = tk.Label(
+            self._scroll_frame, text=title, bg=self._bg, fg="#f9e2af", font=("Segoe UI", 9, "bold"), anchor=tk.W
+        )
         lbl.pack(fill=tk.X, padx=8, pady=(2, 4))
         self._sections.append(lbl)
 
@@ -124,16 +128,24 @@ class PropertiesPanel(tk.Frame):
         row.pack(fill=tk.X, padx=8, pady=1)
         self._sections.append(row)
 
-        tk.Label(row, text=label, bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 8), width=8, anchor=tk.W).pack(side=tk.LEFT)
+        tk.Label(row, text=label, bg=self._bg, fg=self._fg, font=("Segoe UI", 8), width=8, anchor=tk.W).pack(
+            side=tk.LEFT
+        )
 
         for i, (axis, val) in enumerate(zip("XYZ", values)):
             colors = ["#f38ba8", "#a6e3a1", "#89b4fa"]
-            tk.Label(row, text=axis, bg=self._bg, fg=colors[i],
-                     font=("Consolas", 8, "bold")).pack(side=tk.LEFT)
+            tk.Label(row, text=axis, bg=self._bg, fg=colors[i], font=("Consolas", 8, "bold")).pack(side=tk.LEFT)
             var = tk.StringVar(value=f"{val:.2f}")
-            ent = tk.Entry(row, textvariable=var, width=6, bg="#313244", fg=self._fg,
-                           insertbackground=self._fg, font=("Consolas", 8), relief=tk.FLAT)
+            ent = tk.Entry(
+                row,
+                textvariable=var,
+                width=6,
+                bg="#313244",
+                fg=self._fg,
+                insertbackground=self._fg,
+                font=("Consolas", 8),
+                relief=tk.FLAT,
+            )
             ent.pack(side=tk.LEFT, padx=(0, 4))
             ent.bind("<Return>", lambda e, k=key, idx=i, v=var: self._on_vec_change(k, idx, v))
             self._widgets[f"{key}_{axis}"] = ent
@@ -142,28 +154,47 @@ class PropertiesPanel(tk.Frame):
         row = tk.Frame(self._scroll_frame, bg=self._bg)
         row.pack(fill=tk.X, padx=8, pady=1)
         self._sections.append(row)
-        tk.Label(row, text=label, bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 8), width=12, anchor=tk.W).pack(side=tk.LEFT)
+        tk.Label(row, text=label, bg=self._bg, fg=self._fg, font=("Segoe UI", 8), width=12, anchor=tk.W).pack(
+            side=tk.LEFT
+        )
         var = tk.StringVar(value=value)
-        ent = tk.Entry(row, textvariable=var, width=14, bg="#313244", fg=self._fg,
-                       insertbackground=self._fg, font=("Consolas", 8), relief=tk.FLAT)
+        ent = tk.Entry(
+            row,
+            textvariable=var,
+            width=14,
+            bg="#313244",
+            fg=self._fg,
+            insertbackground=self._fg,
+            font=("Consolas", 8),
+            relief=tk.FLAT,
+        )
         ent.pack(side=tk.LEFT, fill=tk.X, expand=True)
         ent.bind("<Return>", lambda e, k=key, v=var: self._fire_change(k, v.get()))
         self._widgets[key] = ent
 
-    def _add_slider_field(self, key: str, label: str, value: float,
-                          from_: float, to: float) -> None:
+    def _add_slider_field(self, key: str, label: str, value: float, from_: float, to: float) -> None:
         row = tk.Frame(self._scroll_frame, bg=self._bg)
         row.pack(fill=tk.X, padx=8, pady=1)
         self._sections.append(row)
-        tk.Label(row, text=label, bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 8), width=12, anchor=tk.W).pack(side=tk.LEFT)
+        tk.Label(row, text=label, bg=self._bg, fg=self._fg, font=("Segoe UI", 8), width=12, anchor=tk.W).pack(
+            side=tk.LEFT
+        )
         var = tk.DoubleVar(value=value)
-        scale = tk.Scale(row, variable=var, from_=from_, to=to, orient=tk.HORIZONTAL,
-                         bg=self._bg, fg=self._fg, troughcolor="#313244",
-                         highlightthickness=0, length=120, showvalue=True,
-                         font=("Consolas", 7),
-                         command=lambda v, k=key: self._fire_change(k, float(v)))
+        scale = tk.Scale(
+            row,
+            variable=var,
+            from_=from_,
+            to=to,
+            orient=tk.HORIZONTAL,
+            bg=self._bg,
+            fg=self._fg,
+            troughcolor="#313244",
+            highlightthickness=0,
+            length=120,
+            showvalue=True,
+            font=("Consolas", 7),
+            command=lambda v, k=key: self._fire_change(k, float(v)),
+        )
         scale.pack(side=tk.LEFT, fill=tk.X, expand=True)
         self._widgets[key] = scale
 
@@ -171,14 +202,23 @@ class PropertiesPanel(tk.Frame):
         row = tk.Frame(self._scroll_frame, bg=self._bg)
         row.pack(fill=tk.X, padx=8, pady=1)
         self._sections.append(row)
-        tk.Label(row, text=label, bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 8), width=12, anchor=tk.W).pack(side=tk.LEFT)
+        tk.Label(row, text=label, bg=self._bg, fg=self._fg, font=("Segoe UI", 8), width=12, anchor=tk.W).pack(
+            side=tk.LEFT
+        )
         swatch = tk.Frame(row, bg=value, width=20, height=20, relief=tk.SUNKEN, bd=1)
         swatch.pack(side=tk.LEFT, padx=(0, 4))
         swatch.pack_propagate(False)
         var = tk.StringVar(value=value)
-        ent = tk.Entry(row, textvariable=var, width=8, bg="#313244", fg=self._fg,
-                       insertbackground=self._fg, font=("Consolas", 8), relief=tk.FLAT)
+        ent = tk.Entry(
+            row,
+            textvariable=var,
+            width=8,
+            bg="#313244",
+            fg=self._fg,
+            insertbackground=self._fg,
+            font=("Consolas", 8),
+            relief=tk.FLAT,
+        )
         ent.pack(side=tk.LEFT)
         ent.bind("<Return>", lambda e, k=key, v=var, s=swatch: self._on_color_change(k, v, s))
         self._widgets[key] = ent
@@ -188,10 +228,17 @@ class PropertiesPanel(tk.Frame):
         row.pack(fill=tk.X, padx=8, pady=1)
         self._sections.append(row)
         var = tk.BooleanVar(value=value)
-        cb = tk.Checkbutton(row, text=label, variable=var, bg=self._bg, fg=self._fg,
-                            selectcolor="#313244", activebackground=self._bg,
-                            font=("Segoe UI", 8),
-                            command=lambda k=key, v=var: self._fire_change(k, v.get()))
+        cb = tk.Checkbutton(
+            row,
+            text=label,
+            variable=var,
+            bg=self._bg,
+            fg=self._fg,
+            selectcolor="#313244",
+            activebackground=self._bg,
+            font=("Segoe UI", 8),
+            command=lambda k=key, v=var: self._fire_change(k, v.get()),
+        )
         cb.pack(side=tk.LEFT)
         self._widgets[key] = cb
 
@@ -199,13 +246,13 @@ class PropertiesPanel(tk.Frame):
         row = tk.Frame(self._scroll_frame, bg=self._bg)
         row.pack(fill=tk.X, padx=8, pady=1)
         self._sections.append(row)
-        tk.Label(row, text=label, bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 8), width=12, anchor=tk.W).pack(side=tk.LEFT)
+        tk.Label(row, text=label, bg=self._bg, fg=self._fg, font=("Segoe UI", 8), width=12, anchor=tk.W).pack(
+            side=tk.LEFT
+        )
         var = tk.StringVar(value=values[0] if values else "")
         combo = ttk.Combobox(row, textvariable=var, values=values, width=12, state="readonly")
         combo.pack(side=tk.LEFT)
-        combo.bind("<<ComboboxSelected>>",
-                   lambda e, k=key, v=var: self._fire_change(k, v.get()))
+        combo.bind("<<ComboboxSelected>>", lambda e, k=key, v=var: self._fire_change(k, v.get()))
         self._widgets[key] = combo
 
     # ------------------------------------------------------------------

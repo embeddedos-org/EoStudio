@@ -20,6 +20,7 @@ from eostudio.core.ai.llm_client import LLMClient, LLMConfig
 @dataclass
 class TestResult:
     """Result of a test run."""
+
     file: str
     passed: bool
     total: int = 0
@@ -28,13 +29,20 @@ class TestResult:
     coverage: float = 0.0
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"file": self.file, "passed": self.passed, "total": self.total,
-                "failures": self.failures, "errors": self.errors, "coverage": self.coverage}
+        return {
+            "file": self.file,
+            "passed": self.passed,
+            "total": self.total,
+            "failures": self.failures,
+            "errors": self.errors,
+            "coverage": self.coverage,
+        }
 
 
 @dataclass
 class TestReport:
     """Comprehensive test report with pass/fail summary, coverage, and suggestions."""
+
     total_files: int = 0
     files_with_tests: int = 0
     total_tests: int = 0
@@ -51,7 +59,9 @@ class TestReport:
             "total_files": self.total_files,
             "files_with_tests": self.files_with_tests,
             "total_tests": self.total_tests,
-            "passed": self.passed, "failed": self.failed, "skipped": self.skipped,
+            "passed": self.passed,
+            "failed": self.failed,
+            "skipped": self.skipped,
             "coverage_percent": self.coverage_percent,
             "missing_tests": self.missing_tests,
             "results": [r.to_dict() for r in self.results],
@@ -71,26 +81,30 @@ class TestReport:
 class AITestAgent:
     """Agent that generates tests, runs them, and fixes failures."""
 
-    def __init__(self, llm_client: Optional[LLMClient] = None,
-                 test_framework: str = "vitest",
-                 max_fix_attempts: int = 3) -> None:
+    def __init__(
+        self, llm_client: Optional[LLMClient] = None, test_framework: str = "vitest", max_fix_attempts: int = 3
+    ) -> None:
         self._client = llm_client or LLMClient(LLMConfig())
         self.test_framework = test_framework
         self.max_fix_attempts = max_fix_attempts
 
-    def generate_tests(self, source_file: str, source_code: str,
-                       framework: str = "react") -> str:
+    def generate_tests(self, source_file: str, source_code: str, framework: str = "react") -> str:
         """Generate test code for a source file."""
-        messages = [{"role": "user", "content": (
-            f"Generate comprehensive tests for this {framework} file.\n"
-            f"Test framework: {self.test_framework}\n"
-            f"File: {source_file}\n\n"
-            f"```\n{source_code}\n```\n\n"
-            f"Generate tests covering:\n"
-            f"- Component rendering\n- User interactions\n- Edge cases\n"
-            f"- Error handling\n- Accessibility\n"
-            f"Return ONLY the test code, no explanation."
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"Generate comprehensive tests for this {framework} file.\n"
+                    f"Test framework: {self.test_framework}\n"
+                    f"File: {source_file}\n\n"
+                    f"```\n{source_code}\n```\n\n"
+                    f"Generate tests covering:\n"
+                    f"- Component rendering\n- User interactions\n- Edge cases\n"
+                    f"- Error handling\n- Accessibility\n"
+                    f"Return ONLY the test code, no explanation."
+                ),
+            }
+        ]
         raw = self._client.chat(messages)
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[1] if "\n" in raw else raw
@@ -129,23 +143,30 @@ class AITestAgent:
         cmd = cmd_map.get(self.test_framework, "npm test")
         try:
             result = subprocess.run(
-                cmd.split(), cwd=project_dir,
-                capture_output=True, text=True, timeout=120,
+                cmd.split(),
+                cwd=project_dir,
+                capture_output=True,
+                text=True,
+                timeout=120,
             )
             return self._parse_results(result)
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return [TestResult(file="all", passed=True, total=0)]
 
-    def fix_failing_tests(self, test_file: str, test_code: str,
-                          errors: List[str], source_code: str) -> str:
+    def fix_failing_tests(self, test_file: str, test_code: str, errors: List[str], source_code: str) -> str:
         """Fix failing test code based on errors."""
-        messages = [{"role": "user", "content": (
-            f"Fix these failing tests.\n\n"
-            f"Test file: {test_file}\nErrors:\n{chr(10).join(errors[:5])}\n\n"
-            f"Current test code:\n```\n{test_code}\n```\n\n"
-            f"Source code being tested:\n```\n{source_code[:1000]}\n```\n\n"
-            f"Return ONLY the fixed test code."
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"Fix these failing tests.\n\n"
+                    f"Test file: {test_file}\nErrors:\n{chr(10).join(errors[:5])}\n\n"
+                    f"Current test code:\n```\n{test_code}\n```\n\n"
+                    f"Source code being tested:\n```\n{source_code[:1000]}\n```\n\n"
+                    f"Return ONLY the fixed test code."
+                ),
+            }
+        ]
         raw = self._client.chat(messages)
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[1] if "\n" in raw else raw
@@ -159,11 +180,13 @@ class AITestAgent:
         for attempt in range(self.max_fix_attempts):
             results = self.run_tests(project_dir)
             all_passed = all(r.passed for r in results)
-            history.append({
-                "attempt": attempt + 1,
-                "results": [r.to_dict() for r in results],
-                "all_passed": all_passed,
-            })
+            history.append(
+                {
+                    "attempt": attempt + 1,
+                    "results": [r.to_dict() for r in results],
+                    "all_passed": all_passed,
+                }
+            )
             if all_passed:
                 break
             # Fix failures
@@ -188,14 +211,16 @@ class AITestAgent:
         try:
             result = subprocess.run(
                 ["npx", "vitest", "run", "--coverage"],
-                cwd=project_dir, capture_output=True, text=True, timeout=120,
+                cwd=project_dir,
+                capture_output=True,
+                text=True,
+                timeout=120,
             )
             return {"success": result.returncode == 0, "output": result.stdout[-1000:]}
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return {"success": False, "error": "Coverage tool not available"}
 
-    def generate_test_config(self, project_dir: str,
-                             framework: Optional[str] = None) -> Dict[str, str]:
+    def generate_test_config(self, project_dir: str, framework: Optional[str] = None) -> Dict[str, str]:
         """Generate test configuration files (vitest.config.ts / jest.config.ts / pytest.ini)."""
         fw = framework or self.test_framework
         configs: Dict[str, str] = {}
@@ -209,14 +234,14 @@ class AITestAgent:
                 "export default defineConfig({\n"
                 "  plugins: [react()],\n"
                 "  test: {\n"
-                '    globals: true,\n'
+                "    globals: true,\n"
                 '    environment: "jsdom",\n'
                 '    setupFiles: ["./src/test/setup.ts"],\n'
                 '    include: ["src/**/*.{test,spec}.{ts,tsx}"],\n'
                 "    coverage: {\n"
                 '      provider: "v8",\n'
                 '      reporter: ["text", "json", "html"],\n'
-                "      exclude: [\"node_modules/\", \"src/test/\"],\n"
+                '      exclude: ["node_modules/", "src/test/"],\n'
                 "      thresholds: { lines: 70, functions: 70, branches: 60 },\n"
                 "    },\n"
                 "  },\n"
@@ -225,15 +250,13 @@ class AITestAgent:
                 "  },\n"
                 "});\n"
             )
-            configs["src/test/setup.ts"] = (
-                'import "@testing-library/jest-dom/vitest";\n'
-            )
+            configs["src/test/setup.ts"] = 'import "@testing-library/jest-dom/vitest";\n'
         elif fw == "jest":
             configs["jest.config.ts"] = (
                 "export default {\n"
                 '  preset: "ts-jest",\n'
                 '  testEnvironment: "jsdom",\n'
-                "  setupFilesAfterSetup: [\"<rootDir>/src/test/setup.ts\"],\n"
+                '  setupFilesAfterSetup: ["<rootDir>/src/test/setup.ts"],\n'
                 '  moduleNameMapper: { "^@/(.*)$": "<rootDir>/src/$1" },\n'
                 '  collectCoverageFrom: ["src/**/*.{ts,tsx}", "!src/**/*.d.ts"],\n'
                 "  coverageThreshold: {\n"
@@ -277,8 +300,10 @@ class AITestAgent:
 
         for root, _, files in os.walk(project_dir):
             for fname in files:
-                if not (fname.endswith((".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx"))
-                        or (fname.startswith("test_") and fname.endswith(".py"))):
+                if not (
+                    fname.endswith((".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx"))
+                    or (fname.startswith("test_") and fname.endswith(".py"))
+                ):
                     continue
 
                 filepath = os.path.join(root, fname)
@@ -322,11 +347,7 @@ class AITestAgent:
         for root, _, files in os.walk(search_dir):
             for fname in files:
                 if fname.endswith((".ts", ".tsx", ".py", ".js", ".jsx")):
-                    is_test = (
-                        ".test." in fname or ".spec." in fname
-                        or fname.startswith("test_")
-                        or "__tests__" in root
-                    )
+                    is_test = ".test." in fname or ".spec." in fname or fname.startswith("test_") or "__tests__" in root
                     if is_test:
                         test_files.append(fname)
                         # Count test functions
@@ -334,9 +355,7 @@ class AITestAgent:
                         try:
                             with open(filepath, "r", encoding="utf-8") as f:
                                 code = f.read()
-                            report.total_tests += len(re.findall(
-                                r"\bit\(|\btest\(|\bdef test_", code
-                            ))
+                            report.total_tests += len(re.findall(r"\bit\(|\btest\(|\bdef test_", code))
                         except OSError:
                             pass
                     else:
@@ -354,17 +373,14 @@ class AITestAgent:
 
         report.files_with_tests = len(tested_files)
         report.missing_tests = [f for f in src_files if f not in tested_files]
-        report.coverage_percent = (
-            (len(tested_files) / len(src_files) * 100) if src_files else 100.0
-        )
+        report.coverage_percent = (len(tested_files) / len(src_files) * 100) if src_files else 100.0
 
         # Validate test files
         report.validation_errors = self.validate_test_files(project_dir)
 
         return report
 
-    def check_spec_completeness(self, project_dir: str,
-                                 spec_data: Dict[str, Any]) -> List[str]:
+    def check_spec_completeness(self, project_dir: str, spec_data: Dict[str, Any]) -> List[str]:
         """Check that tests exist for all components/features defined in the spec."""
         missing: List[str] = []
 
@@ -408,13 +424,18 @@ class AITestAgent:
         return missing
 
     def _parse_results(self, result: subprocess.CompletedProcess) -> List[TestResult]:
-        errors = [l for l in (result.stderr + result.stdout).split("\n")
-                  if "fail" in l.lower() or "error" in l.lower()][:10]
-        return [TestResult(
-            file="all", passed=result.returncode == 0,
-            total=1, failures=0 if result.returncode == 0 else 1,
-            errors=errors,
-        )]
+        errors = [
+            l for l in (result.stderr + result.stdout).split("\n") if "fail" in l.lower() or "error" in l.lower()
+        ][:10]
+        return [
+            TestResult(
+                file="all",
+                passed=result.returncode == 0,
+                total=1,
+                failures=0 if result.returncode == 0 else 1,
+                errors=errors,
+            )
+        ]
 
     def _fallback_test(self, source_file: str, framework: str) -> str:
         name = source_file.replace(".tsx", "").replace(".ts", "").replace(".jsx", "").replace(".js", "")

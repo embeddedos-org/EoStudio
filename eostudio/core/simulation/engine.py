@@ -41,9 +41,14 @@ class Block:
 
 
 class SourceBlock(Block):
-    def __init__(self, block_id: str = "", name: str = "",
-                 signal_type: str = "step", amplitude: float = 1.0,
-                 frequency: float = 1.0) -> None:
+    def __init__(
+        self,
+        block_id: str = "",
+        name: str = "",
+        signal_type: str = "step",
+        amplitude: float = 1.0,
+        frequency: float = 1.0,
+    ) -> None:
         super().__init__(block_id, name)
         self.signal_type = signal_type
         self.amplitude = amplitude
@@ -69,8 +74,7 @@ class GainBlock(Block):
 
 
 class SumBlock(Block):
-    def __init__(self, block_id: str = "", name: str = "",
-                 signs: Optional[List[str]] = None) -> None:
+    def __init__(self, block_id: str = "", name: str = "", signs: Optional[List[str]] = None) -> None:
         super().__init__(block_id, name)
         self.signs = signs or ["+", "+"]
 
@@ -83,8 +87,7 @@ class SumBlock(Block):
 
 
 class PIDBlock(Block):
-    def __init__(self, block_id: str = "", name: str = "",
-                 Kp: float = 1.0, Ki: float = 0.0, Kd: float = 0.0) -> None:
+    def __init__(self, block_id: str = "", name: str = "", Kp: float = 1.0, Ki: float = 0.0, Kd: float = 0.0) -> None:
         super().__init__(block_id, name)
         self.Kp = Kp
         self.Ki = Ki

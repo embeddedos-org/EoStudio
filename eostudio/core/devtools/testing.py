@@ -1,4 +1,5 @@
 """Universal test runner supporting multiple frameworks."""
+
 from __future__ import annotations
 
 import enum
@@ -13,6 +14,7 @@ from typing import Any, Callable
 
 class TestStatus(enum.Enum):
     """Status of an individual test."""
+
     PASSED = "passed"
     FAILED = "failed"
     ERROR = "error"
@@ -23,6 +25,7 @@ class TestStatus(enum.Enum):
 
 class TestFramework(enum.Enum):
     """Supported test frameworks."""
+
     PYTEST = "pytest"
     JEST = "jest"
     CARGO_TEST = "cargo_test"
@@ -35,6 +38,7 @@ class TestFramework(enum.Enum):
 @dataclass
 class TestResult:
     """Result of a single test execution."""
+
     name: str
     status: TestStatus
     duration: float = 0.0
@@ -48,6 +52,7 @@ class TestResult:
 @dataclass
 class TestSuite:
     """Collection of test results."""
+
     name: str
     tests: list[TestResult] = field(default_factory=list)
     duration: float = 0.0
@@ -102,6 +107,7 @@ class TestSuite:
 @dataclass
 class CoverageResult:
     """Code coverage information."""
+
     total_lines: int = 0
     covered_lines: int = 0
     percentage: float = 0.0
@@ -489,9 +495,7 @@ class TestRunner:
         )
         for m in pattern.finditer(stdout + "\n" + stderr):
             status = TestStatus.PASSED if m.group("status") == "passed" else TestStatus.FAILED
-            suite.add_result(
-                TestResult(name=m.group("name"), status=status, duration=float(m.group("dur")))
-            )
+            suite.add_result(TestResult(name=m.group("name"), status=status, duration=float(m.group("dur"))))
         if not suite.tests:
             self._fallback_summary(suite, stdout, stderr)
         return suite

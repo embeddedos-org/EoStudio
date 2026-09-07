@@ -38,26 +38,16 @@ class CodeReviewer:
         return self.llm_client.complete(prompt)
 
     def review_file(self, code: str, filename: str) -> ReviewResult:
-        prompt = (
-            f"Review the following code from {filename}. "
-            f"Identify bugs, style issues, and improvements:\n\n{code}"
-        )
+        prompt = f"Review the following code from {filename}. Identify bugs, style issues, and improvements:\n\n{code}"
         result = self._ask(prompt)
         return ReviewResult(summary=result, score=80)
 
     def review_diff(self, diff_text: str) -> ReviewResult:
-        prompt = (
-            f"Review the following code diff. "
-            f"Identify issues and suggest improvements:\n\n{diff_text}"
-        )
+        prompt = f"Review the following code diff. Identify issues and suggest improvements:\n\n{diff_text}"
         result = self._ask(prompt)
         return ReviewResult(summary=result, score=80)
 
     def review_commit(self, commit_message: str, diff_text: str) -> ReviewResult:
-        prompt = (
-            f"Review the following commit.\n"
-            f"Commit message: {commit_message}\n\n"
-            f"Diff:\n{diff_text}"
-        )
+        prompt = f"Review the following commit.\nCommit message: {commit_message}\n\nDiff:\n{diff_text}"
         result = self._ask(prompt)
         return ReviewResult(summary=result, score=80)

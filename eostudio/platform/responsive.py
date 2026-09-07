@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 @dataclass
 class DevicePreset:
     """Device screen preset for responsive preview."""
+
     name: str
     width: int
     height: int
@@ -25,14 +26,14 @@ DEVICE_PRESETS: Dict[str, DevicePreset] = {
     "iphone-15": DevicePreset("iPhone 15", 393, 852, 460, "ios", "phone", 3.0),
     "ipad-mini": DevicePreset("iPad Mini", 744, 1133, 326, "ios", "tablet", 2.0),
     "ipad-air": DevicePreset("iPad Air", 820, 1180, 264, "ios", "tablet", 2.0),
-    "ipad-pro-12": DevicePreset("iPad Pro 12.9\"", 1024, 1366, 264, "ios", "tablet", 2.0),
+    "ipad-pro-12": DevicePreset('iPad Pro 12.9"', 1024, 1366, 264, "ios", "tablet", 2.0),
     "pixel-7": DevicePreset("Pixel 7", 412, 915, 416, "android", "phone", 2.625),
     "pixel-7-pro": DevicePreset("Pixel 7 Pro", 412, 892, 512, "android", "phone", 3.5),
     "samsung-s23": DevicePreset("Samsung S23", 360, 780, 425, "android", "phone", 3.0),
     "samsung-s23-ultra": DevicePreset("Samsung S23 Ultra", 384, 824, 500, "android", "phone", 3.75),
     "android-tablet": DevicePreset("Android Tablet", 800, 1280, 213, "android", "tablet", 1.5),
-    "laptop-sm": DevicePreset("Laptop 13\"", 1366, 768, 96, "desktop", "laptop", 1.0),
-    "laptop-md": DevicePreset("Laptop 15\"", 1536, 864, 96, "desktop", "laptop", 1.0),
+    "laptop-sm": DevicePreset('Laptop 13"', 1366, 768, 96, "desktop", "laptop", 1.0),
+    "laptop-md": DevicePreset('Laptop 15"', 1536, 864, 96, "desktop", "laptop", 1.0),
     "desktop-fhd": DevicePreset("Desktop FHD", 1920, 1080, 96, "desktop", "monitor", 1.0),
     "desktop-qhd": DevicePreset("Desktop QHD", 2560, 1440, 109, "desktop", "monitor", 1.0),
     "desktop-4k": DevicePreset("Desktop 4K", 3840, 2160, 163, "desktop", "monitor", 2.0),
@@ -45,6 +46,7 @@ DEVICE_PRESETS: Dict[str, DevicePreset] = {
 @dataclass
 class Breakpoint:
     """Responsive breakpoint definition."""
+
     name: str
     min_width: int
     max_width: int

@@ -1,15 +1,19 @@
 """HardwareEditor — GUI for schematic capture, PCB layout, board config, and BOM."""
 
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -23,6 +27,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog, messagebox, simpledialog
 from typing import Any, Dict, List, Optional, Tuple
+
 try:
     from eostudio.codegen.hardware import FirmwareGenerator
 except ImportError:
@@ -95,21 +100,46 @@ class HardwareEditor(tk.Frame):
         left = tk.Frame(tab, bg=self._bg, width=170)
         left.pack(side=tk.LEFT, fill=tk.Y)
         left.pack_propagate(False)
-        tk.Label(left, text="Components", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold")).pack(fill=tk.X, padx=6, pady=(6, 2))
+        tk.Label(left, text="Components", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold")).pack(
+            fill=tk.X, padx=6, pady=(6, 2)
+        )
         sf = tk.Frame(left, bg=self._bg)
         sf.pack(fill=tk.BOTH, expand=True)
         cur = ""
         for c in _CL:
             if c["cat"] != cur:
                 cur = c["cat"]
-                tk.Label(sf, text=cur, bg=self._bg, fg="#6c7086", font=("Segoe UI", 8, "bold")).pack(fill=tk.X, padx=6, pady=(4, 0))
-            b = tk.Button(sf, text=c["name"], bg="#313244", fg="#89b4fa", relief=tk.FLAT, font=("Segoe UI", 8), anchor=tk.W, padx=4)
+                tk.Label(sf, text=cur, bg=self._bg, fg="#6c7086", font=("Segoe UI", 8, "bold")).pack(
+                    fill=tk.X, padx=6, pady=(4, 0)
+                )
+            b = tk.Button(
+                sf,
+                text=c["name"],
+                bg="#313244",
+                fg="#89b4fa",
+                relief=tk.FLAT,
+                font=("Segoe UI", 8),
+                anchor=tk.W,
+                padx=4,
+            )
             b.pack(fill=tk.X, padx=4)
             b.bind("<ButtonPress-1>", lambda e, cc=c: self._sset(cc))
         ttk.Separator(left).pack(fill=tk.X, padx=4, pady=4)
-        tk.Button(left, text="Wire Mode", bg="#f9e2af", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 8), command=lambda: setattr(self, '_tool', '__wire__')).pack(fill=tk.X, padx=6, pady=1)
-        tk.Button(left, text="Net Label", bg="#a6e3a1", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 8), command=self._anet).pack(fill=tk.X, padx=6, pady=1)
-        tk.Button(left, text="Run ERC", bg="#f38ba8", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 8), command=self._erc).pack(fill=tk.X, padx=6, pady=4)
+        tk.Button(
+            left,
+            text="Wire Mode",
+            bg="#f9e2af",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 8),
+            command=lambda: setattr(self, "_tool", "__wire__"),
+        ).pack(fill=tk.X, padx=6, pady=1)
+        tk.Button(
+            left, text="Net Label", bg="#a6e3a1", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 8), command=self._anet
+        ).pack(fill=tk.X, padx=6, pady=1)
+        tk.Button(
+            left, text="Run ERC", bg="#f38ba8", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 8), command=self._erc
+        ).pack(fill=tk.X, padx=6, pady=4)
         self._cv = tk.Canvas(tab, bg="#181825", highlightthickness=0)
         self._cv.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self._cv.bind("<Button-1>", self._sclk)
@@ -118,7 +148,9 @@ class HardwareEditor(tk.Frame):
         right = tk.Frame(tab, bg=self._bg, width=200)
         right.pack(side=tk.RIGHT, fill=tk.Y)
         right.pack_propagate(False)
-        tk.Label(right, text="Properties", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold")).pack(fill=tk.X, padx=6, pady=(6, 2))
+        tk.Label(right, text="Properties", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold")).pack(
+            fill=tk.X, padx=6, pady=(6, 2)
+        )
         self._pf = tk.Frame(right, bg=self._bg)
         self._pf.pack(fill=tk.BOTH, expand=True, padx=4)
         tk.Label(self._pf, text="No selection", bg=self._bg, fg="#6c7086", font=("Segoe UI", 9)).pack(pady=20)
@@ -133,10 +165,28 @@ class HardwareEditor(tk.Frame):
         self._lv = tk.StringVar(value=_LY[0])
         lc = ttk.Combobox(tb, textvariable=self._lv, values=_LY, state="readonly", width=16)
         lc.pack(side=tk.LEFT, padx=2)
-        lc.bind("<<ComboboxSelected>>", lambda e: setattr(self, '_player', self._lv.get()))
+        lc.bind("<<ComboboxSelected>>", lambda e: setattr(self, "_player", self._lv.get()))
         for l, t in [("Route", "route"), ("Via", "via"), ("Zone", "zone"), ("Select", None)]:
-            tk.Button(tb, text=l, bg="#45475a", fg=self._fg, relief=tk.FLAT, font=("Segoe UI", 8), padx=6, command=lambda tt=t: setattr(self, '_ptool', tt)).pack(side=tk.LEFT, padx=2, pady=3)
-        tk.Button(tb, text="Run DRC", bg="#f38ba8", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 8), padx=6, command=self._drc).pack(side=tk.RIGHT, padx=6, pady=3)
+            tk.Button(
+                tb,
+                text=l,
+                bg="#45475a",
+                fg=self._fg,
+                relief=tk.FLAT,
+                font=("Segoe UI", 8),
+                padx=6,
+                command=lambda tt=t: setattr(self, "_ptool", tt),
+            ).pack(side=tk.LEFT, padx=2, pady=3)
+        tk.Button(
+            tb,
+            text="Run DRC",
+            bg="#f38ba8",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 8),
+            padx=6,
+            command=self._drc,
+        ).pack(side=tk.RIGHT, padx=6, pady=3)
         self._pcv = tk.Canvas(tab, bg="#11111b", highlightthickness=0)
         self._pcv.pack(fill=tk.BOTH, expand=True)
         self._pcv.create_rectangle(50, 50, 550, 400, outline="#585b70", width=2, dash=(4, 2))
@@ -152,12 +202,41 @@ class HardwareEditor(tk.Frame):
         tk.Label(tb, text="Platform:", bg="#313244", fg=self._fg, font=("Segoe UI", 9)).pack(side=tk.LEFT, padx=(6, 2))
         self._pv = tk.StringVar(value=self._tplat)
         ttk.Combobox(tb, textvariable=self._pv, values=_PL, state="readonly", width=14).pack(side=tk.LEFT, padx=2)
-        tk.Button(tb, text="Gen from Schematic", bg="#89b4fa", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 8), padx=6, command=self._gcfg).pack(side=tk.LEFT, padx=6, pady=4)
-        tk.Button(tb, text="Generate Code", bg="#a6e3a1", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 8), padx=6, command=self._cgen).pack(side=tk.LEFT, padx=4, pady=4)
-        tk.Button(tb, text="\u25b6 Simulate", bg="#f9e2af", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 8), padx=6, command=self._sim).pack(side=tk.RIGHT, padx=6, pady=4)
+        tk.Button(
+            tb,
+            text="Gen from Schematic",
+            bg="#89b4fa",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 8),
+            padx=6,
+            command=self._gcfg,
+        ).pack(side=tk.LEFT, padx=6, pady=4)
+        tk.Button(
+            tb,
+            text="Generate Code",
+            bg="#a6e3a1",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 8),
+            padx=6,
+            command=self._cgen,
+        ).pack(side=tk.LEFT, padx=4, pady=4)
+        tk.Button(
+            tb,
+            text="\u25b6 Simulate",
+            bg="#f9e2af",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 8),
+            padx=6,
+            command=self._sim,
+        ).pack(side=tk.RIGHT, padx=6, pady=4)
         ef = tk.Frame(tab, bg=self._bg)
         ef.pack(fill=tk.BOTH, expand=True, padx=6, pady=6)
-        self._yt = tk.Text(ef, bg="#181825", fg="#cdd6f4", insertbackground="#cdd6f4", font=("Consolas", 10), wrap=tk.NONE, undo=True)
+        self._yt = tk.Text(
+            ef, bg="#181825", fg="#cdd6f4", insertbackground="#cdd6f4", font=("Consolas", 10), wrap=tk.NONE, undo=True
+        )
         ys = ttk.Scrollbar(ef, command=self._yt.yview)
         xs = ttk.Scrollbar(ef, orient=tk.HORIZONTAL, command=self._yt.xview)
         self._yt.configure(yscrollcommand=ys.set, xscrollcommand=xs.set)
@@ -167,7 +246,9 @@ class HardwareEditor(tk.Frame):
         self._yt.insert("1.0", self._yaml)
         rf = tk.LabelFrame(tab, text="Simulation Result", bg=self._bg, fg="#6c7086", font=("Segoe UI", 9))
         rf.pack(fill=tk.X, padx=6, pady=(0, 6))
-        self._sl = tk.Label(rf, text="No simulation run yet.", bg=self._bg, fg="#6c7086", font=("Segoe UI", 9), anchor=tk.W)
+        self._sl = tk.Label(
+            rf, text="No simulation run yet.", bg=self._bg, fg="#6c7086", font=("Segoe UI", 9), anchor=tk.W
+        )
         self._sl.pack(fill=tk.X, padx=6, pady=4)
 
     def _mk_bom(self) -> None:
@@ -176,8 +257,26 @@ class HardwareEditor(tk.Frame):
         tb = tk.Frame(tab, bg="#313244", height=36)
         tb.pack(fill=tk.X)
         tb.pack_propagate(False)
-        tk.Button(tb, text="Refresh BOM", bg="#89b4fa", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 8), padx=6, command=self._rbom).pack(side=tk.LEFT, padx=6, pady=4)
-        tk.Button(tb, text="Export CSV", bg="#a6e3a1", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 8), padx=6, command=self._ecsv).pack(side=tk.LEFT, padx=4, pady=4)
+        tk.Button(
+            tb,
+            text="Refresh BOM",
+            bg="#89b4fa",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 8),
+            padx=6,
+            command=self._rbom,
+        ).pack(side=tk.LEFT, padx=6, pady=4)
+        tk.Button(
+            tb,
+            text="Export CSV",
+            bg="#a6e3a1",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 8),
+            padx=6,
+            command=self._ecsv,
+        ).pack(side=tk.LEFT, padx=4, pady=4)
         self._cl = tk.Label(tb, text="Total: $0.00", bg="#313244", fg="#f9e2af", font=("Segoe UI", 9, "bold"))
         self._cl.pack(side=tk.RIGHT, padx=8)
         cols = ("ref", "value", "package", "qty", "manufacturer", "price")
@@ -222,7 +321,9 @@ class HardwareEditor(tk.Frame):
             self._dc(c, len(self._comps) - 1)
             self._ssel(len(self._comps) - 1)
             return
-        h = next((i for i, c in enumerate(self._comps) if abs(x - c.get("x", 0)) < 30 and abs(y - c.get("y", 0)) < 20), None)
+        h = next(
+            (i for i, c in enumerate(self._comps) if abs(x - c.get("x", 0)) < 30 and abs(y - c.get("y", 0)) < 20), None
+        )
         if h is not None:
             self._sel = h
             self._drag = (x, y)
@@ -275,9 +376,13 @@ class HardwareEditor(tk.Frame):
             w.destroy()
         c = self._comps[i]
         for lb, k in [("Reference", "ref"), ("Value", "val"), ("Package", "pkg"), ("Name", "name")]:
-            tk.Label(self._pf, text=lb, bg=self._bg, fg="#6c7086", font=("Segoe UI", 8)).pack(fill=tk.X, padx=4, pady=(4, 0))
+            tk.Label(self._pf, text=lb, bg=self._bg, fg="#6c7086", font=("Segoe UI", 8)).pack(
+                fill=tk.X, padx=4, pady=(4, 0)
+            )
             v = tk.StringVar(value=c.get(k, ""))
-            en = tk.Entry(self._pf, textvariable=v, bg="#313244", fg=self._fg, insertbackground=self._fg, font=("Segoe UI", 9))
+            en = tk.Entry(
+                self._pf, textvariable=v, bg="#313244", fg=self._fg, insertbackground=self._fg, font=("Segoe UI", 9)
+            )
             en.pack(fill=tk.X, padx=4)
             en.bind("<Return>", lambda ev, kk=k, vv=v: self._sprop(i, kk, vv.get()))
 
@@ -330,7 +435,7 @@ class HardwareEditor(tk.Frame):
         if not self._pcbt:
             errs.append("No traces placed")
         for i, t in enumerate(self._pcbt):
-            if ((t[2] - t[0])**2 + (t[3] - t[1])**2)**0.5 < 2:
+            if ((t[2] - t[0]) ** 2 + (t[3] - t[1]) ** 2) ** 0.5 < 2:
                 errs.append(f"Trace {i}: too short")
         if errs:
             messagebox.showwarning("DRC Errors", "\n".join(errs), parent=self)
@@ -339,17 +444,20 @@ class HardwareEditor(tk.Frame):
 
     # ---- Board config / codegen ----
     def _dyaml(self) -> str:
-        return ("name: my_board\narch: arm-cortex-m\ncpu: cortex-m4\nclock_mhz: 168\nhse_mhz: 8\nmemory:\n"
-                "  - name: FLASH\n    base: 0x08000000\n    size: 0x100000\n"
-                "  - name: SRAM\n    base: 0x20000000\n    size: 0x20000\nperipherals:\n"
-                "  - type: uart\n    name: uart0\n    base: 0x40011000\n    irq: 37\n"
-                "  - type: gpio\n    name: gpioa\n    base: 0x40020000\n"
-                "  - type: spi\n    name: spi1\n    base: 0x40013000\n    irq: 35\n"
-                "  - type: i2c\n    name: i2c1\n    base: 0x40005400\n    irq: 31\n")
+        return (
+            "name: my_board\narch: arm-cortex-m\ncpu: cortex-m4\nclock_mhz: 168\nhse_mhz: 8\nmemory:\n"
+            "  - name: FLASH\n    base: 0x08000000\n    size: 0x100000\n"
+            "  - name: SRAM\n    base: 0x20000000\n    size: 0x20000\nperipherals:\n"
+            "  - type: uart\n    name: uart0\n    base: 0x40011000\n    irq: 37\n"
+            "  - type: gpio\n    name: gpioa\n    base: 0x40020000\n"
+            "  - type: spi\n    name: spi1\n    base: 0x40013000\n    irq: 35\n"
+            "  - type: i2c\n    name: i2c1\n    base: 0x40005400\n    irq: 31\n"
+        )
 
     def _pyaml(self) -> Dict[str, Any]:
         try:
             import yaml  # type: ignore[import-untyped]
+
             return yaml.safe_load(self._yt.get("1.0", tk.END)) or {}
         except Exception as e:
             messagebox.showerror("YAML Error", str(e), parent=self)
@@ -361,10 +469,23 @@ class HardwareEditor(tk.Frame):
         except ImportError:
             messagebox.showerror("Error", "PyYAML required", parent=self)
             return
-        cfg: Dict[str, Any] = {"name": "my_board", "arch": "arm-cortex-m", "cpu": "cortex-m4",
-                               "clock_mhz": 168, "memory": [{"name": "FLASH", "base": 0x08000000, "size": 0x100000},
-                                                            {"name": "SRAM", "base": 0x20000000, "size": 0x20000}], "peripherals": []}
-        pm = {"MCU STM32F4": "cortex-m4", "MCU ESP32": "xtensa-lx7", "MCU nRF52": "cortex-m4", "MCU RP2040": "cortex-m0plus"}
+        cfg: Dict[str, Any] = {
+            "name": "my_board",
+            "arch": "arm-cortex-m",
+            "cpu": "cortex-m4",
+            "clock_mhz": 168,
+            "memory": [
+                {"name": "FLASH", "base": 0x08000000, "size": 0x100000},
+                {"name": "SRAM", "base": 0x20000000, "size": 0x20000},
+            ],
+            "peripherals": [],
+        }
+        pm = {
+            "MCU STM32F4": "cortex-m4",
+            "MCU ESP32": "xtensa-lx7",
+            "MCU nRF52": "cortex-m4",
+            "MCU RP2040": "cortex-m0plus",
+        }
         for c in self._comps:
             if c.get("name", "") in pm:
                 cfg["cpu"] = pm[c["name"]]
@@ -377,13 +498,17 @@ class HardwareEditor(tk.Frame):
         dlg.geometry("360x240")
         dlg.configure(bg=self._bg)
         dlg.transient(self)
-        tk.Label(dlg, text="Generate Firmware", bg=self._bg, fg=self._fg, font=("Segoe UI", 12, "bold")).pack(pady=(12, 8))
+        tk.Label(dlg, text="Generate Firmware", bg=self._bg, fg=self._fg, font=("Segoe UI", 12, "bold")).pack(
+            pady=(12, 8)
+        )
         tk.Label(dlg, text="Target OS:", bg=self._bg, fg="#6c7086", font=("Segoe UI", 9)).pack(anchor=tk.W, padx=16)
         ov = tk.StringVar(value=self._tos)
         ttk.Combobox(dlg, textvariable=ov, values=_OL, state="readonly", width=20).pack(padx=16, pady=4)
         tk.Label(dlg, text="App Name:", bg=self._bg, fg="#6c7086", font=("Segoe UI", 9)).pack(anchor=tk.W, padx=16)
         nv = tk.StringVar(value="app")
-        tk.Entry(dlg, textvariable=nv, bg="#313244", fg=self._fg, insertbackground=self._fg, font=("Segoe UI", 10)).pack(fill=tk.X, padx=16, pady=4)
+        tk.Entry(
+            dlg, textvariable=nv, bg="#313244", fg=self._fg, insertbackground=self._fg, font=("Segoe UI", 10)
+        ).pack(fill=tk.X, padx=16, pady=4)
 
         def gen():
             self._tos = ov.get()
@@ -395,7 +520,17 @@ class HardwareEditor(tk.Frame):
                 return
             self._dogen(cfg, nv.get() or "app", od)
             dlg.destroy()
-        tk.Button(dlg, text="Generate", bg="#a6e3a1", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 10, "bold"), padx=12, command=gen).pack(pady=16)
+
+        tk.Button(
+            dlg,
+            text="Generate",
+            bg="#a6e3a1",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 10, "bold"),
+            padx=12,
+            command=gen,
+        ).pack(pady=16)
 
     def _dogen(self, cfg: Dict[str, Any], app: str, od: str) -> None:
         if FirmwareGenerator is None:
@@ -445,14 +580,25 @@ class HardwareEditor(tk.Frame):
         for c in self._comps:
             k = f"{c.get('val', '')}|{c.get('pkg', '')}"
             if k not in grouped:
-                grouped[k] = {"ref": c.get("ref", "?"), "value": c.get("val", ""), "package": c.get("pkg", ""), "qty": 0, "manufacturer": "", "price": 0.0}
+                grouped[k] = {
+                    "ref": c.get("ref", "?"),
+                    "value": c.get("val", ""),
+                    "package": c.get("pkg", ""),
+                    "qty": 0,
+                    "manufacturer": "",
+                    "price": 0.0,
+                }
             grouped[k]["qty"] += 1
             if grouped[k]["qty"] > 1:
                 grouped[k]["ref"] += f", {c.get('ref', '?')}"
         self._bom = list(grouped.values())
         total = 0.0
         for b in self._bom:
-            self._tv.insert("", "end", values=(b["ref"], b["value"], b["package"], b["qty"], b["manufacturer"], f"${b['price']:.2f}"))
+            self._tv.insert(
+                "",
+                "end",
+                values=(b["ref"], b["value"], b["package"], b["qty"], b["manufacturer"], f"${b['price']:.2f}"),
+            )
             total += b["price"] * b["qty"]
         self._cl.config(text=f"Total: ${total:.2f}")
 

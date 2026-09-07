@@ -59,6 +59,7 @@ class SecureStorage:
         self._use_keyring = False
         try:
             import keyring as _kr  # lazy import
+
             self._keyring = _kr
             # Probe that the backend is functional.
             _kr.get_password(self._SERVICE_NAME, "__probe__")
@@ -108,20 +109,14 @@ class SecureStorage:
             return {}
         try:
             blob = json.loads(_SECURE_STORAGE_FILE.read_text(encoding="utf-8"))
-            return {
-                k: self._xor_bytes(base64.b64decode(v), self._derive_key()).decode()
-                for k, v in blob.items()
-            }
+            return {k: self._xor_bytes(base64.b64decode(v), self._derive_key()).decode() for k, v in blob.items()}
         except Exception:
             return {}
 
     def _save_store(self, store: Dict[str, str]) -> None:
         _EOSTUDIO_DIR.mkdir(parents=True, exist_ok=True)
         key = self._derive_key()
-        blob = {
-            k: base64.b64encode(self._xor_bytes(v.encode(), key)).decode()
-            for k, v in store.items()
-        }
+        blob = {k: base64.b64encode(self._xor_bytes(v.encode(), key)).decode() for k, v in store.items()}
         _SECURE_STORAGE_FILE.write_text(json.dumps(blob, indent=2), encoding="utf-8")
 
     def _file_store(self, key: str, value: str) -> None:

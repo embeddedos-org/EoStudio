@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class DesignSection:
     """A section of the design spec (e.g., Architecture, User Flows, Data Model)."""
+
     title: str
     content: str
     diagrams: List[Dict[str, Any]] = field(default_factory=list)
@@ -16,8 +17,13 @@ class DesignSection:
     notes: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"title": self.title, "content": self.content,
-                "diagrams": self.diagrams, "wireframes": self.wireframes, "notes": self.notes}
+        return {
+            "title": self.title,
+            "content": self.content,
+            "diagrams": self.diagrams,
+            "wireframes": self.wireframes,
+            "notes": self.notes,
+        }
 
     def to_markdown(self) -> str:
         lines = [f"## {self.title}", "", self.content]
@@ -29,6 +35,7 @@ class DesignSection:
 @dataclass
 class DesignSpec:
     """Complete design specification document."""
+
     project_name: str
     version: str = "1.0"
     overview: str = ""
@@ -46,19 +53,34 @@ class DesignSpec:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "project_name": self.project_name, "version": self.version,
-            "overview": self.overview, "goals": self.goals,
-            "non_goals": self.non_goals, "target_users": self.target_users,
+            "project_name": self.project_name,
+            "version": self.version,
+            "overview": self.overview,
+            "goals": self.goals,
+            "non_goals": self.non_goals,
+            "target_users": self.target_users,
             "sections": [s.to_dict() for s in self.sections],
-            "open_questions": self.open_questions, "risks": self.risks,
+            "open_questions": self.open_questions,
+            "risks": self.risks,
         }
 
     def to_markdown(self) -> str:
-        lines = [f"# Design Spec: {self.project_name} v{self.version}", "",
-                 "## Overview", self.overview, "",
-                 "## Goals", *[f"- {g}" for g in self.goals], "",
-                 "## Non-Goals", *[f"- {g}" for g in self.non_goals], "",
-                 "## Target Users", *[f"- {u}" for u in self.target_users], ""]
+        lines = [
+            f"# Design Spec: {self.project_name} v{self.version}",
+            "",
+            "## Overview",
+            self.overview,
+            "",
+            "## Goals",
+            *[f"- {g}" for g in self.goals],
+            "",
+            "## Non-Goals",
+            *[f"- {g}" for g in self.non_goals],
+            "",
+            "## Target Users",
+            *[f"- {u}" for u in self.target_users],
+            "",
+        ]
         for section in self.sections:
             lines.append(section.to_markdown())
             lines.append("")
@@ -72,10 +94,18 @@ class DesignSpec:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "DesignSpec":
-        spec = cls(project_name=data["project_name"], version=data.get("version", "1.0"),
-                   overview=data.get("overview", ""), goals=data.get("goals", []),
-                   non_goals=data.get("non_goals", []), target_users=data.get("target_users", []),
-                   open_questions=data.get("open_questions", []), risks=data.get("risks", []))
+        spec = cls(
+            project_name=data["project_name"],
+            version=data.get("version", "1.0"),
+            overview=data.get("overview", ""),
+            goals=data.get("goals", []),
+            non_goals=data.get("non_goals", []),
+            target_users=data.get("target_users", []),
+            open_questions=data.get("open_questions", []),
+            risks=data.get("risks", []),
+        )
         for s in data.get("sections", []):
-            spec.sections.append(DesignSection(**{k: v for k, v in s.items() if k in DesignSection.__dataclass_fields__}))
+            spec.sections.append(
+                DesignSection(**{k: v for k, v in s.items() if k in DesignSection.__dataclass_fields__})
+            )
         return spec

@@ -11,6 +11,7 @@ Features:
 - Side-by-side and unified diff modes
 - Syntax-highlighted diff output
 """
+
 from __future__ import annotations
 
 import difflib
@@ -37,6 +38,7 @@ class ReviewSeverity(Enum):
 @dataclass
 class DiffHunk:
     """A single diff hunk (block of changes)."""
+
     old_start: int
     old_lines: List[str]
     new_start: int
@@ -49,9 +51,10 @@ class DiffHunk:
 @dataclass
 class ReviewComment:
     """An AI-generated review comment on a diff."""
+
     line: int
     severity: ReviewSeverity
-    category: str           # "security", "performance", "style", "logic", "test"
+    category: str  # "security", "performance", "style", "logic", "test"
     message: str
     suggestion: str = ""
     auto_fixable: bool = False
@@ -60,13 +63,14 @@ class ReviewComment:
 @dataclass
 class DiffResult:
     """Result of a diff operation."""
+
     file_a: str
     file_b: str
     language: str
     hunks: List[DiffHunk]
     review_comments: List[ReviewComment]
     summary: str
-    stats: Dict[str, int]   # lines_added, lines_removed, files_changed
+    stats: Dict[str, int]  # lines_added, lines_removed, files_changed
     pr_description: str = ""
     security_issues: List[ReviewComment] = field(default_factory=list)
 
@@ -176,9 +180,7 @@ class SmartDiff:
         for hunk in result.hunks:
             old_count = len(hunk.old_lines)
             new_count = len(hunk.new_lines)
-            lines.append(
-                f"@@ -{hunk.old_start},{old_count} +{hunk.new_start},{new_count} @@"
-            )
+            lines.append(f"@@ -{hunk.old_start},{old_count} +{hunk.new_start},{new_count} @@")
             for line in hunk.context_before:
                 lines.append(f" {line.rstrip()}")
             for line in hunk.old_lines:
@@ -189,9 +191,7 @@ class SmartDiff:
                 lines.append(f" {line.rstrip()}")
         return "\n".join(lines)
 
-    def _compute_hunks(
-        self, old_lines: List[str], new_lines: List[str]
-    ) -> List[DiffHunk]:
+    def _compute_hunks(self, old_lines: List[str], new_lines: List[str]) -> List[DiffHunk]:
         """Compute diff hunks using SequenceMatcher."""
         matcher = difflib.SequenceMatcher(None, old_lines, new_lines)
         hunks: List[DiffHunk] = []
@@ -211,18 +211,18 @@ class SmartDiff:
                     new_chunk.extend(new_lines[j1:j2])
 
             if old_chunk or new_chunk:
-                hunks.append(DiffHunk(
-                    old_start=old_start + 1,
-                    old_lines=old_chunk,
-                    new_start=new_start + 1,
-                    new_lines=new_chunk,
-                ))
+                hunks.append(
+                    DiffHunk(
+                        old_start=old_start + 1,
+                        old_lines=old_chunk,
+                        new_start=new_start + 1,
+                        new_lines=new_chunk,
+                    )
+                )
 
         return hunks
 
-    def _compute_stats(
-        self, old_lines: List[str], new_lines: List[str]
-    ) -> Dict[str, int]:
+    def _compute_stats(self, old_lines: List[str], new_lines: List[str]) -> Dict[str, int]:
         """Compute diff statistics."""
         matcher = difflib.SequenceMatcher(None, old_lines, new_lines)
         added = deleted = 0
@@ -239,9 +239,7 @@ class SmartDiff:
             "new_total": len(new_lines),
         }
 
-    def _analyze_new_code(
-        self, new_text: str, language: str
-    ) -> List[ReviewComment]:
+    def _analyze_new_code(self, new_text: str, language: str) -> List[ReviewComment]:
         """Analyze new code for security, performance, and style issues."""
         comments: List[ReviewComment] = []
         lines = new_text.splitlines()
@@ -250,41 +248,49 @@ class SmartDiff:
         for pattern, message in _SECURITY_PATTERNS:
             for i, line in enumerate(lines, 1):
                 if pattern.search(line):
-                    comments.append(ReviewComment(
-                        line=i,
-                        severity=ReviewSeverity.CRITICAL,
-                        category="security",
-                        message=message,
-                        suggestion="Review and fix this security issue before merging.",
-                    ))
+                    comments.append(
+                        ReviewComment(
+                            line=i,
+                            severity=ReviewSeverity.CRITICAL,
+                            category="security",
+                            message=message,
+                            suggestion="Review and fix this security issue before merging.",
+                        )
+                    )
 
         # Performance checks
         for pattern, message in _PERFORMANCE_PATTERNS:
             for i, line in enumerate(lines, 1):
                 if pattern.search(line):
-                    comments.append(ReviewComment(
-                        line=i,
-                        severity=ReviewSeverity.WARNING,
-                        category="performance",
-                        message=message,
-                    ))
+                    comments.append(
+                        ReviewComment(
+                            line=i,
+                            severity=ReviewSeverity.WARNING,
+                            category="performance",
+                            message=message,
+                        )
+                    )
 
         # Style checks
         for i, line in enumerate(lines, 1):
             if len(line) > 120:
-                comments.append(ReviewComment(
-                    line=i,
-                    severity=ReviewSeverity.INFO,
-                    category="style",
-                    message=f"Line too long ({len(line)} chars) — consider wrapping at 120",
-                ))
+                comments.append(
+                    ReviewComment(
+                        line=i,
+                        severity=ReviewSeverity.INFO,
+                        category="style",
+                        message=f"Line too long ({len(line)} chars) — consider wrapping at 120",
+                    )
+                )
             if re.search(r"\bTODO\b|\bFIXME\b|\bHACK\b", line, re.I):
-                comments.append(ReviewComment(
-                    line=i,
-                    severity=ReviewSeverity.INFO,
-                    category="style",
-                    message="Technical debt marker found — address before merging",
-                ))
+                comments.append(
+                    ReviewComment(
+                        line=i,
+                        severity=ReviewSeverity.INFO,
+                        category="style",
+                        message="Technical debt marker found — address before merging",
+                    )
+                )
 
         return comments
 
@@ -298,10 +304,10 @@ class SmartDiff:
         if self._router:
             try:
                 hunk_text = "\n".join(
-                    f"Hunk {i+1}: -{len(h.old_lines)} +{len(h.new_lines)} lines"
-                    for i, h in enumerate(hunks[:5])
+                    f"Hunk {i + 1}: -{len(h.old_lines)} +{len(h.new_lines)} lines" for i, h in enumerate(hunks[:5])
                 )
                 from eostudio.core.ai.multi_model_router import TaskType
+
                 prompt = (
                     f"Summarize these code changes in 2-3 sentences:\n"
                     f"Language: {language}\n"
@@ -349,21 +355,32 @@ class SmartDiff:
                     lines.append(f"- Line {c.line}: {c.message}")
 
         lines.append("\n## Checklist")
-        lines.extend([
-            "- [ ] Tests updated",
-            "- [ ] Documentation updated",
-            "- [ ] No hardcoded secrets",
-            "- [ ] Security review complete",
-        ])
+        lines.extend(
+            [
+                "- [ ] Tests updated",
+                "- [ ] Documentation updated",
+                "- [ ] No hardcoded secrets",
+                "- [ ] Security review complete",
+            ]
+        )
 
         return "\n".join(lines)
 
     @staticmethod
     def _detect_language(path: str) -> str:
         ext_map = {
-            ".py": "python", ".ts": "typescript", ".tsx": "typescript",
-            ".js": "javascript", ".jsx": "javascript", ".rs": "rust",
-            ".go": "go", ".cpp": "cpp", ".c": "c", ".java": "java",
-            ".cs": "csharp", ".rb": "ruby", ".php": "php",
+            ".py": "python",
+            ".ts": "typescript",
+            ".tsx": "typescript",
+            ".js": "javascript",
+            ".jsx": "javascript",
+            ".rs": "rust",
+            ".go": "go",
+            ".cpp": "cpp",
+            ".c": "c",
+            ".java": "java",
+            ".cs": "csharp",
+            ".rb": "ruby",
+            ".php": "php",
         }
         return ext_map.get(Path(path).suffix.lower(), "text")

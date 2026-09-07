@@ -28,29 +28,50 @@ def export_dxf(entities: List[Dict[str, Any]], filepath: str) -> None:
     lines: List[str] = []
 
     # HEADER section
-    lines.extend([
-        "0", "SECTION",
-        "2", "HEADER",
-        "9", "$ACADVER",
-        "1", "AC1009",
-        "0", "ENDSEC",
-    ])
+    lines.extend(
+        [
+            "0",
+            "SECTION",
+            "2",
+            "HEADER",
+            "9",
+            "$ACADVER",
+            "1",
+            "AC1009",
+            "0",
+            "ENDSEC",
+        ]
+    )
 
     # TABLES section (minimal layer table)
-    lines.extend([
-        "0", "SECTION",
-        "2", "TABLES",
-        "0", "TABLE",
-        "2", "LAYER",
-        "70", "1",
-        "0", "LAYER",
-        "2", "0",
-        "70", "0",
-        "62", "7",
-        "6", "CONTINUOUS",
-        "0", "ENDTAB",
-        "0", "ENDSEC",
-    ])
+    lines.extend(
+        [
+            "0",
+            "SECTION",
+            "2",
+            "TABLES",
+            "0",
+            "TABLE",
+            "2",
+            "LAYER",
+            "70",
+            "1",
+            "0",
+            "LAYER",
+            "2",
+            "0",
+            "70",
+            "0",
+            "62",
+            "7",
+            "6",
+            "CONTINUOUS",
+            "0",
+            "ENDTAB",
+            "0",
+            "ENDSEC",
+        ]
+    )
 
     # ENTITIES section
     lines.extend(["0", "SECTION", "2", "ENTITIES"])
@@ -59,47 +80,82 @@ def export_dxf(entities: List[Dict[str, Any]], filepath: str) -> None:
         etype = ent.get("type", "").upper()
 
         if etype == "LINE":
-            lines.extend([
-                "0", "LINE",
-                "8", ent.get("layer", "0"),
-                "10", str(float(ent.get("x1", 0))),
-                "20", str(float(ent.get("y1", 0))),
-                "30", str(float(ent.get("z1", 0))),
-                "11", str(float(ent.get("x2", 0))),
-                "21", str(float(ent.get("y2", 0))),
-                "31", str(float(ent.get("z2", 0))),
-            ])
+            lines.extend(
+                [
+                    "0",
+                    "LINE",
+                    "8",
+                    ent.get("layer", "0"),
+                    "10",
+                    str(float(ent.get("x1", 0))),
+                    "20",
+                    str(float(ent.get("y1", 0))),
+                    "30",
+                    str(float(ent.get("z1", 0))),
+                    "11",
+                    str(float(ent.get("x2", 0))),
+                    "21",
+                    str(float(ent.get("y2", 0))),
+                    "31",
+                    str(float(ent.get("z2", 0))),
+                ]
+            )
 
         elif etype == "CIRCLE":
-            lines.extend([
-                "0", "CIRCLE",
-                "8", ent.get("layer", "0"),
-                "10", str(float(ent.get("cx", 0))),
-                "20", str(float(ent.get("cy", 0))),
-                "30", str(float(ent.get("cz", 0))),
-                "40", str(float(ent.get("radius", 1))),
-            ])
+            lines.extend(
+                [
+                    "0",
+                    "CIRCLE",
+                    "8",
+                    ent.get("layer", "0"),
+                    "10",
+                    str(float(ent.get("cx", 0))),
+                    "20",
+                    str(float(ent.get("cy", 0))),
+                    "30",
+                    str(float(ent.get("cz", 0))),
+                    "40",
+                    str(float(ent.get("radius", 1))),
+                ]
+            )
 
         elif etype == "ARC":
-            lines.extend([
-                "0", "ARC",
-                "8", ent.get("layer", "0"),
-                "10", str(float(ent.get("cx", 0))),
-                "20", str(float(ent.get("cy", 0))),
-                "30", str(float(ent.get("cz", 0))),
-                "40", str(float(ent.get("radius", 1))),
-                "50", str(float(ent.get("start_angle", 0))),
-                "51", str(float(ent.get("end_angle", 360))),
-            ])
+            lines.extend(
+                [
+                    "0",
+                    "ARC",
+                    "8",
+                    ent.get("layer", "0"),
+                    "10",
+                    str(float(ent.get("cx", 0))),
+                    "20",
+                    str(float(ent.get("cy", 0))),
+                    "30",
+                    str(float(ent.get("cz", 0))),
+                    "40",
+                    str(float(ent.get("radius", 1))),
+                    "50",
+                    str(float(ent.get("start_angle", 0))),
+                    "51",
+                    str(float(ent.get("end_angle", 360))),
+                ]
+            )
 
         elif etype == "POINT":
-            lines.extend([
-                "0", "POINT",
-                "8", ent.get("layer", "0"),
-                "10", str(float(ent.get("x", 0))),
-                "20", str(float(ent.get("y", 0))),
-                "30", str(float(ent.get("z", 0))),
-            ])
+            lines.extend(
+                [
+                    "0",
+                    "POINT",
+                    "8",
+                    ent.get("layer", "0"),
+                    "10",
+                    str(float(ent.get("x", 0))),
+                    "20",
+                    str(float(ent.get("y", 0))),
+                    "30",
+                    str(float(ent.get("z", 0))),
+                ]
+            )
 
     lines.extend(["0", "ENDSEC"])
 
@@ -178,36 +234,44 @@ def _parse_entity(lines: List[str], start: int) -> Dict[str, Any]:
         i += 2
 
     if etype == "LINE":
-        result.update({
-            "x1": group_map.get("10", 0.0),
-            "y1": group_map.get("20", 0.0),
-            "z1": group_map.get("30", 0.0),
-            "x2": group_map.get("11", 0.0),
-            "y2": group_map.get("21", 0.0),
-            "z2": group_map.get("31", 0.0),
-        })
+        result.update(
+            {
+                "x1": group_map.get("10", 0.0),
+                "y1": group_map.get("20", 0.0),
+                "z1": group_map.get("30", 0.0),
+                "x2": group_map.get("11", 0.0),
+                "y2": group_map.get("21", 0.0),
+                "z2": group_map.get("31", 0.0),
+            }
+        )
     elif etype == "CIRCLE":
-        result.update({
-            "cx": group_map.get("10", 0.0),
-            "cy": group_map.get("20", 0.0),
-            "cz": group_map.get("30", 0.0),
-            "radius": group_map.get("40", 1.0),
-        })
+        result.update(
+            {
+                "cx": group_map.get("10", 0.0),
+                "cy": group_map.get("20", 0.0),
+                "cz": group_map.get("30", 0.0),
+                "radius": group_map.get("40", 1.0),
+            }
+        )
     elif etype == "ARC":
-        result.update({
-            "cx": group_map.get("10", 0.0),
-            "cy": group_map.get("20", 0.0),
-            "cz": group_map.get("30", 0.0),
-            "radius": group_map.get("40", 1.0),
-            "start_angle": group_map.get("50", 0.0),
-            "end_angle": group_map.get("51", 360.0),
-        })
+        result.update(
+            {
+                "cx": group_map.get("10", 0.0),
+                "cy": group_map.get("20", 0.0),
+                "cz": group_map.get("30", 0.0),
+                "radius": group_map.get("40", 1.0),
+                "start_angle": group_map.get("50", 0.0),
+                "end_angle": group_map.get("51", 360.0),
+            }
+        )
     elif etype == "POINT":
-        result.update({
-            "x": group_map.get("10", 0.0),
-            "y": group_map.get("20", 0.0),
-            "z": group_map.get("30", 0.0),
-        })
+        result.update(
+            {
+                "x": group_map.get("10", 0.0),
+                "y": group_map.get("20", 0.0),
+                "z": group_map.get("30", 0.0),
+            }
+        )
 
     return result
 
@@ -228,13 +292,20 @@ class DXFExporter:
     def export(self, entities: List[Dict[str, Any]]) -> str:
         """Export entities to a DXF-formatted string."""
         lines: List[str] = []
-        lines.extend([
-            "0", "SECTION",
-            "2", "HEADER",
-            "9", "$ACADVER",
-            "1", "AC1009",
-            "0", "ENDSEC",
-        ])
+        lines.extend(
+            [
+                "0",
+                "SECTION",
+                "2",
+                "HEADER",
+                "9",
+                "$ACADVER",
+                "1",
+                "AC1009",
+                "0",
+                "ENDSEC",
+            ]
+        )
         lines.extend(["0", "SECTION", "2", "ENTITIES"])
         for ent in entities:
             etype = ent.get("type", "").upper()
@@ -245,36 +316,72 @@ class DXFExporter:
                 y1 = float(start[1]) if len(start) > 1 else 0.0
                 x2 = float(end[0]) if len(end) > 0 else 0.0
                 y2 = float(end[1]) if len(end) > 1 else 0.0
-                lines.extend([
-                    "0", "LINE",
-                    "8", ent.get("layer", "0"),
-                    "10", str(x1), "20", str(y1), "30", "0.0",
-                    "11", str(x2), "21", str(y2), "31", "0.0",
-                ])
+                lines.extend(
+                    [
+                        "0",
+                        "LINE",
+                        "8",
+                        ent.get("layer", "0"),
+                        "10",
+                        str(x1),
+                        "20",
+                        str(y1),
+                        "30",
+                        "0.0",
+                        "11",
+                        str(x2),
+                        "21",
+                        str(y2),
+                        "31",
+                        "0.0",
+                    ]
+                )
             elif etype == "CIRCLE":
                 center = ent.get("center", [0, 0])
                 cx = float(center[0]) if len(center) > 0 else 0.0
                 cy = float(center[1]) if len(center) > 1 else 0.0
                 radius = float(ent.get("radius", 1))
-                lines.extend([
-                    "0", "CIRCLE",
-                    "8", ent.get("layer", "0"),
-                    "10", str(cx), "20", str(cy), "30", "0.0",
-                    "40", str(radius),
-                ])
+                lines.extend(
+                    [
+                        "0",
+                        "CIRCLE",
+                        "8",
+                        ent.get("layer", "0"),
+                        "10",
+                        str(cx),
+                        "20",
+                        str(cy),
+                        "30",
+                        "0.0",
+                        "40",
+                        str(radius),
+                    ]
+                )
             elif etype == "ARC":
                 center = ent.get("center", [0, 0])
                 cx = float(center[0]) if len(center) > 0 else 0.0
                 cy = float(center[1]) if len(center) > 1 else 0.0
                 radius = float(ent.get("radius", 1))
-                lines.extend([
-                    "0", "ARC",
-                    "8", ent.get("layer", "0"),
-                    "10", str(cx), "20", str(cy), "30", "0.0",
-                    "40", str(radius),
-                    "50", str(float(ent.get("start_angle", 0))),
-                    "51", str(float(ent.get("end_angle", 360))),
-                ])
+                lines.extend(
+                    [
+                        "0",
+                        "ARC",
+                        "8",
+                        ent.get("layer", "0"),
+                        "10",
+                        str(cx),
+                        "20",
+                        str(cy),
+                        "30",
+                        "0.0",
+                        "40",
+                        str(radius),
+                        "50",
+                        str(float(ent.get("start_angle", 0))),
+                        "51",
+                        str(float(ent.get("end_angle", 360))),
+                    ]
+                )
         lines.extend(["0", "ENDSEC"])
         lines.extend(["0", "EOF"])
         return "\n".join(lines)

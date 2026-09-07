@@ -9,6 +9,7 @@ Provides:
 - Completion cache to avoid redundant API calls
 - Telemetry (acceptance rate, latency)
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -27,12 +28,13 @@ log = logging.getLogger(__name__)
 @dataclass
 class CompletionContext:
     """Context extracted from the editor for completion."""
-    prefix: str          # Code before cursor
-    suffix: str          # Code after cursor (for FIM)
-    language: str        # e.g. "python", "typescript", "rust"
-    filename: str        # e.g. "app.py"
-    line_number: int     # 0-indexed
-    column: int          # 0-indexed
+
+    prefix: str  # Code before cursor
+    suffix: str  # Code after cursor (for FIM)
+    language: str  # e.g. "python", "typescript", "rust"
+    filename: str  # e.g. "app.py"
+    line_number: int  # 0-indexed
+    column: int  # 0-indexed
     imports: List[str] = field(default_factory=list)
     function_signatures: List[str] = field(default_factory=list)
     project_context: str = ""  # Brief project description
@@ -41,11 +43,12 @@ class CompletionContext:
 @dataclass
 class CompletionResult:
     """A single completion suggestion."""
-    text: str                    # The completion text to insert
-    display_text: str            # Truncated for ghost text display
-    confidence: float            # 0.0 – 1.0
-    model: str                   # Which model generated this
-    latency_ms: float            # How long it took
+
+    text: str  # The completion text to insert
+    display_text: str  # Truncated for ghost text display
+    confidence: float  # 0.0 – 1.0
+    model: str  # Which model generated this
+    latency_ms: float  # How long it took
     is_multiline: bool = False
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -262,24 +265,28 @@ class InlineCompletionEngine:
 
         # Use FIM (fill-in-the-middle) format when suffix is available
         if ctx.suffix.strip():
-            lines.extend([
-                "",
-                "### Code before cursor:",
-                ctx.prefix[-600:],  # Last 600 chars of prefix
-                "",
-                "### Code after cursor:",
-                ctx.suffix[:200],
-                "",
-                f"### Complete the code at the cursor position ({'multi-line' if multiline else 'single line'}):",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "### Code before cursor:",
+                    ctx.prefix[-600:],  # Last 600 chars of prefix
+                    "",
+                    "### Code after cursor:",
+                    ctx.suffix[:200],
+                    "",
+                    f"### Complete the code at the cursor position ({'multi-line' if multiline else 'single line'}):",
+                ]
+            )
         else:
-            lines.extend([
-                "",
-                "### Code:",
-                ctx.prefix[-800:],
-                "",
-                f"### Continue ({'multi-line block' if multiline else 'next line only'}):",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "### Code:",
+                    ctx.prefix[-800:],
+                    "",
+                    f"### Continue ({'multi-line block' if multiline else 'next line only'}):",
+                ]
+            )
 
         return "\n".join(lines)
 
@@ -292,7 +299,7 @@ class InlineCompletionEngine:
         # Remove any repetition of the prefix
         prefix_tail = ctx.prefix[-50:].strip()
         if text.startswith(prefix_tail):
-            text = text[len(prefix_tail):]
+            text = text[len(prefix_tail) :]
 
         # Trim to reasonable length
         lines = text.split("\n")
@@ -307,13 +314,16 @@ class InlineCompletionEngine:
 # Language-aware context extractor
 # ------------------------------------------------------------------
 
+
 class ContextExtractor:
     """Extracts structured context from raw editor state."""
 
     _IMPORT_PATTERNS = {
         "python": re.compile(r"^(?:import|from)\s+(\S+)", re.MULTILINE),
         "typescript": re.compile(r"^import\s+.+from\s+['\"]([^'\"]+)['\"]", re.MULTILINE),
-        "javascript": re.compile(r"^(?:import\s+.+from\s+['\"]([^'\"]+)['\"]|require\(['\"]([^'\"]+)['\"]\))", re.MULTILINE),
+        "javascript": re.compile(
+            r"^(?:import\s+.+from\s+['\"]([^'\"]+)['\"]|require\(['\"]([^'\"]+)['\"]\))", re.MULTILINE
+        ),
         "rust": re.compile(r"^use\s+(\S+)", re.MULTILINE),
         "go": re.compile(r"^import\s+[\"](\S+)[\"]", re.MULTILINE),
     }

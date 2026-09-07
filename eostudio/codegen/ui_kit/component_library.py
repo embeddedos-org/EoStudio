@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class ComponentDef:
     """Definition of a UI component with variants, props, and accessibility."""
+
     name: str
     category: str  # layout, input, display, feedback, navigation, overlay
     description: str = ""
@@ -22,100 +23,159 @@ class ComponentDef:
 
 # 30+ production components
 COMPONENT_LIBRARY: Dict[str, ComponentDef] = {
-    "Button": ComponentDef("Button", "input", "Clickable button with variants",
-                           variants=["primary", "secondary", "ghost", "danger", "outline"],
-                           sizes=["sm", "md", "lg"],
-                           aria_attributes=["aria-label", "aria-disabled"],
-                           keyboard_support=["Enter", "Space"]),
-    "Input": ComponentDef("Input", "input", "Text input with validation",
-                          variants=["outlined", "filled", "underline"],
-                          sizes=["sm", "md", "lg"],
-                          aria_attributes=["aria-label", "aria-invalid", "aria-describedby"]),
-    "Textarea": ComponentDef("Textarea", "input", "Multi-line text input",
-                             variants=["outlined", "filled"], sizes=["sm", "md", "lg"]),
-    "Select": ComponentDef("Select", "input", "Dropdown select",
-                           variants=["outlined", "filled"],
-                           keyboard_support=["ArrowUp", "ArrowDown", "Enter", "Escape"]),
-    "Checkbox": ComponentDef("Checkbox", "input", "Checkbox with label",
-                             aria_attributes=["aria-checked"],
-                             keyboard_support=["Space"]),
-    "Radio": ComponentDef("Radio", "input", "Radio button group",
-                          keyboard_support=["ArrowUp", "ArrowDown"]),
-    "Toggle": ComponentDef("Toggle", "input", "Toggle switch",
-                           sizes=["sm", "md", "lg"],
-                           aria_attributes=["aria-checked", "role=switch"]),
-    "Slider": ComponentDef("Slider", "input", "Range slider",
-                           aria_attributes=["aria-valuemin", "aria-valuemax", "aria-valuenow"]),
-    "Card": ComponentDef("Card", "display", "Content card with header/body/footer",
-                         variants=["elevated", "outlined", "filled"]),
-    "Avatar": ComponentDef("Avatar", "display", "User avatar with fallback",
-                           sizes=["xs", "sm", "md", "lg", "xl"],
-                           variants=["circular", "rounded", "square"]),
-    "Badge": ComponentDef("Badge", "display", "Status badge/tag",
-                          variants=["solid", "outline", "subtle"],
-                          sizes=["sm", "md"]),
-    "Alert": ComponentDef("Alert", "feedback", "Alert message",
-                          variants=["info", "success", "warning", "error"],
-                          aria_attributes=["role=alert"]),
-    "Toast": ComponentDef("Toast", "feedback", "Toast notification",
-                          variants=["info", "success", "warning", "error"],
-                          aria_attributes=["role=status", "aria-live=polite"]),
-    "Dialog": ComponentDef("Dialog", "overlay", "Modal dialog",
-                           aria_attributes=["role=dialog", "aria-modal=true", "aria-labelledby"],
-                           keyboard_support=["Escape", "Tab trap"]),
-    "Sheet": ComponentDef("Sheet", "overlay", "Bottom/side sheet",
-                          variants=["bottom", "left", "right"]),
-    "Dropdown": ComponentDef("Dropdown", "overlay", "Dropdown menu",
-                             keyboard_support=["ArrowUp", "ArrowDown", "Enter", "Escape"]),
-    "Tooltip": ComponentDef("Tooltip", "overlay", "Tooltip on hover",
-                            aria_attributes=["role=tooltip"]),
-    "Tabs": ComponentDef("Tabs", "navigation", "Tab navigation",
-                         variants=["underline", "pills", "enclosed"],
-                         keyboard_support=["ArrowLeft", "ArrowRight"]),
-    "Breadcrumb": ComponentDef("Breadcrumb", "navigation", "Breadcrumb navigation",
-                               aria_attributes=["aria-label=Breadcrumb"]),
+    "Button": ComponentDef(
+        "Button",
+        "input",
+        "Clickable button with variants",
+        variants=["primary", "secondary", "ghost", "danger", "outline"],
+        sizes=["sm", "md", "lg"],
+        aria_attributes=["aria-label", "aria-disabled"],
+        keyboard_support=["Enter", "Space"],
+    ),
+    "Input": ComponentDef(
+        "Input",
+        "input",
+        "Text input with validation",
+        variants=["outlined", "filled", "underline"],
+        sizes=["sm", "md", "lg"],
+        aria_attributes=["aria-label", "aria-invalid", "aria-describedby"],
+    ),
+    "Textarea": ComponentDef(
+        "Textarea", "input", "Multi-line text input", variants=["outlined", "filled"], sizes=["sm", "md", "lg"]
+    ),
+    "Select": ComponentDef(
+        "Select",
+        "input",
+        "Dropdown select",
+        variants=["outlined", "filled"],
+        keyboard_support=["ArrowUp", "ArrowDown", "Enter", "Escape"],
+    ),
+    "Checkbox": ComponentDef(
+        "Checkbox", "input", "Checkbox with label", aria_attributes=["aria-checked"], keyboard_support=["Space"]
+    ),
+    "Radio": ComponentDef("Radio", "input", "Radio button group", keyboard_support=["ArrowUp", "ArrowDown"]),
+    "Toggle": ComponentDef(
+        "Toggle", "input", "Toggle switch", sizes=["sm", "md", "lg"], aria_attributes=["aria-checked", "role=switch"]
+    ),
+    "Slider": ComponentDef(
+        "Slider", "input", "Range slider", aria_attributes=["aria-valuemin", "aria-valuemax", "aria-valuenow"]
+    ),
+    "Card": ComponentDef(
+        "Card", "display", "Content card with header/body/footer", variants=["elevated", "outlined", "filled"]
+    ),
+    "Avatar": ComponentDef(
+        "Avatar",
+        "display",
+        "User avatar with fallback",
+        sizes=["xs", "sm", "md", "lg", "xl"],
+        variants=["circular", "rounded", "square"],
+    ),
+    "Badge": ComponentDef(
+        "Badge", "display", "Status badge/tag", variants=["solid", "outline", "subtle"], sizes=["sm", "md"]
+    ),
+    "Alert": ComponentDef(
+        "Alert",
+        "feedback",
+        "Alert message",
+        variants=["info", "success", "warning", "error"],
+        aria_attributes=["role=alert"],
+    ),
+    "Toast": ComponentDef(
+        "Toast",
+        "feedback",
+        "Toast notification",
+        variants=["info", "success", "warning", "error"],
+        aria_attributes=["role=status", "aria-live=polite"],
+    ),
+    "Dialog": ComponentDef(
+        "Dialog",
+        "overlay",
+        "Modal dialog",
+        aria_attributes=["role=dialog", "aria-modal=true", "aria-labelledby"],
+        keyboard_support=["Escape", "Tab trap"],
+    ),
+    "Sheet": ComponentDef("Sheet", "overlay", "Bottom/side sheet", variants=["bottom", "left", "right"]),
+    "Dropdown": ComponentDef(
+        "Dropdown", "overlay", "Dropdown menu", keyboard_support=["ArrowUp", "ArrowDown", "Enter", "Escape"]
+    ),
+    "Tooltip": ComponentDef("Tooltip", "overlay", "Tooltip on hover", aria_attributes=["role=tooltip"]),
+    "Tabs": ComponentDef(
+        "Tabs",
+        "navigation",
+        "Tab navigation",
+        variants=["underline", "pills", "enclosed"],
+        keyboard_support=["ArrowLeft", "ArrowRight"],
+    ),
+    "Breadcrumb": ComponentDef(
+        "Breadcrumb", "navigation", "Breadcrumb navigation", aria_attributes=["aria-label=Breadcrumb"]
+    ),
     "Pagination": ComponentDef("Pagination", "navigation", "Page pagination"),
     "Sidebar": ComponentDef("Sidebar", "navigation", "Collapsible sidebar"),
     "Navbar": ComponentDef("Navbar", "navigation", "Top navigation bar"),
-    "Table": ComponentDef("Table", "display", "Data table with sorting",
-                          aria_attributes=["role=table"]),
-    "Skeleton": ComponentDef("Skeleton", "feedback", "Loading skeleton",
-                             variants=["text", "circular", "rectangular"]),
-    "Progress": ComponentDef("Progress", "feedback", "Progress bar",
-                             variants=["linear", "circular"],
-                             aria_attributes=["role=progressbar", "aria-valuenow"]),
-    "Spinner": ComponentDef("Spinner", "feedback", "Loading spinner",
-                            sizes=["sm", "md", "lg"]),
+    "Table": ComponentDef("Table", "display", "Data table with sorting", aria_attributes=["role=table"]),
+    "Skeleton": ComponentDef("Skeleton", "feedback", "Loading skeleton", variants=["text", "circular", "rectangular"]),
+    "Progress": ComponentDef(
+        "Progress",
+        "feedback",
+        "Progress bar",
+        variants=["linear", "circular"],
+        aria_attributes=["role=progressbar", "aria-valuenow"],
+    ),
+    "Spinner": ComponentDef("Spinner", "feedback", "Loading spinner", sizes=["sm", "md", "lg"]),
     "Divider": ComponentDef("Divider", "layout", "Horizontal/vertical divider"),
-    "Stack": ComponentDef("Stack", "layout", "Flex stack layout",
-                          variants=["horizontal", "vertical"]),
+    "Stack": ComponentDef("Stack", "layout", "Flex stack layout", variants=["horizontal", "vertical"]),
     "Grid": ComponentDef("Grid", "layout", "CSS grid layout"),
     "Container": ComponentDef("Container", "layout", "Max-width container"),
     "AspectRatio": ComponentDef("AspectRatio", "layout", "Aspect ratio container"),
     "ScrollArea": ComponentDef("ScrollArea", "layout", "Custom scrollbar area"),
-    "Accordion": ComponentDef("Accordion", "display", "Collapsible accordion",
-                              keyboard_support=["Enter", "Space", "ArrowUp", "ArrowDown"]),
-    "CommandPalette": ComponentDef("CommandPalette", "overlay", "Cmd+K command palette",
-                                   keyboard_support=["Cmd+K", "ArrowUp", "ArrowDown", "Enter"]),
+    "Accordion": ComponentDef(
+        "Accordion", "display", "Collapsible accordion", keyboard_support=["Enter", "Space", "ArrowUp", "ArrowDown"]
+    ),
+    "CommandPalette": ComponentDef(
+        "CommandPalette",
+        "overlay",
+        "Cmd+K command palette",
+        keyboard_support=["Cmd+K", "ArrowUp", "ArrowDown", "Enter"],
+    ),
     # Compound components
-    "Form": ComponentDef("Form", "input", "Form with validation, field groups, and submit handling",
-                         variants=["vertical", "horizontal", "inline"],
-                         aria_attributes=["role=form", "aria-label"],
-                         keyboard_support=["Tab", "Enter"]),
-    "DataTable": ComponentDef("DataTable", "display", "Data table with sorting, filtering, and pagination",
-                              variants=["simple", "striped", "bordered"],
-                              sizes=["sm", "md", "lg"],
-                              aria_attributes=["role=table", "aria-sort", "aria-label"]),
-    "FileUpload": ComponentDef("FileUpload", "input", "File upload with drag-and-drop and preview",
-                               variants=["dropzone", "button", "inline"],
-                               aria_attributes=["aria-label", "role=button"]),
-    "DatePicker": ComponentDef("DatePicker", "input", "Date picker with calendar popup",
-                               sizes=["sm", "md", "lg"],
-                               aria_attributes=["aria-label", "role=dialog"],
-                               keyboard_support=["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", "Escape"]),
-    "ColorPicker": ComponentDef("ColorPicker", "input", "Color picker with presets and custom input",
-                                sizes=["sm", "md", "lg"],
-                                aria_attributes=["aria-label"]),
+    "Form": ComponentDef(
+        "Form",
+        "input",
+        "Form with validation, field groups, and submit handling",
+        variants=["vertical", "horizontal", "inline"],
+        aria_attributes=["role=form", "aria-label"],
+        keyboard_support=["Tab", "Enter"],
+    ),
+    "DataTable": ComponentDef(
+        "DataTable",
+        "display",
+        "Data table with sorting, filtering, and pagination",
+        variants=["simple", "striped", "bordered"],
+        sizes=["sm", "md", "lg"],
+        aria_attributes=["role=table", "aria-sort", "aria-label"],
+    ),
+    "FileUpload": ComponentDef(
+        "FileUpload",
+        "input",
+        "File upload with drag-and-drop and preview",
+        variants=["dropzone", "button", "inline"],
+        aria_attributes=["aria-label", "role=button"],
+    ),
+    "DatePicker": ComponentDef(
+        "DatePicker",
+        "input",
+        "Date picker with calendar popup",
+        sizes=["sm", "md", "lg"],
+        aria_attributes=["aria-label", "role=dialog"],
+        keyboard_support=["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", "Escape"],
+    ),
+    "ColorPicker": ComponentDef(
+        "ColorPicker",
+        "input",
+        "Color picker with presets and custom input",
+        sizes=["sm", "md", "lg"],
+        aria_attributes=["aria-label"],
+    ),
 }
 
 
@@ -146,9 +206,9 @@ class UIKitGenerator:
             "spacing_unit": variables.get("spacing_unit", "0.25rem"),
         }
 
-    def generate_all(self, include_stories: bool = False,
-                     include_responsive: bool = True,
-                     include_animations: bool = True) -> Dict[str, str]:
+    def generate_all(
+        self, include_stories: bool = False, include_responsive: bool = True, include_animations: bool = True
+    ) -> Dict[str, str]:
         """Generate all components with optional stories, responsive, and animation variants."""
         files: Dict[str, str] = {}
         files["src/components/ui/index.ts"] = self._generate_index()
@@ -179,9 +239,7 @@ class UIKitGenerator:
             return self._generate_component(comp)
         return None
 
-    def _generate_component(self, comp: ComponentDef,
-                            responsive: bool = False,
-                            animated: bool = False) -> str:
+    def _generate_component(self, comp: ComponentDef, responsive: bool = False, animated: bool = False) -> str:
         """Generate a single React component with TypeScript, responsive, and animation support."""
         name = comp.name
         kebab = self._kebab(name)
@@ -203,15 +261,17 @@ class UIKitGenerator:
         if comp.sizes:
             lines.append(f"  size?: {sizes_type};")
         if responsive:
-            lines.append(f'  responsive?: boolean;')
+            lines.append(f"  responsive?: boolean;")
         if animated:
-            lines.append(f'  animated?: boolean;')
-        lines.extend([
-            "  disabled?: boolean;",
-            "  children?: React.ReactNode;",
-            "}",
-            "",
-        ])
+            lines.append(f"  animated?: boolean;")
+        lines.extend(
+            [
+                "  disabled?: boolean;",
+                "  children?: React.ReactNode;",
+                "}",
+                "",
+            ]
+        )
 
         # Variant styles map
         if comp.variants:
@@ -243,9 +303,13 @@ class UIKitGenerator:
 
         if comp.sizes:
             lines.append("const sizes: Record<string, string> = {")
-            size_styles = {"xs": "text-xs px-2 py-0.5", "sm": "text-sm px-3 py-1.5",
-                           "md": "text-base px-4 py-2", "lg": "text-lg px-6 py-3",
-                           "xl": "text-xl px-8 py-4"}
+            size_styles = {
+                "xs": "text-xs px-2 py-0.5",
+                "sm": "text-sm px-3 py-1.5",
+                "md": "text-base px-4 py-2",
+                "lg": "text-lg px-6 py-3",
+                "xl": "text-xl px-8 py-4",
+            }
             for s in comp.sizes:
                 lines.append(f'  {s}: "{size_styles.get(s, "px-4 py-2")}",')
             lines.append("};")
@@ -253,7 +317,9 @@ class UIKitGenerator:
 
         # Responsive breakpoint classes
         if responsive and comp.sizes:
-            lines.append("const responsiveClasses = \"sm:px-3 sm:py-1.5 sm:text-sm md:px-4 md:py-2 md:text-base lg:px-6 lg:py-3 lg:text-lg\";")
+            lines.append(
+                'const responsiveClasses = "sm:px-3 sm:py-1.5 sm:text-sm md:px-4 md:py-2 md:text-base lg:px-6 lg:py-3 lg:text-lg";'
+            )
             lines.append("")
 
         # Component function
@@ -268,26 +334,35 @@ class UIKitGenerator:
             prop_destructure += "animated = true, "
         prop_destructure += "disabled, className, children, ...props"
 
-        lines.extend([
-            f"export const {name} = React.forwardRef<HTMLElement, {name}Props>((",
-            f"  {{ {prop_destructure} }},",
-            "  ref",
-            ") => {",
-        ])
+        lines.extend(
+            [
+                f"export const {name} = React.forwardRef<HTMLElement, {name}Props>((",
+                f"  {{ {prop_destructure} }},",
+                "  ref",
+                ") => {",
+            ]
+        )
 
         # Use motion component if animated
         if animated:
-            lines.extend([
-                f"  const Comp = animated ? motion.div : \"div\";",
-                f"  const animationProps = animated ? fadeIn : {{}};",
-            ])
+            lines.extend(
+                [
+                    f'  const Comp = animated ? motion.div : "div";',
+                    f"  const animationProps = animated ? fadeIn : {{}};",
+                ]
+            )
 
         lines.append("  return (")
 
         # Element based on category
-        tag = {"input": "input" if name in ("Input", "Textarea") else "button",
-               "display": "div", "feedback": "div", "overlay": "div",
-               "navigation": "nav", "layout": "div"}.get(comp.category, "div")
+        tag = {
+            "input": "input" if name in ("Input", "Textarea") else "button",
+            "display": "div",
+            "feedback": "div",
+            "overlay": "div",
+            "navigation": "nav",
+            "layout": "div",
+        }.get(comp.category, "div")
 
         aria_attrs = ""
         for attr in comp.aria_attributes:
@@ -308,34 +383,37 @@ class UIKitGenerator:
         variant_ref = f"variants[variant]" if comp.variants else '""'
         size_ref = f"sizes[size]" if comp.sizes else '""'
 
-        responsive_ref = "isResponsive ? responsiveClasses : \"\"" if responsive and comp.sizes else '""'
+        responsive_ref = 'isResponsive ? responsiveClasses : ""' if responsive and comp.sizes else '""'
 
-        lines.extend([
-            f'    <{tag}',
-            f'      ref={{ref as any}}',
-            f'      className={{cn("{base_class}", {variant_ref}, {size_ref}, {responsive_ref}, className)}}',
-            f"      disabled={{disabled}}",
-        ])
+        lines.extend(
+            [
+                f"    <{tag}",
+                f"      ref={{ref as any}}",
+                f'      className={{cn("{base_class}", {variant_ref}, {size_ref}, {responsive_ref}, className)}}',
+                f"      disabled={{disabled}}",
+            ]
+        )
         if animated:
             lines.append(f"      {{...animationProps}}")
-        lines.extend([
-            f"      {{...props}}",
-            f"    >",
-            f"      {{children}}",
-            f"    </{tag}>",
-            "  );",
-            "});",
-            "",
-            f'{name}.displayName = "{name}";',
-            "",
-            f"export default {name};",
-        ])
+        lines.extend(
+            [
+                f"      {{...props}}",
+                f"    >",
+                f"      {{children}}",
+                f"    </{tag}>",
+                "  );",
+                "});",
+                "",
+                f'{name}.displayName = "{name}";',
+                "",
+                f"export default {name};",
+            ]
+        )
 
         return "\n".join(lines) + "\n"
 
     def _generate_index(self) -> str:
-        lines = [f'export {{ {name} }} from "./{self._kebab(name)}";'
-                 for name in COMPONENT_LIBRARY]
+        lines = [f'export {{ {name} }} from "./{self._kebab(name)}";' for name in COMPONENT_LIBRARY]
         return "\n".join(lines) + "\n"
 
     def _generate_utils(self) -> str:
@@ -383,21 +461,21 @@ class UIKitGenerator:
         return (
             'import type { Variants } from "framer-motion";\n\n'
             "export const fadeIn = {\n"
-            '  initial: { opacity: 0, y: 8 },\n'
-            '  animate: { opacity: 1, y: 0 },\n'
+            "  initial: { opacity: 0, y: 8 },\n"
+            "  animate: { opacity: 1, y: 0 },\n"
             '  transition: { duration: 0.2, ease: "easeOut" },\n'
             "};\n\n"
             "export const fadeOut = {\n"
-            '  exit: { opacity: 0, y: -8 },\n'
+            "  exit: { opacity: 0, y: -8 },\n"
             '  transition: { duration: 0.15, ease: "easeIn" },\n'
             "};\n\n"
             "export const slideIn: Variants = {\n"
-            '  hidden: { x: -20, opacity: 0 },\n'
-            '  visible: { x: 0, opacity: 1, transition: { duration: 0.3 } },\n'
+            "  hidden: { x: -20, opacity: 0 },\n"
+            "  visible: { x: 0, opacity: 1, transition: { duration: 0.3 } },\n"
             "};\n\n"
             "export const scaleIn: Variants = {\n"
-            '  hidden: { scale: 0.95, opacity: 0 },\n'
-            '  visible: { scale: 1, opacity: 1, transition: { duration: 0.2 } },\n'
+            "  hidden: { scale: 0.95, opacity: 0 },\n"
+            "  visible: { scale: 1, opacity: 1, transition: { duration: 0.2 } },\n"
             "};\n\n"
             "export const staggerChildren: Variants = {\n"
             "  visible: {\n"
@@ -417,7 +495,7 @@ class UIKitGenerator:
             f"const meta: Meta<typeof {name}> = {{",
             f'  title: "UI/{name}",',
             f"  component: {name},",
-            f"  tags: [\"autodocs\"],",
+            f'  tags: ["autodocs"],',
         ]
 
         # Add argTypes for variants
@@ -434,41 +512,48 @@ class UIKitGenerator:
                 lines.append("    },")
             lines.append("  },")
 
-        lines.extend([
-            "};",
-            "",
-            "export default meta;",
-            f"type Story = StoryObj<typeof {name}>;",
-            "",
-            f'export const Default: Story = {{',
-            f"  args: {{",
-            f'    children: "{name}",',
-        ])
+        lines.extend(
+            [
+                "};",
+                "",
+                "export default meta;",
+                f"type Story = StoryObj<typeof {name}>;",
+                "",
+                f"export const Default: Story = {{",
+                f"  args: {{",
+                f'    children: "{name}",',
+            ]
+        )
         if comp.variants:
             lines.append(f'    variant: "{comp.variants[0]}",')
         if comp.sizes:
             lines.append(f'    size: "md",')
-        lines.extend([
-            "  },",
-            "};",
-        ])
+        lines.extend(
+            [
+                "  },",
+                "};",
+            ]
+        )
 
         # Add variant stories
         for v in comp.variants[:3]:
             story_name = v.title().replace("_", "")
-            lines.extend([
-                "",
-                f"export const {story_name}: Story = {{",
-                f"  args: {{",
-                f'    children: "{name} ({v})",',
-                f'    variant: "{v}",',
-                "  },",
-                "};",
-            ])
+            lines.extend(
+                [
+                    "",
+                    f"export const {story_name}: Story = {{",
+                    f"  args: {{",
+                    f'    children: "{name} ({v})",',
+                    f'    variant: "{v}",',
+                    "  },",
+                    "};",
+                ]
+            )
 
         return "\n".join(lines) + "\n"
 
     @staticmethod
     def _kebab(name: str) -> str:
         import re
+
         return re.sub(r"(?<!^)(?=[A-Z])", "-", name).lower()

@@ -53,9 +53,7 @@ class BackendRegistry:
         self._backends: Dict[str, Callable[[], DisplayBackend]] = {}
         self._fallback_order: List[str] = []
 
-    def register(self, platform_id: str,
-                 factory: Callable[[], DisplayBackend],
-                 priority: int = 0) -> None:
+    def register(self, platform_id: str, factory: Callable[[], DisplayBackend], priority: int = 0) -> None:
         self._backends[platform_id] = factory
         if platform_id not in self._fallback_order:
             self._fallback_order.insert(priority, platform_id)
@@ -87,21 +85,25 @@ _registry = BackendRegistry()
 
 def _register_tkinter() -> DisplayBackend:
     from eostudio.platform.tkinter_backend import TkinterBackend
+
     return TkinterBackend()
 
 
 def _register_eos() -> DisplayBackend:
     from eostudio.platform.eos_backend import EosBackend
+
     return EosBackend()
 
 
 def _register_web() -> DisplayBackend:
     from eostudio.platform.web_backend import WebBackend
+
     return WebBackend()
 
 
 def _register_macos() -> DisplayBackend:
     from eostudio.platform.macos_backend import MacOSBackend
+
     return MacOSBackend()
 
 

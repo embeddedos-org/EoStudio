@@ -19,6 +19,7 @@ class TaskStatus(Enum):
 @dataclass
 class Task:
     """A single implementation task."""
+
     id: str
     title: str
     description: str = ""
@@ -40,11 +41,17 @@ class Task:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "id": self.id, "title": self.title, "description": self.description,
-            "status": self.status.value, "requirement_id": self.requirement_id,
-            "component": self.component, "files_to_create": self.files_to_create,
-            "files_to_modify": self.files_to_modify, "tests_needed": self.tests_needed,
-            "depends_on": self.depends_on, "effort": self.effort,
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "status": self.status.value,
+            "requirement_id": self.requirement_id,
+            "component": self.component,
+            "files_to_create": self.files_to_create,
+            "files_to_modify": self.files_to_modify,
+            "tests_needed": self.tests_needed,
+            "depends_on": self.depends_on,
+            "effort": self.effort,
         }
 
     def to_markdown(self) -> str:
@@ -60,13 +67,15 @@ class Task:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Task":
-        return cls(**{k: TaskStatus(v) if k == "status" else v
-                      for k, v in data.items() if k in cls.__dataclass_fields__})
+        return cls(
+            **{k: TaskStatus(v) if k == "status" else v for k, v in data.items() if k in cls.__dataclass_fields__}
+        )
 
 
 @dataclass
 class TaskBreakdown:
     """A collection of tasks derived from specs."""
+
     project_name: str
     tasks: List[Task] = field(default_factory=list)
     milestones: List[Dict[str, Any]] = field(default_factory=list)
@@ -96,21 +105,24 @@ class TaskBreakdown:
     def next_tasks(self) -> List[Task]:
         """Get tasks that are ready to work on (no unmet dependencies)."""
         done_ids = {t.id for t in self.tasks if t.status == TaskStatus.DONE}
-        return [t for t in self.tasks if t.status == TaskStatus.TODO
-                and all(d in done_ids for d in t.depends_on)]
+        return [t for t in self.tasks if t.status == TaskStatus.TODO and all(d in done_ids for d in t.depends_on)]
 
     def add_milestone(self, name: str, task_ids: List[str], deadline: str = "") -> None:
         self.milestones.append({"name": name, "tasks": task_ids, "deadline": deadline})
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"project": self.project_name,
-                "tasks": [t.to_dict() for t in self.tasks],
-                "milestones": self.milestones,
-                "progress": self.progress}
+        return {
+            "project": self.project_name,
+            "tasks": [t.to_dict() for t in self.tasks],
+            "milestones": self.milestones,
+            "progress": self.progress,
+        }
 
     def to_markdown(self) -> str:
-        lines = [f"# Task Breakdown: {self.project_name}",
-                 f"\nProgress: {self.progress:.0f}% ({len(self.by_status(TaskStatus.DONE))}/{len(self.tasks)})\n"]
+        lines = [
+            f"# Task Breakdown: {self.project_name}",
+            f"\nProgress: {self.progress:.0f}% ({len(self.by_status(TaskStatus.DONE))}/{len(self.tasks)})\n",
+        ]
         components = sorted(set(t.component for t in self.tasks if t.component))
         for comp in components:
             lines.append(f"\n## {comp}")

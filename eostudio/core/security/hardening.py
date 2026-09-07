@@ -9,6 +9,7 @@ Provides:
 - Security report generation
 - Auto-remediation suggestions
 """
+
 from __future__ import annotations
 
 import json
@@ -30,10 +31,11 @@ class VulnSeverity(Enum):
 @dataclass
 class Vulnerability:
     """A detected security vulnerability."""
+
     id: str
     title: str
     severity: VulnSeverity
-    category: str           # "sast", "dependency", "secret", "license"
+    category: str  # "sast", "dependency", "secret", "license"
     file: str
     line: int
     description: str
@@ -47,9 +49,10 @@ class Vulnerability:
 @dataclass
 class SecurityReport:
     """Full security report for a workspace."""
+
     workspace: str
     vulnerabilities: List[Vulnerability]
-    score: int              # 0-100 (100 = no issues)
+    score: int  # 0-100 (100 = no issues)
     summary: str
     critical_count: int
     high_count: int
@@ -66,7 +69,8 @@ class SecurityReport:
 _SAST_RULES: List[Dict[str, Any]] = [
     # Injection
     {
-        "id": "SAST-001", "title": "SQL Injection Risk",
+        "id": "SAST-001",
+        "title": "SQL Injection Risk",
         "pattern": re.compile(r'(execute|query)\s*\(\s*["\'].*%s|f["\'].*SELECT|f["\'].*INSERT', re.I),
         "severity": VulnSeverity.CRITICAL,
         "category": "injection",
@@ -74,7 +78,8 @@ _SAST_RULES: List[Dict[str, Any]] = [
         "recommendation": "Use parameterized queries or an ORM.",
     },
     {
-        "id": "SAST-002", "title": "Command Injection Risk",
+        "id": "SAST-002",
+        "title": "Command Injection Risk",
         "pattern": re.compile(r"os\.system\(|subprocess\.(call|run|Popen)\(.*shell\s*=\s*True", re.I),
         "severity": VulnSeverity.HIGH,
         "category": "injection",
@@ -82,7 +87,8 @@ _SAST_RULES: List[Dict[str, Any]] = [
         "recommendation": "Avoid shell=True; use subprocess with a list of arguments.",
     },
     {
-        "id": "SAST-003", "title": "Code Injection via eval/exec",
+        "id": "SAST-003",
+        "title": "Code Injection via eval/exec",
         "pattern": re.compile(r"\beval\s*\(|\bexec\s*\("),
         "severity": VulnSeverity.CRITICAL,
         "category": "injection",
@@ -91,11 +97,9 @@ _SAST_RULES: List[Dict[str, Any]] = [
     },
     # Broken Authentication
     {
-        "id": "SAST-004", "title": "Hardcoded Credentials",
-        "pattern": re.compile(
-            r'(password|passwd|pwd|secret|api_key|token|auth)\s*=\s*["\'][^"\']{4,}["\']',
-            re.I
-        ),
+        "id": "SAST-004",
+        "title": "Hardcoded Credentials",
+        "pattern": re.compile(r'(password|passwd|pwd|secret|api_key|token|auth)\s*=\s*["\'][^"\']{4,}["\']', re.I),
         "severity": VulnSeverity.CRITICAL,
         "category": "secret",
         "description": "Hardcoded credentials found in source code.",
@@ -103,7 +107,8 @@ _SAST_RULES: List[Dict[str, Any]] = [
     },
     # Cryptographic Failures
     {
-        "id": "SAST-005", "title": "Weak Hash Algorithm",
+        "id": "SAST-005",
+        "title": "Weak Hash Algorithm",
         "pattern": re.compile(r"\bmd5\b|\bsha1\b|\bsha\s*=\s*['\"]sha1['\"]", re.I),
         "severity": VulnSeverity.MEDIUM,
         "category": "crypto",
@@ -111,7 +116,8 @@ _SAST_RULES: List[Dict[str, Any]] = [
         "recommendation": "Use SHA-256 or better for security-sensitive hashing.",
     },
     {
-        "id": "SAST-006", "title": "Insecure Random",
+        "id": "SAST-006",
+        "title": "Insecure Random",
         "pattern": re.compile(r"\brandom\.random\(\)|\brandom\.randint\(", re.I),
         "severity": VulnSeverity.LOW,
         "category": "crypto",
@@ -120,7 +126,8 @@ _SAST_RULES: List[Dict[str, Any]] = [
     },
     # Insecure Deserialization
     {
-        "id": "SAST-007", "title": "Unsafe Pickle Deserialization",
+        "id": "SAST-007",
+        "title": "Unsafe Pickle Deserialization",
         "pattern": re.compile(r"pickle\.loads?\("),
         "severity": VulnSeverity.HIGH,
         "category": "deserialization",
@@ -128,7 +135,8 @@ _SAST_RULES: List[Dict[str, Any]] = [
         "recommendation": "Use JSON or a safe serialization format.",
     },
     {
-        "id": "SAST-008", "title": "Unsafe YAML Load",
+        "id": "SAST-008",
+        "title": "Unsafe YAML Load",
         "pattern": re.compile(r"yaml\.load\((?!.*Loader\s*=\s*yaml\.SafeLoader)"),
         "severity": VulnSeverity.HIGH,
         "category": "deserialization",
@@ -137,7 +145,8 @@ _SAST_RULES: List[Dict[str, Any]] = [
     },
     # XSS
     {
-        "id": "SAST-009", "title": "Potential XSS via innerHTML",
+        "id": "SAST-009",
+        "title": "Potential XSS via innerHTML",
         "pattern": re.compile(r"\.innerHTML\s*=|dangerouslySetInnerHTML"),
         "severity": VulnSeverity.HIGH,
         "category": "xss",
@@ -146,7 +155,8 @@ _SAST_RULES: List[Dict[str, Any]] = [
     },
     # Path Traversal
     {
-        "id": "SAST-010", "title": "Path Traversal Risk",
+        "id": "SAST-010",
+        "title": "Path Traversal Risk",
         "pattern": re.compile(r"open\s*\(.*\+|open\s*\(.*format\(|open\s*\(.*f['\"]"),
         "severity": VulnSeverity.MEDIUM,
         "category": "path_traversal",
@@ -155,7 +165,8 @@ _SAST_RULES: List[Dict[str, Any]] = [
     },
     # Debug/Dev settings in production
     {
-        "id": "SAST-011", "title": "Debug Mode Enabled",
+        "id": "SAST-011",
+        "title": "Debug Mode Enabled",
         "pattern": re.compile(r"DEBUG\s*=\s*True|debug\s*=\s*True", re.I),
         "severity": VulnSeverity.MEDIUM,
         "category": "config",
@@ -164,7 +175,8 @@ _SAST_RULES: List[Dict[str, Any]] = [
     },
     # SSRF
     {
-        "id": "SAST-012", "title": "Potential SSRF",
+        "id": "SAST-012",
+        "title": "Potential SSRF",
         "pattern": re.compile(r"requests\.(get|post|put)\s*\(\s*[^\"']+\+|urllib.*urlopen\s*\(.*\+"),
         "severity": VulnSeverity.HIGH,
         "category": "ssrf",
@@ -176,32 +188,38 @@ _SAST_RULES: List[Dict[str, Any]] = [
 # Secret patterns (for dedicated secret scanning)
 _SECRET_PATTERNS: List[Dict[str, Any]] = [
     {
-        "id": "SEC-001", "title": "AWS Access Key",
+        "id": "SEC-001",
+        "title": "AWS Access Key",
         "pattern": re.compile(r"AKIA[0-9A-Z]{16}"),
         "severity": VulnSeverity.CRITICAL,
     },
     {
-        "id": "SEC-002", "title": "GitHub Token",
+        "id": "SEC-002",
+        "title": "GitHub Token",
         "pattern": re.compile(r"ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9_]{82}"),
         "severity": VulnSeverity.CRITICAL,
     },
     {
-        "id": "SEC-003", "title": "OpenAI API Key",
+        "id": "SEC-003",
+        "title": "OpenAI API Key",
         "pattern": re.compile(r"sk-[a-zA-Z0-9]{48}"),
         "severity": VulnSeverity.CRITICAL,
     },
     {
-        "id": "SEC-004", "title": "Private Key",
+        "id": "SEC-004",
+        "title": "Private Key",
         "pattern": re.compile(r"-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----"),
         "severity": VulnSeverity.CRITICAL,
     },
     {
-        "id": "SEC-005", "title": "Stripe Secret Key",
+        "id": "SEC-005",
+        "title": "Stripe Secret Key",
         "pattern": re.compile(r"sk_live_[a-zA-Z0-9]{24}"),
         "severity": VulnSeverity.CRITICAL,
     },
     {
-        "id": "SEC-006", "title": "Generic High-Entropy Secret",
+        "id": "SEC-006",
+        "title": "Generic High-Entropy Secret",
         "pattern": re.compile(r'["\'][a-zA-Z0-9+/]{40,}["\']'),
         "severity": VulnSeverity.MEDIUM,
     },
@@ -222,8 +240,20 @@ class SecurityScanner:
     """
 
     SCANNED_EXTENSIONS = {
-        ".py", ".ts", ".tsx", ".js", ".jsx", ".go", ".rs",
-        ".java", ".php", ".rb", ".cs", ".env", ".yaml", ".yml",
+        ".py",
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".go",
+        ".rs",
+        ".java",
+        ".php",
+        ".rb",
+        ".cs",
+        ".env",
+        ".yaml",
+        ".yml",
     }
     IGNORED_DIRS = {".git", "node_modules", "__pycache__", "dist", "build", ".venv"}
 
@@ -240,6 +270,7 @@ class SecurityScanner:
             SecurityReport with all found vulnerabilities.
         """
         import time
+
         start = time.monotonic()
         root = Path(workspace)
         vulnerabilities: List[Vulnerability] = []
@@ -305,31 +336,35 @@ class SecurityScanner:
         for rule in _SAST_RULES:
             for i, line in enumerate(lines, 1):
                 if rule["pattern"].search(line):
-                    vulns.append(Vulnerability(
-                        id=rule["id"],
-                        title=rule["title"],
-                        severity=rule["severity"],
-                        category=rule["category"],
-                        file=path,
-                        line=i,
-                        description=rule["description"],
-                        recommendation=rule["recommendation"],
-                    ))
+                    vulns.append(
+                        Vulnerability(
+                            id=rule["id"],
+                            title=rule["title"],
+                            severity=rule["severity"],
+                            category=rule["category"],
+                            file=path,
+                            line=i,
+                            description=rule["description"],
+                            recommendation=rule["recommendation"],
+                        )
+                    )
 
         # Secret scanning
         for rule in _SECRET_PATTERNS:
             for i, line in enumerate(lines, 1):
                 if rule["pattern"].search(line):
-                    vulns.append(Vulnerability(
-                        id=rule["id"],
-                        title=rule["title"],
-                        severity=rule["severity"],
-                        category="secret",
-                        file=path,
-                        line=i,
-                        description=f"Potential secret/credential found: {rule['title']}",
-                        recommendation="Remove from source code; use environment variables or a secrets manager.",
-                    ))
+                    vulns.append(
+                        Vulnerability(
+                            id=rule["id"],
+                            title=rule["title"],
+                            severity=rule["severity"],
+                            category="secret",
+                            file=path,
+                            line=i,
+                            description=f"Potential secret/credential found: {rule['title']}",
+                            recommendation="Remove from source code; use environment variables or a secrets manager.",
+                        )
+                    )
 
         return vulns
 
@@ -344,23 +379,27 @@ class SecurityScanner:
             try:
                 result = subprocess.run(
                     ["pip-audit", "--format=json", "-r", str(req_file)],
-                    capture_output=True, text=True, timeout=60,
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
                 )
                 if result.returncode == 0:
                     data = json.loads(result.stdout)
                     for dep in data.get("dependencies", []):
                         for vuln in dep.get("vulns", []):
-                            vulns.append(Vulnerability(
-                                id=vuln.get("id", "CVE-UNKNOWN"),
-                                title=f"Vulnerable dependency: {dep['name']} {dep['version']}",
-                                severity=VulnSeverity.HIGH,
-                                category="dependency",
-                                file=str(req_file),
-                                line=0,
-                                description=vuln.get("description", ""),
-                                recommendation=f"Upgrade to {vuln.get('fix_versions', ['latest'])[0]}",
-                                cve=vuln.get("id", ""),
-                            ))
+                            vulns.append(
+                                Vulnerability(
+                                    id=vuln.get("id", "CVE-UNKNOWN"),
+                                    title=f"Vulnerable dependency: {dep['name']} {dep['version']}",
+                                    severity=VulnSeverity.HIGH,
+                                    category="dependency",
+                                    file=str(req_file),
+                                    line=0,
+                                    description=vuln.get("description", ""),
+                                    recommendation=f"Upgrade to {vuln.get('fix_versions', ['latest'])[0]}",
+                                    cve=vuln.get("id", ""),
+                                )
+                            )
             except Exception:
                 pass
 
@@ -370,7 +409,9 @@ class SecurityScanner:
             try:
                 result = subprocess.run(
                     ["npm", "audit", "--json"],
-                    capture_output=True, text=True, timeout=60,
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
                     cwd=str(root),
                 )
                 data = json.loads(result.stdout)
@@ -382,16 +423,18 @@ class SecurityScanner:
                         "low": VulnSeverity.LOW,
                     }
                     sev = severity_map.get(vuln_data.get("severity", "low"), VulnSeverity.LOW)
-                    vulns.append(Vulnerability(
-                        id=vuln_id,
-                        title=f"Vulnerable npm package: {vuln_data.get('name', vuln_id)}",
-                        severity=sev,
-                        category="dependency",
-                        file=str(pkg_file),
-                        line=0,
-                        description=vuln_data.get("title", ""),
-                        recommendation="Run `npm audit fix`",
-                    ))
+                    vulns.append(
+                        Vulnerability(
+                            id=vuln_id,
+                            title=f"Vulnerable npm package: {vuln_data.get('name', vuln_id)}",
+                            severity=sev,
+                            category="dependency",
+                            file=str(pkg_file),
+                            line=0,
+                            description=vuln_data.get("title", ""),
+                            recommendation="Run `npm audit fix`",
+                        )
+                    )
             except Exception:
                 pass
 

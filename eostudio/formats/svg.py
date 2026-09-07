@@ -1,4 +1,5 @@
 """SVG format exporter for EoStudio 2D shapes."""
+
 from __future__ import annotations
 
 import os
@@ -16,9 +17,7 @@ class SVGExporter:
     ) -> str:
         """Export shapes to an SVG string."""
         lines = [
-            f'<svg xmlns="http://www.w3.org/2000/svg" '
-            f'width="{width}" height="{height}" '
-            f'viewBox="0 0 {width} {height}">'
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">'
         ]
         for shape in shapes:
             shape_type = shape.get("type", "")
@@ -29,30 +28,21 @@ class SVGExporter:
                 h = shape.get("height", 100)
                 fill = shape.get("fill", "none")
                 stroke = shape.get("stroke", "black")
-                lines.append(
-                    f'  <rect x="{x}" y="{y}" width="{w}" height="{h}" '
-                    f'fill="{fill}" stroke="{stroke}" />'
-                )
+                lines.append(f'  <rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{fill}" stroke="{stroke}" />')
             elif shape_type == "circle":
                 cx = shape.get("cx", 0)
                 cy = shape.get("cy", 0)
                 r = shape.get("r", 50)
                 fill = shape.get("fill", "none")
                 stroke = shape.get("stroke", "black")
-                lines.append(
-                    f'  <circle cx="{cx}" cy="{cy}" r="{r}" '
-                    f'fill="{fill}" stroke="{stroke}" />'
-                )
+                lines.append(f'  <circle cx="{cx}" cy="{cy}" r="{r}" fill="{fill}" stroke="{stroke}" />')
             elif shape_type == "line":
                 x1 = shape.get("x1", 0)
                 y1 = shape.get("y1", 0)
                 x2 = shape.get("x2", 100)
                 y2 = shape.get("y2", 100)
                 stroke = shape.get("stroke", "black")
-                lines.append(
-                    f'  <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" '
-                    f'stroke="{stroke}" />'
-                )
+                lines.append(f'  <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{stroke}" />')
             elif shape_type == "text":
                 x = shape.get("x", 0)
                 y = shape.get("y", 0)

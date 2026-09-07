@@ -23,6 +23,7 @@ _RECENT_PROJECTS_FILE = _EOSTUDIO_DIR / "recent_projects.json"
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class WorkspaceConfig:
     """Multi-root workspace configuration stored in ``.eostudio/workspace.json``."""
@@ -58,120 +59,253 @@ class RecentProject:
 # Built-in templates
 # ---------------------------------------------------------------------------
 
+
 def _builtin_templates() -> List[ProjectTemplate]:
     """Return 20+ starter templates for common languages and frameworks."""
     return [
-        ProjectTemplate("python-basic", "Basic Python project", "python", "none", {
-            "main.py": '"""Entry point."""\n\n\ndef main() -> None:\n    print("Hello, world!")\n\n\nif __name__ == "__main__":\n    main()\n',
-            "requirements.txt": "",
-            ".gitignore": "__pycache__/\n*.pyc\n.venv/\n",
-        }),
-        ProjectTemplate("python-flask", "Flask web application", "python", "flask", {
-            "app.py": 'from flask import Flask\n\napp = Flask(__name__)\n\n\n@app.route("/")\ndef index():\n    return "Hello, Flask!"\n\n\nif __name__ == "__main__":\n    app.run(debug=True)\n',
-            "requirements.txt": "flask\n",
-            ".gitignore": "__pycache__/\n*.pyc\n.venv/\n",
-        }),
-        ProjectTemplate("python-fastapi", "FastAPI web service", "python", "fastapi", {
-            "main.py": 'from fastapi import FastAPI\n\napp = FastAPI()\n\n\n@app.get("/")\nasync def root():\n    return {"message": "Hello, FastAPI!"}\n',
-            "requirements.txt": "fastapi\nuvicorn[standard]\n",
-            ".gitignore": "__pycache__/\n*.pyc\n.venv/\n",
-        }),
-        ProjectTemplate("python-django", "Django web application", "python", "django", {
-            "manage.py": '#!/usr/bin/env python\nimport os, sys\n\ndef main():\n    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")\n    from django.core.management import execute_from_command_line\n    execute_from_command_line(sys.argv)\n\nif __name__ == "__main__":\n    main()\n',
-            "requirements.txt": "django\n",
-            ".gitignore": "__pycache__/\n*.pyc\ndb.sqlite3\n",
-        }),
-        ProjectTemplate("javascript-node", "Node.js application", "javascript", "node", {
-            "index.js": 'console.log("Hello, Node.js!");\n',
-            "package.json": '{\n  "name": "my-app",\n  "version": "1.0.0",\n  "main": "index.js",\n  "scripts": {"start": "node index.js"}\n}\n',
-            ".gitignore": "node_modules/\n",
-        }),
-        ProjectTemplate("javascript-express", "Express.js web server", "javascript", "express", {
-            "index.js": 'const express = require("express");\nconst app = express();\n\napp.get("/", (req, res) => res.send("Hello, Express!"));\n\napp.listen(3000, () => console.log("Listening on :3000"));\n',
-            "package.json": '{\n  "name": "my-express-app",\n  "version": "1.0.0",\n  "main": "index.js",\n  "scripts": {"start": "node index.js"},\n  "dependencies": {"express": "^4.18.0"}\n}\n',
-            ".gitignore": "node_modules/\n",
-        }),
-        ProjectTemplate("typescript-node", "TypeScript Node.js application", "typescript", "node", {
-            "src/index.ts": 'console.log("Hello, TypeScript!");\n',
-            "tsconfig.json": '{\n  "compilerOptions": {"target": "ES2020", "module": "commonjs", "outDir": "dist", "strict": true},\n  "include": ["src"]\n}\n',
-            "package.json": '{\n  "name": "my-ts-app",\n  "version": "1.0.0",\n  "scripts": {"build": "tsc", "start": "node dist/index.js"}\n}\n',
-            ".gitignore": "node_modules/\ndist/\n",
-        }),
-        ProjectTemplate("react", "React single-page application", "typescript", "react", {
-            "src/App.tsx": 'export default function App() {\n  return <h1>Hello, React!</h1>;\n}\n',
-            "src/index.tsx": 'import React from "react";\nimport ReactDOM from "react-dom/client";\nimport App from "./App";\n\nReactDOM.createRoot(document.getElementById("root")!).render(<App />);\n',
-            "package.json": '{\n  "name": "my-react-app",\n  "version": "1.0.0",\n  "scripts": {"start": "react-scripts start", "build": "react-scripts build"}\n}\n',
-            ".gitignore": "node_modules/\nbuild/\n",
-        }),
-        ProjectTemplate("nextjs", "Next.js full-stack application", "typescript", "nextjs", {
-            "pages/index.tsx": 'export default function Home() {\n  return <h1>Hello, Next.js!</h1>;\n}\n',
-            "package.json": '{\n  "name": "my-nextjs-app",\n  "version": "1.0.0",\n  "scripts": {"dev": "next dev", "build": "next build"}\n}\n',
-            ".gitignore": "node_modules/\n.next/\n",
-        }),
-        ProjectTemplate("vue", "Vue.js application", "typescript", "vue", {
-            "src/App.vue": '<template>\n  <h1>Hello, Vue!</h1>\n</template>\n\n<script setup lang="ts">\n</script>\n',
-            "package.json": '{\n  "name": "my-vue-app",\n  "version": "1.0.0",\n  "scripts": {"dev": "vite", "build": "vite build"}\n}\n',
-            ".gitignore": "node_modules/\ndist/\n",
-        }),
-        ProjectTemplate("rust-basic", "Rust application", "rust", "none", {
-            "src/main.rs": 'fn main() {\n    println!("Hello, Rust!");\n}\n',
-            "Cargo.toml": '[package]\nname = "my-app"\nversion = "0.1.0"\nedition = "2021"\n',
-            ".gitignore": "target/\n",
-        }),
-        ProjectTemplate("rust-actix", "Rust Actix Web server", "rust", "actix-web", {
-            "src/main.rs": 'use actix_web::{get, App, HttpServer, Responder};\n\n#[get("/")]\nasync fn index() -> impl Responder {\n    "Hello, Actix!"\n}\n\n#[actix_web::main]\nasync fn main() -> std::io::Result<()> {\n    HttpServer::new(|| App::new().service(index))\n        .bind("127.0.0.1:8080")?\n        .run()\n        .await\n}\n',
-            "Cargo.toml": '[package]\nname = "my-actix-app"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]\nactix-web = "4"\n',
-            ".gitignore": "target/\n",
-        }),
-        ProjectTemplate("go-basic", "Go application", "go", "none", {
-            "main.go": 'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("Hello, Go!")\n}\n',
-            "go.mod": 'module myapp\n\ngo 1.21\n',
-            ".gitignore": "bin/\n",
-        }),
-        ProjectTemplate("go-gin", "Go Gin web server", "go", "gin", {
-            "main.go": 'package main\n\nimport "github.com/gin-gonic/gin"\n\nfunc main() {\n\tr := gin.Default()\n\tr.GET("/", func(c *gin.Context) {\n\t\tc.JSON(200, gin.H{"message": "Hello, Gin!"})\n\t})\n\tr.Run()\n}\n',
-            "go.mod": 'module myapp\n\ngo 1.21\n\nrequire github.com/gin-gonic/gin v1.9.1\n',
-            ".gitignore": "bin/\n",
-        }),
-        ProjectTemplate("c-basic", "C application", "c", "none", {
-            "main.c": '#include <stdio.h>\n\nint main(void) {\n    printf("Hello, C!\\n");\n    return 0;\n}\n',
-            "Makefile": 'CC=gcc\nCFLAGS=-Wall -Wextra -std=c17\n\nall: main\n\nmain: main.c\n\t$(CC) $(CFLAGS) -o $@ $<\n\nclean:\n\trm -f main\n',
-            ".gitignore": "*.o\nmain\n",
-        }),
-        ProjectTemplate("cpp-basic", "C++ application", "cpp", "none", {
-            "main.cpp": '#include <iostream>\n\nint main() {\n    std::cout << "Hello, C++!" << std::endl;\n    return 0;\n}\n',
-            "CMakeLists.txt": 'cmake_minimum_required(VERSION 3.16)\nproject(myapp LANGUAGES CXX)\nset(CMAKE_CXX_STANDARD 20)\nadd_executable(myapp main.cpp)\n',
-            ".gitignore": "build/\n",
-        }),
-        ProjectTemplate("java-basic", "Java application", "java", "none", {
-            "src/Main.java": 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, Java!");\n    }\n}\n',
-            ".gitignore": "*.class\nbuild/\n",
-        }),
-        ProjectTemplate("java-spring", "Spring Boot application", "java", "spring-boot", {
-            "src/main/java/com/example/App.java": 'package com.example;\n\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\n\n@SpringBootApplication\npublic class App {\n    public static void main(String[] args) {\n        SpringApplication.run(App.class, args);\n    }\n}\n',
-            "build.gradle": 'plugins {\n    id "org.springframework.boot" version "3.2.0"\n    id "java"\n}\n\ndependencies {\n    implementation "org.springframework.boot:spring-boot-starter-web"\n}\n',
-            ".gitignore": "build/\n.gradle/\n",
-        }),
-        ProjectTemplate("csharp-console", "C# console application", "csharp", "dotnet", {
-            "Program.cs": 'Console.WriteLine("Hello, C#!");\n',
-            "app.csproj": '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n  </PropertyGroup>\n</Project>\n',
-            ".gitignore": "bin/\nobj/\n",
-        }),
-        ProjectTemplate("ruby-rails", "Ruby on Rails application", "ruby", "rails", {
-            "config.ru": 'require_relative "config/environment"\nrun Rails.application\n',
-            "Gemfile": 'source "https://rubygems.org"\ngem "rails", "~> 7.1"\n',
-            ".gitignore": "log/\ntmp/\n",
-        }),
-        ProjectTemplate("embedded-c", "Embedded C firmware project", "c", "embedded", {
-            "src/main.c": '#include <stdint.h>\n\nint main(void) {\n    while (1) {\n        // main loop\n    }\n    return 0;\n}\n',
-            "Makefile": 'CC=arm-none-eabi-gcc\nCFLAGS=-mcpu=cortex-m4 -mthumb -Wall\n\nall:\n\t$(CC) $(CFLAGS) -o firmware.elf src/main.c\n\nclean:\n\trm -f firmware.elf\n',
-            ".gitignore": "*.elf\n*.bin\n*.hex\nbuild/\n",
-        }),
-        ProjectTemplate("svelte", "Svelte application", "typescript", "svelte", {
-            "src/App.svelte": '<h1>Hello, Svelte!</h1>\n',
-            "package.json": '{\n  "name": "my-svelte-app",\n  "version": "1.0.0",\n  "scripts": {"dev": "vite dev", "build": "vite build"}\n}\n',
-            ".gitignore": "node_modules/\ndist/\n",
-        }),
+        ProjectTemplate(
+            "python-basic",
+            "Basic Python project",
+            "python",
+            "none",
+            {
+                "main.py": '"""Entry point."""\n\n\ndef main() -> None:\n    print("Hello, world!")\n\n\nif __name__ == "__main__":\n    main()\n',
+                "requirements.txt": "",
+                ".gitignore": "__pycache__/\n*.pyc\n.venv/\n",
+            },
+        ),
+        ProjectTemplate(
+            "python-flask",
+            "Flask web application",
+            "python",
+            "flask",
+            {
+                "app.py": 'from flask import Flask\n\napp = Flask(__name__)\n\n\n@app.route("/")\ndef index():\n    return "Hello, Flask!"\n\n\nif __name__ == "__main__":\n    app.run(debug=True)\n',
+                "requirements.txt": "flask\n",
+                ".gitignore": "__pycache__/\n*.pyc\n.venv/\n",
+            },
+        ),
+        ProjectTemplate(
+            "python-fastapi",
+            "FastAPI web service",
+            "python",
+            "fastapi",
+            {
+                "main.py": 'from fastapi import FastAPI\n\napp = FastAPI()\n\n\n@app.get("/")\nasync def root():\n    return {"message": "Hello, FastAPI!"}\n',
+                "requirements.txt": "fastapi\nuvicorn[standard]\n",
+                ".gitignore": "__pycache__/\n*.pyc\n.venv/\n",
+            },
+        ),
+        ProjectTemplate(
+            "python-django",
+            "Django web application",
+            "python",
+            "django",
+            {
+                "manage.py": '#!/usr/bin/env python\nimport os, sys\n\ndef main():\n    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")\n    from django.core.management import execute_from_command_line\n    execute_from_command_line(sys.argv)\n\nif __name__ == "__main__":\n    main()\n',
+                "requirements.txt": "django\n",
+                ".gitignore": "__pycache__/\n*.pyc\ndb.sqlite3\n",
+            },
+        ),
+        ProjectTemplate(
+            "javascript-node",
+            "Node.js application",
+            "javascript",
+            "node",
+            {
+                "index.js": 'console.log("Hello, Node.js!");\n',
+                "package.json": '{\n  "name": "my-app",\n  "version": "1.0.0",\n  "main": "index.js",\n  "scripts": {"start": "node index.js"}\n}\n',
+                ".gitignore": "node_modules/\n",
+            },
+        ),
+        ProjectTemplate(
+            "javascript-express",
+            "Express.js web server",
+            "javascript",
+            "express",
+            {
+                "index.js": 'const express = require("express");\nconst app = express();\n\napp.get("/", (req, res) => res.send("Hello, Express!"));\n\napp.listen(3000, () => console.log("Listening on :3000"));\n',
+                "package.json": '{\n  "name": "my-express-app",\n  "version": "1.0.0",\n  "main": "index.js",\n  "scripts": {"start": "node index.js"},\n  "dependencies": {"express": "^4.18.0"}\n}\n',
+                ".gitignore": "node_modules/\n",
+            },
+        ),
+        ProjectTemplate(
+            "typescript-node",
+            "TypeScript Node.js application",
+            "typescript",
+            "node",
+            {
+                "src/index.ts": 'console.log("Hello, TypeScript!");\n',
+                "tsconfig.json": '{\n  "compilerOptions": {"target": "ES2020", "module": "commonjs", "outDir": "dist", "strict": true},\n  "include": ["src"]\n}\n',
+                "package.json": '{\n  "name": "my-ts-app",\n  "version": "1.0.0",\n  "scripts": {"build": "tsc", "start": "node dist/index.js"}\n}\n',
+                ".gitignore": "node_modules/\ndist/\n",
+            },
+        ),
+        ProjectTemplate(
+            "react",
+            "React single-page application",
+            "typescript",
+            "react",
+            {
+                "src/App.tsx": "export default function App() {\n  return <h1>Hello, React!</h1>;\n}\n",
+                "src/index.tsx": 'import React from "react";\nimport ReactDOM from "react-dom/client";\nimport App from "./App";\n\nReactDOM.createRoot(document.getElementById("root")!).render(<App />);\n',
+                "package.json": '{\n  "name": "my-react-app",\n  "version": "1.0.0",\n  "scripts": {"start": "react-scripts start", "build": "react-scripts build"}\n}\n',
+                ".gitignore": "node_modules/\nbuild/\n",
+            },
+        ),
+        ProjectTemplate(
+            "nextjs",
+            "Next.js full-stack application",
+            "typescript",
+            "nextjs",
+            {
+                "pages/index.tsx": "export default function Home() {\n  return <h1>Hello, Next.js!</h1>;\n}\n",
+                "package.json": '{\n  "name": "my-nextjs-app",\n  "version": "1.0.0",\n  "scripts": {"dev": "next dev", "build": "next build"}\n}\n',
+                ".gitignore": "node_modules/\n.next/\n",
+            },
+        ),
+        ProjectTemplate(
+            "vue",
+            "Vue.js application",
+            "typescript",
+            "vue",
+            {
+                "src/App.vue": '<template>\n  <h1>Hello, Vue!</h1>\n</template>\n\n<script setup lang="ts">\n</script>\n',
+                "package.json": '{\n  "name": "my-vue-app",\n  "version": "1.0.0",\n  "scripts": {"dev": "vite", "build": "vite build"}\n}\n',
+                ".gitignore": "node_modules/\ndist/\n",
+            },
+        ),
+        ProjectTemplate(
+            "rust-basic",
+            "Rust application",
+            "rust",
+            "none",
+            {
+                "src/main.rs": 'fn main() {\n    println!("Hello, Rust!");\n}\n',
+                "Cargo.toml": '[package]\nname = "my-app"\nversion = "0.1.0"\nedition = "2021"\n',
+                ".gitignore": "target/\n",
+            },
+        ),
+        ProjectTemplate(
+            "rust-actix",
+            "Rust Actix Web server",
+            "rust",
+            "actix-web",
+            {
+                "src/main.rs": 'use actix_web::{get, App, HttpServer, Responder};\n\n#[get("/")]\nasync fn index() -> impl Responder {\n    "Hello, Actix!"\n}\n\n#[actix_web::main]\nasync fn main() -> std::io::Result<()> {\n    HttpServer::new(|| App::new().service(index))\n        .bind("127.0.0.1:8080")?\n        .run()\n        .await\n}\n',
+                "Cargo.toml": '[package]\nname = "my-actix-app"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]\nactix-web = "4"\n',
+                ".gitignore": "target/\n",
+            },
+        ),
+        ProjectTemplate(
+            "go-basic",
+            "Go application",
+            "go",
+            "none",
+            {
+                "main.go": 'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("Hello, Go!")\n}\n',
+                "go.mod": "module myapp\n\ngo 1.21\n",
+                ".gitignore": "bin/\n",
+            },
+        ),
+        ProjectTemplate(
+            "go-gin",
+            "Go Gin web server",
+            "go",
+            "gin",
+            {
+                "main.go": 'package main\n\nimport "github.com/gin-gonic/gin"\n\nfunc main() {\n\tr := gin.Default()\n\tr.GET("/", func(c *gin.Context) {\n\t\tc.JSON(200, gin.H{"message": "Hello, Gin!"})\n\t})\n\tr.Run()\n}\n',
+                "go.mod": "module myapp\n\ngo 1.21\n\nrequire github.com/gin-gonic/gin v1.9.1\n",
+                ".gitignore": "bin/\n",
+            },
+        ),
+        ProjectTemplate(
+            "c-basic",
+            "C application",
+            "c",
+            "none",
+            {
+                "main.c": '#include <stdio.h>\n\nint main(void) {\n    printf("Hello, C!\\n");\n    return 0;\n}\n',
+                "Makefile": "CC=gcc\nCFLAGS=-Wall -Wextra -std=c17\n\nall: main\n\nmain: main.c\n\t$(CC) $(CFLAGS) -o $@ $<\n\nclean:\n\trm -f main\n",
+                ".gitignore": "*.o\nmain\n",
+            },
+        ),
+        ProjectTemplate(
+            "cpp-basic",
+            "C++ application",
+            "cpp",
+            "none",
+            {
+                "main.cpp": '#include <iostream>\n\nint main() {\n    std::cout << "Hello, C++!" << std::endl;\n    return 0;\n}\n',
+                "CMakeLists.txt": "cmake_minimum_required(VERSION 3.16)\nproject(myapp LANGUAGES CXX)\nset(CMAKE_CXX_STANDARD 20)\nadd_executable(myapp main.cpp)\n",
+                ".gitignore": "build/\n",
+            },
+        ),
+        ProjectTemplate(
+            "java-basic",
+            "Java application",
+            "java",
+            "none",
+            {
+                "src/Main.java": 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, Java!");\n    }\n}\n',
+                ".gitignore": "*.class\nbuild/\n",
+            },
+        ),
+        ProjectTemplate(
+            "java-spring",
+            "Spring Boot application",
+            "java",
+            "spring-boot",
+            {
+                "src/main/java/com/example/App.java": "package com.example;\n\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\n\n@SpringBootApplication\npublic class App {\n    public static void main(String[] args) {\n        SpringApplication.run(App.class, args);\n    }\n}\n",
+                "build.gradle": 'plugins {\n    id "org.springframework.boot" version "3.2.0"\n    id "java"\n}\n\ndependencies {\n    implementation "org.springframework.boot:spring-boot-starter-web"\n}\n',
+                ".gitignore": "build/\n.gradle/\n",
+            },
+        ),
+        ProjectTemplate(
+            "csharp-console",
+            "C# console application",
+            "csharp",
+            "dotnet",
+            {
+                "Program.cs": 'Console.WriteLine("Hello, C#!");\n',
+                "app.csproj": '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n  </PropertyGroup>\n</Project>\n',
+                ".gitignore": "bin/\nobj/\n",
+            },
+        ),
+        ProjectTemplate(
+            "ruby-rails",
+            "Ruby on Rails application",
+            "ruby",
+            "rails",
+            {
+                "config.ru": 'require_relative "config/environment"\nrun Rails.application\n',
+                "Gemfile": 'source "https://rubygems.org"\ngem "rails", "~> 7.1"\n',
+                ".gitignore": "log/\ntmp/\n",
+            },
+        ),
+        ProjectTemplate(
+            "embedded-c",
+            "Embedded C firmware project",
+            "c",
+            "embedded",
+            {
+                "src/main.c": "#include <stdint.h>\n\nint main(void) {\n    while (1) {\n        // main loop\n    }\n    return 0;\n}\n",
+                "Makefile": "CC=arm-none-eabi-gcc\nCFLAGS=-mcpu=cortex-m4 -mthumb -Wall\n\nall:\n\t$(CC) $(CFLAGS) -o firmware.elf src/main.c\n\nclean:\n\trm -f firmware.elf\n",
+                ".gitignore": "*.elf\n*.bin\n*.hex\nbuild/\n",
+            },
+        ),
+        ProjectTemplate(
+            "svelte",
+            "Svelte application",
+            "typescript",
+            "svelte",
+            {
+                "src/App.svelte": "<h1>Hello, Svelte!</h1>\n",
+                "package.json": '{\n  "name": "my-svelte-app",\n  "version": "1.0.0",\n  "scripts": {"dev": "vite dev", "build": "vite build"}\n}\n',
+                ".gitignore": "node_modules/\ndist/\n",
+            },
+        ),
     ]
 
 
@@ -208,6 +342,7 @@ _PROJECT_MARKERS: List[Dict[str, Any]] = [
 # ---------------------------------------------------------------------------
 # Project Manager
 # ---------------------------------------------------------------------------
+
 
 class ProjectManager:
     """Workspace and project management for EoStudio.

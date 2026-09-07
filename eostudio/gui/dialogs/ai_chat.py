@@ -1,16 +1,19 @@
 """AI Chat panel — the Smart Chat sidebar integrated into every editor."""
 
-
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -59,31 +62,40 @@ class AIChatDialog(tk.Frame):
         header = tk.Frame(self, bg="#181825")
         header.pack(fill=tk.X)
 
-        tk.Label(header, text="🤖 Smart Chat", bg="#181825", fg=self._fg,
-                 font=("Segoe UI", 10, "bold")).pack(side=tk.LEFT, padx=8, pady=4)
+        tk.Label(header, text="🤖 Smart Chat", bg="#181825", fg=self._fg, font=("Segoe UI", 10, "bold")).pack(
+            side=tk.LEFT, padx=8, pady=4
+        )
 
-        self._context_label = tk.Label(header, text=f"[{self._editor_context}]",
-                                       bg="#181825", fg="#6c7086",
-                                       font=("Consolas", 8))
+        self._context_label = tk.Label(
+            header, text=f"[{self._editor_context}]", bg="#181825", fg="#6c7086", font=("Consolas", 8)
+        )
         self._context_label.pack(side=tk.LEFT, padx=4)
 
-        tk.Button(header, text="🗑", bg="#181825", fg="#6c7086",
-                  relief=tk.FLAT, font=("Segoe UI", 9), padx=4,
-                  command=self._clear_conversation).pack(side=tk.RIGHT, padx=4)
+        tk.Button(
+            header,
+            text="🗑",
+            bg="#181825",
+            fg="#6c7086",
+            relief=tk.FLAT,
+            font=("Segoe UI", 9),
+            padx=4,
+            command=self._clear_conversation,
+        ).pack(side=tk.RIGHT, padx=4)
 
         prompts_frame = tk.Frame(self, bg=self._bg)
         prompts_frame.pack(fill=tk.X, padx=4, pady=4)
 
-        tk.Label(prompts_frame, text="Suggested:", bg=self._bg, fg="#6c7086",
-                 font=("Segoe UI", 7)).pack(anchor=tk.W, padx=4)
+        tk.Label(prompts_frame, text="Suggested:", bg=self._bg, fg="#6c7086", font=("Segoe UI", 7)).pack(
+            anchor=tk.W, padx=4
+        )
 
         self._prompts_row = tk.Frame(prompts_frame, bg=self._bg)
         self._prompts_row.pack(fill=tk.X, padx=2)
         self._populate_sample_prompts()
 
-        gallery_frame = tk.LabelFrame(self, text="Sample Designs", bg=self._bg,
-                                      fg="#cba6f7", font=("Segoe UI", 8, "bold"),
-                                      bd=1, relief=tk.GROOVE)
+        gallery_frame = tk.LabelFrame(
+            self, text="Sample Designs", bg=self._bg, fg="#cba6f7", font=("Segoe UI", 8, "bold"), bd=1, relief=tk.GROOVE
+        )
         gallery_frame.pack(fill=tk.X, padx=4, pady=2)
 
         self._gallery_row = tk.Frame(gallery_frame, bg=self._bg)
@@ -93,45 +105,54 @@ class AIChatDialog(tk.Frame):
         self._chat_frame = tk.Frame(self, bg="#181825")
         self._chat_frame.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
 
-        self._chat_canvas = tk.Canvas(self._chat_frame, bg="#181825",
-                                      highlightthickness=0)
-        chat_scrollbar = ttk.Scrollbar(self._chat_frame, orient=tk.VERTICAL,
-                                       command=self._chat_canvas.yview)
+        self._chat_canvas = tk.Canvas(self._chat_frame, bg="#181825", highlightthickness=0)
+        chat_scrollbar = ttk.Scrollbar(self._chat_frame, orient=tk.VERTICAL, command=self._chat_canvas.yview)
         self._chat_inner = tk.Frame(self._chat_canvas, bg="#181825")
 
-        self._chat_inner.bind("<Configure>",
-                              lambda e: self._chat_canvas.configure(
-                                  scrollregion=self._chat_canvas.bbox("all")))
-        self._chat_canvas.create_window((0, 0), window=self._chat_inner,
-                                        anchor=tk.NW, tags="inner")
+        self._chat_inner.bind(
+            "<Configure>", lambda e: self._chat_canvas.configure(scrollregion=self._chat_canvas.bbox("all"))
+        )
+        self._chat_canvas.create_window((0, 0), window=self._chat_inner, anchor=tk.NW, tags="inner")
         self._chat_canvas.configure(yscrollcommand=chat_scrollbar.set)
 
         self._chat_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         chat_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        self._chat_canvas.bind("<Configure>",
-                               lambda e: self._chat_canvas.itemconfigure(
-                                   "inner", width=e.width))
+        self._chat_canvas.bind("<Configure>", lambda e: self._chat_canvas.itemconfigure("inner", width=e.width))
 
         self._add_system_message(
             "Hello! I'm your AI design assistant. "
             f"I'm set up for the {self._editor_context} editor. "
-            "Ask me anything about your design!")
+            "Ask me anything about your design!"
+        )
 
         input_frame = tk.Frame(self, bg=self._bg)
         input_frame.pack(fill=tk.X, padx=4, pady=(0, 4))
 
         self._input_var = tk.StringVar()
-        self._input_entry = tk.Entry(input_frame, textvariable=self._input_var,
-                                     bg="#313244", fg=self._fg,
-                                     insertbackground=self._fg,
-                                     font=("Segoe UI", 9), relief=tk.FLAT)
+        self._input_entry = tk.Entry(
+            input_frame,
+            textvariable=self._input_var,
+            bg="#313244",
+            fg=self._fg,
+            insertbackground=self._fg,
+            font=("Segoe UI", 9),
+            relief=tk.FLAT,
+        )
         self._input_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 4), ipady=4)
         self._input_entry.bind("<Return>", lambda e: self._send_message())
 
-        tk.Button(input_frame, text="Send", bg="#89b4fa", fg="#1e1e2e",
-                  relief=tk.FLAT, font=("Segoe UI", 9, "bold"), padx=10, pady=2,
-                  command=self._send_message).pack(side=tk.RIGHT)
+        tk.Button(
+            input_frame,
+            text="Send",
+            bg="#89b4fa",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 9, "bold"),
+            padx=10,
+            pady=2,
+            command=self._send_message,
+        ).pack(side=tk.RIGHT)
 
     # ------------------------------------------------------------------
     # Sample prompts
@@ -140,10 +161,18 @@ class AIChatDialog(tk.Frame):
     def _populate_sample_prompts(self) -> None:
         prompts = self._get_sample_prompts()
         for prompt_text in prompts[:4]:
-            btn = tk.Button(self._prompts_row, text=prompt_text[:30] + "…" if len(prompt_text) > 30 else prompt_text,
-                            bg="#313244", fg="#89b4fa", relief=tk.FLAT,
-                            font=("Segoe UI", 7), padx=4, pady=1, anchor=tk.W,
-                            command=lambda p=prompt_text: self._send_prompt(p))  # type: ignore[misc]
+            btn = tk.Button(
+                self._prompts_row,
+                text=prompt_text[:30] + "…" if len(prompt_text) > 30 else prompt_text,
+                bg="#313244",
+                fg="#89b4fa",
+                relief=tk.FLAT,
+                font=("Segoe UI", 7),
+                padx=4,
+                pady=1,
+                anchor=tk.W,
+                command=lambda p=prompt_text: self._send_prompt(p),
+            )  # type: ignore[misc]
             btn.pack(fill=tk.X, pady=1)
 
     def _get_sample_prompts(self) -> List[str]:
@@ -191,12 +220,15 @@ class AIChatDialog(tk.Frame):
                 "Create a snap-fit enclosure",
             ],
         }
-        return prompts_map.get(self._editor_context, [
-            "Help me with my design",
-            "Generate a sample object",
-            "Explain this tool",
-            "Optimize my project",
-        ])
+        return prompts_map.get(
+            self._editor_context,
+            [
+                "Help me with my design",
+                "Generate a sample object",
+                "Explain this tool",
+                "Optimize my project",
+            ],
+        )
 
     # ------------------------------------------------------------------
     # Gallery
@@ -205,17 +237,13 @@ class AIChatDialog(tk.Frame):
     def _populate_gallery(self) -> None:
         samples = self._get_sample_designs()
         for sample in samples[:4]:
-            frame = tk.Frame(self._gallery_row, bg="#313244", width=40, height=40,
-                             relief=tk.RAISED, bd=1)
+            frame = tk.Frame(self._gallery_row, bg="#313244", width=40, height=40, relief=tk.RAISED, bd=1)
             frame.pack(side=tk.LEFT, padx=2, pady=2)
             frame.pack_propagate(False)
-            label = tk.Label(frame, text=sample["icon"], bg="#313244", fg=sample["color"],
-                             font=("Segoe UI", 14))
+            label = tk.Label(frame, text=sample["icon"], bg="#313244", fg=sample["color"], font=("Segoe UI", 14))
             label.pack(expand=True)
-            label.bind("<Button-1>",
-                       lambda e, s=sample: self._insert_sample_design(s))  # type: ignore[misc]
-            frame.bind("<Button-1>",
-                       lambda e, s=sample: self._insert_sample_design(s))  # type: ignore[misc]
+            label.bind("<Button-1>", lambda e, s=sample: self._insert_sample_design(s))  # type: ignore[misc]
+            frame.bind("<Button-1>", lambda e, s=sample: self._insert_sample_design(s))  # type: ignore[misc]
 
     def _get_sample_designs(self) -> List[Dict[str, Any]]:
         designs_map = {
@@ -238,12 +266,15 @@ class AIChatDialog(tk.Frame):
                 {"name": "Settings", "icon": "⚙", "color": "#cba6f7", "type": "settings_screen"},
             ],
         }
-        return designs_map.get(self._editor_context, [
-            {"name": "Sample A", "icon": "★", "color": "#89b4fa", "type": "sample_a"},
-            {"name": "Sample B", "icon": "◆", "color": "#a6e3a1", "type": "sample_b"},
-            {"name": "Sample C", "icon": "●", "color": "#f9e2af", "type": "sample_c"},
-            {"name": "Sample D", "icon": "▲", "color": "#cba6f7", "type": "sample_d"},
-        ])
+        return designs_map.get(
+            self._editor_context,
+            [
+                {"name": "Sample A", "icon": "★", "color": "#89b4fa", "type": "sample_a"},
+                {"name": "Sample B", "icon": "◆", "color": "#a6e3a1", "type": "sample_b"},
+                {"name": "Sample C", "icon": "●", "color": "#f9e2af", "type": "sample_c"},
+                {"name": "Sample D", "icon": "▲", "color": "#cba6f7", "type": "sample_d"},
+            ],
+        )
 
     def _insert_sample_design(self, sample: Dict[str, Any]) -> None:
         self._add_system_message(f"Inserting sample design: {sample['name']}")
@@ -313,16 +344,15 @@ class AIChatDialog(tk.Frame):
         row = tk.Frame(self._chat_inner, bg="#181825")
         row.pack(fill=tk.X, padx=4, pady=2, anchor=anchor)  # type: ignore[arg-type]
 
-        lbl = tk.Label(row, text=label, bg="#181825", fg="#6c7086",
-                       font=("Segoe UI", 7))
+        lbl = tk.Label(row, text=label, bg="#181825", fg="#6c7086", font=("Segoe UI", 7))
         lbl.pack(anchor=anchor, padx=4)  # type: ignore[arg-type]
 
         bubble = tk.Frame(row, bg=bg, padx=8, pady=4)
         bubble.pack(anchor=anchor, padx=4)  # type: ignore[arg-type]
 
-        msg_label = tk.Label(bubble, text=text, bg=bg, fg=fg,
-                             font=("Segoe UI", 9), wraplength=200,
-                             justify=tk.LEFT, anchor=tk.W)
+        msg_label = tk.Label(
+            bubble, text=text, bg=bg, fg=fg, font=("Segoe UI", 9), wraplength=200, justify=tk.LEFT, anchor=tk.W
+        )
         msg_label.pack()
 
         self._chat_canvas.update_idletasks()

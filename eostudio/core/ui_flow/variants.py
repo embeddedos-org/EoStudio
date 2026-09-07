@@ -22,6 +22,7 @@ class ComponentState(Enum):
 @dataclass
 class StateOverride:
     """Property overrides for a specific component state."""
+
     state: ComponentState
     properties: Dict[str, Any] = field(default_factory=dict)
 
@@ -36,7 +37,7 @@ class StateOverride:
         pseudo = state_map.get(self.state, "")
         if pseudo:
             return f"{base_selector}{pseudo}"
-        return f"{base_selector}[data-state=\"{self.state.value}\"]"
+        return f'{base_selector}[data-state="{self.state.value}"]'
 
     def to_dict(self) -> Dict[str, Any]:
         return {"state": self.state.value, "properties": self.properties}
@@ -49,6 +50,7 @@ class StateOverride:
 @dataclass
 class ComponentVariant:
     """A variant of a component with different properties (e.g. size, color scheme)."""
+
     name: str
     properties: Dict[str, Any] = field(default_factory=dict)
     states: List[StateOverride] = field(default_factory=list)
@@ -99,6 +101,7 @@ class ComponentVariant:
 @dataclass
 class VariantSet:
     """A set of variants for a component type (e.g. Button has primary, secondary, ghost)."""
+
     component_type: str
     variants: List[ComponentVariant] = field(default_factory=list)
     default_variant: str = ""
@@ -128,8 +131,7 @@ class VariantSet:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "VariantSet":
-        vs = cls(component_type=data["component_type"],
-                 default_variant=data.get("default", ""))
+        vs = cls(component_type=data["component_type"], default_variant=data.get("default", ""))
         for v_data in data.get("variants", []):
             vs.variants.append(ComponentVariant.from_dict(v_data))
         return vs
@@ -137,26 +139,28 @@ class VariantSet:
     @classmethod
     def create_button_variants(cls) -> "VariantSet":
         vs = cls(component_type="Button", default_variant="primary")
-        primary = vs.add_variant("primary", bg="#2563eb", color="#ffffff",
-                                 border_radius=8, padding="10px 20px", font_weight=600)
+        primary = vs.add_variant(
+            "primary", bg="#2563eb", color="#ffffff", border_radius=8, padding="10px 20px", font_weight=600
+        )
         primary.add_state(ComponentState.HOVER, bg="#1d4ed8")
         primary.add_state(ComponentState.ACTIVE, bg="#1e40af", transform="scale(0.98)")
         primary.add_state(ComponentState.DISABLED, bg="#93c5fd", opacity=0.6, cursor="not-allowed")
         primary.add_state(ComponentState.FOCUS, outline="2px solid #60a5fa", outline_offset="2px")
 
-        secondary = vs.add_variant("secondary", bg="#f1f5f9", color="#1e293b",
-                                   border="1px solid #cbd5e1", border_radius=8, padding="10px 20px")
+        secondary = vs.add_variant(
+            "secondary", bg="#f1f5f9", color="#1e293b", border="1px solid #cbd5e1", border_radius=8, padding="10px 20px"
+        )
         secondary.add_state(ComponentState.HOVER, bg="#e2e8f0")
         secondary.add_state(ComponentState.ACTIVE, bg="#cbd5e1")
         secondary.add_state(ComponentState.DISABLED, opacity=0.6, cursor="not-allowed")
 
-        ghost = vs.add_variant("ghost", bg="transparent", color="#2563eb",
-                               border_radius=8, padding="10px 20px")
+        ghost = vs.add_variant("ghost", bg="transparent", color="#2563eb", border_radius=8, padding="10px 20px")
         ghost.add_state(ComponentState.HOVER, bg="#eff6ff")
         ghost.add_state(ComponentState.ACTIVE, bg="#dbeafe")
 
-        danger = vs.add_variant("danger", bg="#dc2626", color="#ffffff",
-                                border_radius=8, padding="10px 20px", font_weight=600)
+        danger = vs.add_variant(
+            "danger", bg="#dc2626", color="#ffffff", border_radius=8, padding="10px 20px", font_weight=600
+        )
         danger.add_state(ComponentState.HOVER, bg="#b91c1c")
         danger.add_state(ComponentState.ACTIVE, bg="#991b1b")
 
@@ -165,17 +169,14 @@ class VariantSet:
     @classmethod
     def create_input_variants(cls) -> "VariantSet":
         vs = cls(component_type="Input", default_variant="outlined")
-        outlined = vs.add_variant("outlined", bg="#ffffff", border="1px solid #d1d5db",
-                                  border_radius=6, padding="10px 12px", font_size=14)
-        outlined.add_state(ComponentState.FOCUS, border_color="#2563eb",
-                           box_shadow="0 0 0 3px rgba(37,99,235,0.1)")
-        outlined.add_state(ComponentState.ERROR, border_color="#dc2626",
-                           box_shadow="0 0 0 3px rgba(220,38,38,0.1)")
+        outlined = vs.add_variant(
+            "outlined", bg="#ffffff", border="1px solid #d1d5db", border_radius=6, padding="10px 12px", font_size=14
+        )
+        outlined.add_state(ComponentState.FOCUS, border_color="#2563eb", box_shadow="0 0 0 3px rgba(37,99,235,0.1)")
+        outlined.add_state(ComponentState.ERROR, border_color="#dc2626", box_shadow="0 0 0 3px rgba(220,38,38,0.1)")
         outlined.add_state(ComponentState.DISABLED, bg="#f9fafb", opacity=0.6)
 
-        filled = vs.add_variant("filled", bg="#f1f5f9", border="none",
-                                border_radius=6, padding="10px 12px")
-        filled.add_state(ComponentState.FOCUS, bg="#e2e8f0",
-                         box_shadow="0 0 0 2px rgba(37,99,235,0.2)")
+        filled = vs.add_variant("filled", bg="#f1f5f9", border="none", border_radius=6, padding="10px 12px")
+        filled.add_state(ComponentState.FOCUS, bg="#e2e8f0", box_shadow="0 0 0 2px rgba(37,99,235,0.2)")
 
         return vs

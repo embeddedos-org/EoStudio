@@ -110,7 +110,9 @@ def _is_ascii_stl(filepath: str, header: bytes) -> bool:
     if not text.lower().startswith("solid"):
         return False
     file_size = os.path.getsize(filepath)
-    expected_binary_size = 84 + 50 * struct.unpack_from("<I", header if len(header) >= 84 else header.ljust(84, b"\0"), 80)[0]
+    expected_binary_size = (
+        84 + 50 * struct.unpack_from("<I", header if len(header) >= 84 else header.ljust(84, b"\0"), 80)[0]
+    )
     if expected_binary_size == file_size:
         return False
     return True
@@ -155,11 +157,13 @@ def _import_stl_binary(filepath: str) -> Mesh:
             fh.read(2)
 
             base = i * 3
-            vertices.extend([
-                Vec3(v0x, v0y, v0z),
-                Vec3(v1x, v1y, v1z),
-                Vec3(v2x, v2y, v2z),
-            ])
+            vertices.extend(
+                [
+                    Vec3(v0x, v0y, v0z),
+                    Vec3(v1x, v1y, v1z),
+                    Vec3(v2x, v2y, v2z),
+                ]
+            )
             faces.append(Face(base, base + 1, base + 2))
 
     mesh = Mesh(name="imported_stl", vertices=vertices, faces=faces)
@@ -197,6 +201,7 @@ class STLExporter:
         if not mesh.normals or len(mesh.normals) != len(mesh.vertices):
             mesh.compute_normals()
         import io
+
         buf = io.BytesIO()
         header = f"EoStudio STL - {mesh.name}".encode("ascii")
         header = header[:80].ljust(80, b"\0")

@@ -40,6 +40,7 @@ class LayoutWrap(Enum):
 @dataclass
 class LayoutConstraints:
     """Constraints applied to a child within an auto-layout."""
+
     fill_width: bool = False
     fill_height: bool = False
     fixed_width: Optional[float] = None
@@ -82,6 +83,7 @@ class LayoutConstraints:
 @dataclass
 class AutoLayout:
     """Flexbox-like auto-layout system for EoStudio components."""
+
     direction: LayoutDirection = LayoutDirection.COLUMN
     alignment: LayoutAlignment = LayoutAlignment.START
     distribution: LayoutDistribution = LayoutDistribution.START
@@ -107,8 +109,9 @@ class AutoLayout:
         elif len(value) == 4:
             self.padding_top, self.padding_right, self.padding_bottom, self.padding_left = value
 
-    def compute_layout(self, container_width: float, container_height: float,
-                       child_sizes: List[Tuple[float, float]]) -> List[Tuple[float, float, float, float]]:
+    def compute_layout(
+        self, container_width: float, container_height: float, child_sizes: List[Tuple[float, float]]
+    ) -> List[Tuple[float, float, float, float]]:
         """Compute child positions and sizes. Returns list of (x, y, width, height)."""
         results: List[Tuple[float, float, float, float]] = []
         if not child_sizes:
@@ -165,8 +168,9 @@ class AutoLayout:
 
         return results
 
-    def _distribute(self, sizes: List[float], available: float, gap: float,
-                    distribution: LayoutDistribution) -> List[float]:
+    def _distribute(
+        self, sizes: List[float], available: float, gap: float, distribution: LayoutDistribution
+    ) -> List[float]:
         n = len(sizes)
         total = sum(sizes) + gap * max(0, n - 1)
         remaining = available - total
@@ -222,8 +226,7 @@ class AutoLayout:
 
         return [0.0] * n
 
-    def _align_cross(self, size: float, available: float,
-                     alignment: LayoutAlignment) -> float:
+    def _align_cross(self, size: float, available: float, alignment: LayoutAlignment) -> float:
         if alignment == LayoutAlignment.START:
             return 0.0
         if alignment == LayoutAlignment.CENTER:

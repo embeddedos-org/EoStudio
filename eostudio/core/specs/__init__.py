@@ -7,9 +7,17 @@ from eostudio.core.specs.task_breakdown import TaskBreakdown, Task, TaskStatus
 from eostudio.core.specs.spec_engine import SpecEngine
 
 __all__ = [
-    "Requirement", "RequirementType", "RequirementPriority",
-    "DesignSpec", "DesignSection",
-    "TechSpec", "TechComponent", "TechAPI", "TechDataModel",
-    "TaskBreakdown", "Task", "TaskStatus",
+    "Requirement",
+    "RequirementType",
+    "RequirementPriority",
+    "DesignSpec",
+    "DesignSection",
+    "TechSpec",
+    "TechComponent",
+    "TechAPI",
+    "TechDataModel",
+    "TaskBreakdown",
+    "Task",
+    "TaskStatus",
     "SpecEngine",
 ]

@@ -1,4 +1,5 @@
 """REST and GraphQL API client with collection management."""
+
 from __future__ import annotations
 
 import enum
@@ -12,6 +13,7 @@ from typing import Any
 
 class HTTPMethod(enum.Enum):
     """HTTP request methods."""
+
     GET = "GET"
     POST = "POST"
     PUT = "PUT"
@@ -23,6 +25,7 @@ class HTTPMethod(enum.Enum):
 
 class AuthType(enum.Enum):
     """Authentication types."""
+
     NONE = "none"
     BASIC = "basic"
     BEARER = "bearer"
@@ -33,6 +36,7 @@ class AuthType(enum.Enum):
 @dataclass
 class AuthConfig:
     """Authentication configuration."""
+
     auth_type: AuthType = AuthType.NONE
     username: str = ""
     password: str = ""
@@ -48,6 +52,7 @@ class AuthConfig:
 @dataclass
 class APIRequest:
     """Definition of an API request."""
+
     method: HTTPMethod = HTTPMethod.GET
     url: str = ""
     headers: dict[str, str] = field(default_factory=dict)
@@ -73,6 +78,7 @@ class APIRequest:
 @dataclass
 class APIResponse:
     """API response data."""
+
     status_code: int = 0
     headers: dict[str, str] = field(default_factory=dict)
     body: Any = None
@@ -104,6 +110,7 @@ class APIResponse:
 @dataclass
 class APIEnvironment:
     """Named set of variables for an API environment."""
+
     name: str = "default"
     variables: dict[str, str] = field(default_factory=dict)
 
@@ -117,6 +124,7 @@ class APIEnvironment:
 @dataclass
 class APICollection:
     """Named collection of saved API requests."""
+
     name: str = ""
     description: str = ""
     requests: list[APIRequest] = field(default_factory=list)
@@ -160,11 +168,10 @@ def _get_httpx():
     """Lazy import httpx."""
     try:
         import httpx
+
         return httpx
     except ImportError:
-        raise ImportError(
-            "httpx is required for API client functionality. Install it with: pip install httpx"
-        )
+        raise ImportError("httpx is required for API client functionality. Install it with: pip install httpx")
 
 
 class APIClient:
@@ -284,19 +291,14 @@ class APIClient:
         payload: dict[str, Any] = {"query": query}
         if variables:
             payload["variables"] = variables
-        return self.request(
-            APIRequest(method=HTTPMethod.POST, url=url, body=payload, **kwargs)
-        )
+        return self.request(APIRequest(method=HTTPMethod.POST, url=url, body=payload, **kwargs))
 
     # ------------------------------------------------------------------
     # History
     # ------------------------------------------------------------------
 
     def get_history(self) -> list[dict[str, Any]]:
-        return [
-            {"request": req.to_dict(), "response": resp.to_dict()}
-            for req, resp in self._history
-        ]
+        return [{"request": req.to_dict(), "response": resp.to_dict()} for req, resp in self._history]
 
     def clear_history(self) -> None:
         self._history.clear()
@@ -396,7 +398,7 @@ class APIClient:
             lines = [
                 "import httpx",
                 "",
-                f'resp = httpx.{req.method.value.lower()}(',
+                f"resp = httpx.{req.method.value.lower()}(",
                 f'    "{url}",',
             ]
             if req.headers:

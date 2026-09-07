@@ -10,6 +10,7 @@ Features:
 - Design canvas collaboration (component moves, property changes)
 - Code editor collaboration (character-level OT)
 """
+
 from __future__ import annotations
 
 import json
@@ -28,26 +29,28 @@ log = logging.getLogger(__name__)
 # Operational Transformation primitives
 # ------------------------------------------------------------------
 
+
 class OpType(Enum):
     INSERT = "insert"
     DELETE = "delete"
     RETAIN = "retain"
-    MOVE = "move"          # For design canvas: move component
+    MOVE = "move"  # For design canvas: move component
     SET_PROP = "set_prop"  # For design canvas: set component property
 
 
 @dataclass
 class Operation:
     """An atomic operation in the OT system."""
+
     op_type: OpType
-    position: int = 0          # Character/component index
-    content: str = ""          # Inserted text (INSERT)
-    length: int = 0            # Characters to delete/retain (DELETE/RETAIN)
-    component_id: str = ""     # Target component (MOVE/SET_PROP)
-    prop_key: str = ""         # Property name (SET_PROP)
-    prop_value: Any = None     # New property value (SET_PROP)
-    dx: float = 0.0            # X delta (MOVE)
-    dy: float = 0.0            # Y delta (MOVE)
+    position: int = 0  # Character/component index
+    content: str = ""  # Inserted text (INSERT)
+    length: int = 0  # Characters to delete/retain (DELETE/RETAIN)
+    component_id: str = ""  # Target component (MOVE/SET_PROP)
+    prop_key: str = ""  # Property name (SET_PROP)
+    prop_value: Any = None  # New property value (SET_PROP)
+    dx: float = 0.0  # X delta (MOVE)
+    dy: float = 0.0  # Y delta (MOVE)
 
     def to_dict(self) -> Dict[str, Any]:
         d = asdict(self)
@@ -64,6 +67,7 @@ class Operation:
 @dataclass
 class ChangeSet:
     """A set of operations from one user at one revision."""
+
     revision: int
     author_id: str
     author_name: str
@@ -194,12 +198,14 @@ class OTEngine:
 # Presence
 # ------------------------------------------------------------------
 
+
 @dataclass
 class UserPresence:
     """Tracks a collaborator's current state in the session."""
+
     user_id: str
     name: str
-    color: str          # Hex color for cursor/selection display
+    color: str  # Hex color for cursor/selection display
     cursor_pos: int = 0
     selection_start: int = 0
     selection_end: int = 0
@@ -214,6 +220,7 @@ class UserPresence:
 # ------------------------------------------------------------------
 # Session
 # ------------------------------------------------------------------
+
 
 class CollabSession:
     """A collaborative editing session.
@@ -252,10 +259,7 @@ class CollabSession:
     @property
     def online_users(self) -> List[UserPresence]:
         now = time.monotonic()
-        return [
-            u for u in self._users.values()
-            if (now - u.last_seen) < self.PRESENCE_TIMEOUT
-        ]
+        return [u for u in self._users.values() if (now - u.last_seen) < self.PRESENCE_TIMEOUT]
 
     def join(self, user_id: str, name: str, color: str = "#3B82F6") -> UserPresence:
         """Add a user to the session."""
@@ -336,14 +340,16 @@ class CollabSession:
                     ops=transformed_ops,
                     change_id=transformed_cs.change_id,
                 )
-                new_pending.append(ChangeSet(
-                    revision=pending.revision,
-                    author_id=pending.author_id,
-                    author_name=pending.author_name,
-                    timestamp=pending.timestamp,
-                    ops=pending_ops,
-                    change_id=pending.change_id,
-                ))
+                new_pending.append(
+                    ChangeSet(
+                        revision=pending.revision,
+                        author_id=pending.author_id,
+                        author_name=pending.author_name,
+                        timestamp=pending.timestamp,
+                        ops=pending_ops,
+                        change_id=pending.change_id,
+                    )
+                )
 
             self._pending = new_pending
             self._apply_changeset(transformed_cs)
@@ -407,11 +413,13 @@ class CollabSession:
         inverse: List[Operation] = []
         for op in reversed(ops):
             if op.op_type == OpType.INSERT:
-                inverse.append(Operation(
-                    op_type=OpType.DELETE,
-                    position=op.position,
-                    length=len(op.content),
-                ))
+                inverse.append(
+                    Operation(
+                        op_type=OpType.DELETE,
+                        position=op.position,
+                        length=len(op.content),
+                    )
+                )
             elif op.op_type == OpType.DELETE:
                 # We'd need the deleted content — simplified: no-op
                 pass
@@ -421,6 +429,7 @@ class CollabSession:
 # ------------------------------------------------------------------
 # Session Manager
 # ------------------------------------------------------------------
+
 
 class CollabSessionManager:
     """Manages multiple collaboration sessions."""

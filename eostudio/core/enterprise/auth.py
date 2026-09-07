@@ -80,12 +80,14 @@ class AuthManager:
             permissions=user.get("permissions", [Permission.READ]),
         )
         self._sessions[token] = session
-        self.log_audit(AuditEntry(
-            timestamp=datetime.now(timezone.utc).isoformat(),
-            user_id=user["user_id"],
-            action="login",
-            resource="auth",
-        ))
+        self.log_audit(
+            AuditEntry(
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                user_id=user["user_id"],
+                action="login",
+                resource="auth",
+            )
+        )
         return session
 
     def login_oauth(self, code: str) -> UserSession:
@@ -104,12 +106,14 @@ class AuthManager:
 
     def logout(self, session: UserSession) -> None:
         self._sessions.pop(session.token, None)
-        self.log_audit(AuditEntry(
-            timestamp=datetime.now(timezone.utc).isoformat(),
-            user_id=session.user_id,
-            action="logout",
-            resource="auth",
-        ))
+        self.log_audit(
+            AuditEntry(
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                user_id=session.user_id,
+                action="logout",
+                resource="auth",
+            )
+        )
 
     def validate_session(self, token: str) -> UserSession | None:
         return self._sessions.get(token)
@@ -135,12 +139,14 @@ class AuthManager:
             "permissions": [Permission.READ, Permission.WRITE],
         }
         self._users[username] = user
-        self.log_audit(AuditEntry(
-            timestamp=datetime.now(timezone.utc).isoformat(),
-            user_id=user_id,
-            action="create_user",
-            resource=f"user:{username}",
-        ))
+        self.log_audit(
+            AuditEntry(
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                user_id=user_id,
+                action="create_user",
+                resource=f"user:{username}",
+            )
+        )
         return {"user_id": user_id, "username": username, "email": email}
 
     def get_audit_log(self, user_id: str | None = None) -> list[AuditEntry]:

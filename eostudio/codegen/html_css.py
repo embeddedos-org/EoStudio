@@ -88,38 +88,20 @@ class HTMLCSSGenerator:
                 lines.append(f"{pad}<p>{label}</p>\n")
             elif ctype == "Input":
                 placeholder = comp.get("placeholder", label)
-                lines.append(
-                    f'{pad}<input type="text" class="input" '
-                    f'placeholder="{placeholder}" />\n'
-                )
+                lines.append(f'{pad}<input type="text" class="input" placeholder="{placeholder}" />\n')
             elif ctype == "TextArea":
-                lines.append(
-                    f'{pad}<textarea class="textarea" '
-                    f'placeholder="{label}"></textarea>\n'
-                )
+                lines.append(f'{pad}<textarea class="textarea" placeholder="{label}"></textarea>\n')
             elif ctype == "Image":
                 src = comp.get("src", "")
                 lines.append(f'{pad}<img src="{src}" alt="{label}" class="image" />\n')
             elif ctype == "Card":
-                child_body = (
-                    self._render_components(children, indent + 1)
-                    if children
-                    else f"{pad}  <p>{label}</p>\n"
-                )
-                lines.append(
-                    f'{pad}<div class="card">\n'
-                    f"{child_body}"
-                    f"{pad}</div>\n"
-                )
+                child_body = self._render_components(children, indent + 1) if children else f"{pad}  <p>{label}</p>\n"
+                lines.append(f'{pad}<div class="card">\n{child_body}{pad}</div>\n')
             elif ctype == "Container" and children:
                 direction = comp.get("direction", "column")
                 cls = "flex-row" if direction == "row" else "flex-col"
                 child_body = self._render_components(children, indent + 1)
-                lines.append(
-                    f'{pad}<div class="container {cls}">\n'
-                    f"{child_body}"
-                    f"{pad}</div>\n"
-                )
+                lines.append(f'{pad}<div class="container {cls}">\n{child_body}{pad}</div>\n')
             elif ctype == "Link":
                 href = comp.get("href", "#")
                 lines.append(f'{pad}<a href="{href}" class="link">{label}</a>\n')

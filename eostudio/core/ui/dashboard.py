@@ -19,6 +19,7 @@ Features:
 - Theme system (dark, light, high-contrast, monokai, dracula)
 - Web-based dashboard server (accessible from browser)
 """
+
 from __future__ import annotations
 
 import json
@@ -33,6 +34,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 # ------------------------------------------------------------------
 # Theme System
 # ------------------------------------------------------------------
+
 
 @dataclass
 class Theme:
@@ -51,33 +53,63 @@ class Theme:
 THEMES: Dict[str, Theme] = {
     "dark": Theme(
         name="EoStudio Dark",
-        bg="#0f172a", fg="#e2e8f0", accent="#38bdf8",
-        success="#22c55e", warning="#eab308", error="#ef4444",
-        info="#60a5fa", muted="#64748b", border="#334155",
+        bg="#0f172a",
+        fg="#e2e8f0",
+        accent="#38bdf8",
+        success="#22c55e",
+        warning="#eab308",
+        error="#ef4444",
+        info="#60a5fa",
+        muted="#64748b",
+        border="#334155",
     ),
     "dracula": Theme(
         name="Dracula",
-        bg="#282a36", fg="#f8f8f2", accent="#bd93f9",
-        success="#50fa7b", warning="#ffb86c", error="#ff5555",
-        info="#8be9fd", muted="#6272a4", border="#44475a",
+        bg="#282a36",
+        fg="#f8f8f2",
+        accent="#bd93f9",
+        success="#50fa7b",
+        warning="#ffb86c",
+        error="#ff5555",
+        info="#8be9fd",
+        muted="#6272a4",
+        border="#44475a",
     ),
     "monokai": Theme(
         name="Monokai Pro",
-        bg="#2d2a2e", fg="#fcfcfa", accent="#a9dc76",
-        success="#a9dc76", warning="#ffd866", error="#ff6188",
-        info="#78dce8", muted="#727072", border="#403e41",
+        bg="#2d2a2e",
+        fg="#fcfcfa",
+        accent="#a9dc76",
+        success="#a9dc76",
+        warning="#ffd866",
+        error="#ff6188",
+        info="#78dce8",
+        muted="#727072",
+        border="#403e41",
     ),
     "light": Theme(
         name="EoStudio Light",
-        bg="#f8fafc", fg="#0f172a", accent="#0284c7",
-        success="#16a34a", warning="#ca8a04", error="#dc2626",
-        info="#2563eb", muted="#94a3b8", border="#e2e8f0",
+        bg="#f8fafc",
+        fg="#0f172a",
+        accent="#0284c7",
+        success="#16a34a",
+        warning="#ca8a04",
+        error="#dc2626",
+        info="#2563eb",
+        muted="#94a3b8",
+        border="#e2e8f0",
     ),
     "high_contrast": Theme(
         name="High Contrast",
-        bg="#000000", fg="#ffffff", accent="#ffff00",
-        success="#00ff00", warning="#ff8800", error="#ff0000",
-        info="#00ffff", muted="#888888", border="#ffffff",
+        bg="#000000",
+        fg="#ffffff",
+        accent="#ffff00",
+        success="#00ff00",
+        warning="#ff8800",
+        error="#ff0000",
+        info="#00ffff",
+        muted="#888888",
+        border="#ffffff",
     ),
 }
 
@@ -85,6 +117,7 @@ THEMES: Dict[str, Theme] = {
 # ------------------------------------------------------------------
 # ANSI Color Helpers
 # ------------------------------------------------------------------
+
 
 def _hex_to_ansi_fg(hex_color: str) -> str:
     """Convert hex color to ANSI 24-bit foreground escape."""
@@ -139,11 +172,7 @@ class Painter:
 
     def header(self, text: str, width: int = 60) -> str:
         bar = "─" * width
-        return (
-            f"{_hex_to_ansi_fg(self.t.accent)}{BOLD}┌{bar}┐\n"
-            f"│ {text.center(width - 2)} │\n"
-            f"└{bar}┘{RESET}"
-        )
+        return f"{_hex_to_ansi_fg(self.t.accent)}{BOLD}┌{bar}┐\n│ {text.center(width - 2)} │\n└{bar}┘{RESET}"
 
     def box(self, title: str, lines: List[str], width: int = 58) -> str:
         bar = "─" * width
@@ -170,9 +199,11 @@ class Painter:
 # Project Health Panel
 # ------------------------------------------------------------------
 
+
 @dataclass
 class ProjectHealth:
     """Aggregated project health metrics."""
+
     workspace: str
     test_count: int = 0
     test_pass_rate: float = 0.0
@@ -196,11 +227,15 @@ def compute_project_health(workspace: str) -> ProjectHealth:
     # Run tests
     result = subprocess.run(
         ["python3", "-m", "pytest", "--tb=no", "-q"],
-        capture_output=True, text=True, cwd=workspace, timeout=60,
+        capture_output=True,
+        text=True,
+        cwd=workspace,
+        timeout=60,
     )
     if result.returncode in (0, 1):
         output = result.stdout + result.stderr
         import re
+
         m = re.search(r"(\d+) passed", output)
         if m:
             health.test_count = int(m.group(1))
@@ -218,11 +253,16 @@ def compute_project_health(workspace: str) -> ProjectHealth:
     ]
     health.overall_score = sum(scores) / len(scores)
     health.grade = (
-        "A+" if health.overall_score >= 95
-        else "A" if health.overall_score >= 90
-        else "B" if health.overall_score >= 80
-        else "C" if health.overall_score >= 70
-        else "D" if health.overall_score >= 60
+        "A+"
+        if health.overall_score >= 95
+        else "A"
+        if health.overall_score >= 90
+        else "B"
+        if health.overall_score >= 80
+        else "C"
+        if health.overall_score >= 70
+        else "D"
+        if health.overall_score >= 60
         else "F"
     )
     return health
@@ -232,9 +272,11 @@ def compute_project_health(workspace: str) -> ProjectHealth:
 # Command Palette
 # ------------------------------------------------------------------
 
+
 @dataclass
 class Command:
     """A command palette entry."""
+
     id: str
     title: str
     description: str
@@ -385,6 +427,7 @@ class CommandPalette:
 # Rich Terminal Dashboard
 # ------------------------------------------------------------------
 
+
 class TerminalDashboard:
     """Rich terminal dashboard for EoStudio.
 
@@ -443,10 +486,7 @@ class TerminalDashboard:
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
         return (
-            f"\n{_hex_to_ansi_fg(t.accent)}{BOLD}"
-            f"╔{bar}╗\n"
-            f"║ {logo:<20} {subtitle:<35} {timestamp:>10} ║\n"
-            f"╚{bar}╝{RESET}"
+            f"\n{_hex_to_ansi_fg(t.accent)}{BOLD}╔{bar}╗\n║ {logo:<20} {subtitle:<35} {timestamp:>10} ║\n╚{bar}╝{RESET}"
         )
 
     def _render_project_info(self) -> str:
@@ -473,7 +513,10 @@ class TerminalDashboard:
         try:
             result = subprocess.run(
                 ["git", "status", "--short", "--branch"],
-                capture_output=True, text=True, cwd=str(self._workspace), timeout=5,
+                capture_output=True,
+                text=True,
+                cwd=str(self._workspace),
+                timeout=5,
             )
             lines_raw = result.stdout.strip().splitlines()
             branch_line = lines_raw[0] if lines_raw else "## unknown"
@@ -503,9 +546,13 @@ class TerminalDashboard:
         try:
             result = subprocess.run(
                 ["python3", "-m", "pytest", "--tb=no", "-q", "--co"],
-                capture_output=True, text=True, cwd=str(self._workspace), timeout=10,
+                capture_output=True,
+                text=True,
+                cwd=str(self._workspace),
+                timeout=10,
             )
             import re
+
             m = re.search(r"(\d+) test", result.stdout + result.stderr)
             test_count = int(m.group(1)) if m else 0
         except Exception:
@@ -524,7 +571,10 @@ class TerminalDashboard:
         try:
             result = subprocess.run(
                 ["git", "log", "--oneline", "-5"],
-                capture_output=True, text=True, cwd=str(self._workspace), timeout=5,
+                capture_output=True,
+                text=True,
+                cwd=str(self._workspace),
+                timeout=5,
             )
             commits = result.stdout.strip().splitlines()
             lines = [f"  {p.muted(c[:7])} {p.fg(c[8:50])}" for c in commits]
@@ -565,7 +615,9 @@ class TerminalDashboard:
     def _check_ollama(self) -> bool:
         try:
             result = subprocess.run(
-                ["ollama", "list"], capture_output=True, timeout=2,
+                ["ollama", "list"],
+                capture_output=True,
+                timeout=2,
             )
             return result.returncode == 0
         except Exception:
@@ -575,6 +627,7 @@ class TerminalDashboard:
 # ------------------------------------------------------------------
 # Web Dashboard Server
 # ------------------------------------------------------------------
+
 
 class WebDashboard:
     """Browser-based dashboard server for EoStudio.
@@ -638,6 +691,7 @@ class WebDashboard:
                     message = body.get("message", "")
                     if router:
                         from eostudio.core.ai.multi_model_router import TaskType
+
                         response = router.complete(message, task=TaskType.CHAT, complexity=5)
                     else:
                         response = "AI router not configured."
@@ -655,6 +709,7 @@ class WebDashboard:
 
         if open_browser:
             import webbrowser
+
             webbrowser.open(f"http://localhost:{port}")
 
         print(f"EoStudio Web Dashboard: http://localhost:{port}")
@@ -666,7 +721,10 @@ class WebDashboard:
         try:
             result = subprocess.run(
                 ["git", "status", "--short", "--branch"],
-                capture_output=True, text=True, cwd=workspace, timeout=5,
+                capture_output=True,
+                text=True,
+                cwd=workspace,
+                timeout=5,
             )
             git_lines = result.stdout.strip().splitlines()
             branch = git_lines[0].replace("## ", "").split("...")[0] if git_lines else "unknown"
@@ -750,7 +808,7 @@ class WebDashboard:
     <div class="logo">EoStudio <span>v3.1</span></div>
     <div class="header-meta">Universal Development Platform · {ws_name}</div>
   </div>
-  <div class="header-meta" id="clock">{health['timestamp']}</div>
+  <div class="header-meta" id="clock">{health["timestamp"]}</div>
 </div>
 
 <div class="grid">
@@ -758,8 +816,8 @@ class WebDashboard:
   <div class="card">
     <div class="card-title">📁 Project</div>
     <div class="metric"><span class="metric-label">Workspace</span><span class="metric-value">{ws_name}</span></div>
-    <div class="metric"><span class="metric-label">Branch</span><span class="metric-value badge badge-info">{health['branch']}</span></div>
-    <div class="metric"><span class="metric-label">Changes</span><span class="metric-value {'badge badge-warning' if health['changes'] > 0 else 'badge badge-success'}">{health['changes']} files</span></div>
+    <div class="metric"><span class="metric-label">Branch</span><span class="metric-value badge badge-info">{health["branch"]}</span></div>
+    <div class="metric"><span class="metric-label">Changes</span><span class="metric-value {"badge badge-warning" if health["changes"] > 0 else "badge badge-success"}">{health["changes"]} files</span></div>
   </div>
 
   <!-- AI Status Card -->

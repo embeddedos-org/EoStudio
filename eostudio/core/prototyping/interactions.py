@@ -51,6 +51,7 @@ class InteractionAction(Enum):
 @dataclass
 class Interaction:
     """A single interaction binding a trigger to an action on a target component."""
+
     id: str
     source_id: str  # Component that triggers the interaction
     trigger: InteractionTrigger
@@ -103,8 +104,7 @@ class InteractionManager:
     def remove_interaction(self, interaction_id: str) -> None:
         self._interactions = [i for i in self._interactions if i.id != interaction_id]
 
-    def get_interactions_for(self, source_id: str,
-                             trigger: Optional[InteractionTrigger] = None) -> List[Interaction]:
+    def get_interactions_for(self, source_id: str, trigger: Optional[InteractionTrigger] = None) -> List[Interaction]:
         results = [i for i in self._interactions if i.source_id == source_id and i.enabled]
         if trigger:
             results = [i for i in results if i.trigger == trigger]
@@ -116,15 +116,15 @@ class InteractionManager:
     def get_variable(self, name: str, default: Any = None) -> Any:
         return self._variables.get(name, default)
 
-    def on_action(self, action: InteractionAction,
-                  callback: Callable[[Interaction, Dict[str, Any]], None]) -> None:
+    def on_action(self, action: InteractionAction, callback: Callable[[Interaction, Dict[str, Any]], None]) -> None:
         key = action.value
         if key not in self._listeners:
             self._listeners[key] = []
         self._listeners[key].append(callback)
 
-    def dispatch(self, source_id: str, trigger: InteractionTrigger,
-                 event_data: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def dispatch(
+        self, source_id: str, trigger: InteractionTrigger, event_data: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """Dispatch a trigger event and execute matching interactions."""
         results = []
         interactions = self.get_interactions_for(source_id, trigger)
@@ -165,8 +165,7 @@ class InteractionManager:
             pass
         return True
 
-    def _execute_action(self, interaction: Interaction,
-                        event_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_action(self, interaction: Interaction, event_data: Dict[str, Any]) -> Dict[str, Any]:
         """Execute an interaction action and return result."""
         action = interaction.action
         params = interaction.parameters
@@ -202,8 +201,11 @@ class InteractionManager:
             result["screen"] = params.get("screen", interaction.target_id)
             result["transition"] = params.get("transition", "push")
 
-        elif action in (InteractionAction.SHOW_COMPONENT, InteractionAction.HIDE_COMPONENT,
-                        InteractionAction.TOGGLE_VISIBILITY):
+        elif action in (
+            InteractionAction.SHOW_COMPONENT,
+            InteractionAction.HIDE_COMPONENT,
+            InteractionAction.TOGGLE_VISIBILITY,
+        ):
             result["visibility_action"] = action.value
 
         elif action == InteractionAction.PLAY_ANIMATION:

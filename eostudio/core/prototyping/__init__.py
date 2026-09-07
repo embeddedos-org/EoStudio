@@ -25,9 +25,19 @@ from eostudio.core.prototyping.state_machine import (
 from eostudio.core.prototyping.player import PrototypePlayer
 
 __all__ = [
-    "Interaction", "InteractionTrigger", "InteractionAction", "InteractionManager",
-    "ScreenTransition", "TransitionType", "TransitionDirection",
-    "GestureRecognizer", "GestureType", "GestureEvent",
-    "PrototypeState", "StateTransition", "StateMachine", "PrototypeVariable",
+    "Interaction",
+    "InteractionTrigger",
+    "InteractionAction",
+    "InteractionManager",
+    "ScreenTransition",
+    "TransitionType",
+    "TransitionDirection",
+    "GestureRecognizer",
+    "GestureType",
+    "GestureEvent",
+    "PrototypeState",
+    "StateTransition",
+    "StateMachine",
+    "PrototypeVariable",
     "PrototypePlayer",
 ]

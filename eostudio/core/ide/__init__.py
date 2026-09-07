@@ -11,7 +11,14 @@ from eostudio.core.ide.cloud import CloudSync
 from eostudio.core.ide.config_manager import ConfigManager, SecretsManager
 
 __all__ = [
-    "SyntaxHighlighter", "LanguageServer", "GitIntegration",
-    "ExtensionManager", "ProjectManager", "TerminalEmulator",
-    "Debugger", "CloudSync", "ConfigManager", "SecretsManager",
+    "SyntaxHighlighter",
+    "LanguageServer",
+    "GitIntegration",
+    "ExtensionManager",
+    "ProjectManager",
+    "TerminalEmulator",
+    "Debugger",
+    "CloudSync",
+    "ConfigManager",
+    "SecretsManager",
 ]

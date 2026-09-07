@@ -11,11 +11,10 @@ This plugin connects to the eOffice backend (localhost:3001) and provides:
 
 from __future__ import annotations
 
-import json
 import logging
 import os
-import urllib.request
-import urllib.error
+import requests
+
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -35,10 +34,14 @@ EOFFICE_DEFAULT_URL = "http://localhost:3001"
 # eOffice API client
 # ------------------------------------------------------------------
 
+
 class EOfficeClient:
     """HTTP client for the eOffice backend API."""
 
     def __init__(self, base_url: str = EOFFICE_DEFAULT_URL) -> None:
+        # Accept http:// deliberately for local development.
+        if not base_url.startswith(("http://", "https://")):
+            raise ValueError(f"Invalid backend URL protocol: {base_url}")
         self.base_url = base_url.rstrip("/")
         self._connected = False
         self._version = ""
@@ -46,12 +49,13 @@ class EOfficeClient:
 
     def check_connection(self) -> bool:
         try:
-            resp = urllib.request.urlopen(f"{self.base_url}/api/health", timeout=3)
-            data = json.loads(resp.read().decode())
+            resp = requests.get(f"{self.base_url}/api/health", timeout=3)
+            resp.raise_for_status()
+            data = resp.json()
             self._version = data.get("version", "unknown")
             self._connected = True
             return True
-        except Exception:
+        except requests.RequestException:
             self._connected = False
             return False
 
@@ -64,37 +68,33 @@ class EOfficeClient:
         return self._version
 
     def _post(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        body = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(
-            f"{self.base_url}{path}",
-            data=body,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
         try:
-            resp = urllib.request.urlopen(req, timeout=30)
-            return json.loads(resp.read().decode())
-        except Exception as exc:
+            resp = requests.post(f"{self.base_url}{path}", json=payload, timeout=30)
+            resp.raise_for_status()
+            return resp.json()
+        except requests.RequestException as exc:
             log.error("eOffice API error (%s): %s", path, exc)
             return {"error": str(exc)}
 
     def _get(self, path: str) -> Dict[str, Any]:
         try:
-            resp = urllib.request.urlopen(
-                f"{self.base_url}{path}", timeout=10
-            )
-            return json.loads(resp.read().decode())
-        except Exception as exc:
+            resp = requests.get(f"{self.base_url}{path}", timeout=10)
+            resp.raise_for_status()
+            return resp.json()
+        except requests.RequestException as exc:
             log.error("eOffice API error (%s): %s", path, exc)
             return {"error": str(exc)}
 
     # ---- eBot AI ----
 
     def ebot_ask(self, prompt: str, context: str = "") -> str:
-        result = self._post("/api/ebot/ask", {
-            "prompt": prompt,
-            "context": context,
-        })
+        result = self._post(
+            "/api/ebot/ask",
+            {
+                "prompt": prompt,
+                "context": context,
+            },
+        )
         return result.get("response", result.get("error", ""))
 
     def ebot_summarize(self, text: str) -> str:
@@ -102,26 +102,35 @@ class EOfficeClient:
         return result.get("summary", result.get("error", ""))
 
     def ebot_rewrite(self, text: str, style: str = "professional") -> str:
-        result = self._post("/api/ebot/rewrite", {
-            "text": text,
-            "style": style,
-        })
+        result = self._post(
+            "/api/ebot/rewrite",
+            {
+                "text": text,
+                "style": style,
+            },
+        )
         return result.get("rewritten", result.get("error", ""))
 
     def ebot_generate_docs(self, code: str, language: str = "c") -> str:
-        result = self._post("/api/ebot/generate-docs", {
-            "code": code,
-            "language": language,
-        })
+        result = self._post(
+            "/api/ebot/generate-docs",
+            {
+                "code": code,
+                "language": language,
+            },
+        )
         return result.get("documentation", result.get("error", ""))
 
     # ---- eDocs ----
 
     def create_doc(self, title: str, content: str = "") -> Dict[str, Any]:
-        return self._post("/api/edocs", {
-            "title": title,
-            "content": content,
-        })
+        return self._post(
+            "/api/edocs",
+            {
+                "title": title,
+                "content": content,
+            },
+        )
 
     def list_docs(self) -> List[Dict[str, Any]]:
         result = self._get("/api/edocs")
@@ -139,27 +148,35 @@ class EOfficeClient:
     # ---- eSheets ----
 
     def create_sheet(self, title: str, data: List[List[Any]] = None) -> Dict[str, Any]:
-        return self._post("/api/esheets", {
-            "title": title,
-            "data": data or [],
-        })
+        return self._post(
+            "/api/esheets",
+            {
+                "title": title,
+                "data": data or [],
+            },
+        )
 
     def import_csv(self, title: str, csv_content: str) -> Dict[str, Any]:
-        return self._post("/api/esheets/import", {
-            "title": title,
-            "format": "csv",
-            "content": csv_content,
-        })
+        return self._post(
+            "/api/esheets/import",
+            {
+                "title": title,
+                "format": "csv",
+                "content": csv_content,
+            },
+        )
 
     # ---- ePlanner ----
 
-    def create_task(self, title: str, description: str = "",
-                     priority: str = "medium") -> Dict[str, Any]:
-        return self._post("/api/eplanner/tasks", {
-            "title": title,
-            "description": description,
-            "priority": priority,
-        })
+    def create_task(self, title: str, description: str = "", priority: str = "medium") -> Dict[str, Any]:
+        return self._post(
+            "/api/eplanner/tasks",
+            {
+                "title": title,
+                "description": description,
+                "priority": priority,
+            },
+        )
 
     def list_tasks(self) -> List[Dict[str, Any]]:
         result = self._get("/api/eplanner/tasks")
@@ -168,10 +185,13 @@ class EOfficeClient:
     # ---- eDrive ----
 
     def upload_file(self, filename: str, content: str) -> Dict[str, Any]:
-        return self._post("/api/edrive/upload", {
-            "filename": filename,
-            "content": content,
-        })
+        return self._post(
+            "/api/edrive/upload",
+            {
+                "filename": filename,
+                "content": content,
+            },
+        )
 
     def list_files(self) -> List[Dict[str, Any]]:
         result = self._get("/api/edrive/files")
@@ -181,6 +201,7 @@ class EOfficeClient:
 # ------------------------------------------------------------------
 # eOffice plugin
 # ------------------------------------------------------------------
+
 
 class EOfficePlugin(Plugin):
     """eOffice productivity suite plugin for EoStudio.
@@ -352,9 +373,7 @@ class EOfficePlugin(Plugin):
         source = data.get("source", "EoStudio")
         self._client.create_note(
             title=f"Error: {source}",
-            body=f"**Error:** {error_msg}\n\n"
-                 f"**Source:** {source}\n"
-                 f"**Time:** auto-logged by eOffice plugin",
+            body=f"**Error:** {error_msg}\n\n**Source:** {source}\n**Time:** auto-logged by eOffice plugin",
         )
         return {"error_logged": True}
 
@@ -395,8 +414,7 @@ class EOfficePlugin(Plugin):
             return {"error": "offline"}
         return self._client.create_task(title, description)
 
-    def export_simulation_data(self, title: str,
-                                 data: List[List[Any]]) -> Dict[str, Any]:
+    def export_simulation_data(self, title: str, data: List[List[Any]]) -> Dict[str, Any]:
         if not self._connected:
             return {"error": "offline"}
         return self._client.create_sheet(title, data)
@@ -408,38 +426,27 @@ class EOfficePlugin(Plugin):
             {
                 "label": "eOffice",
                 "children": [
-                    {"label": "Open eDocs", "action": "eoffice.open_edocs",
-                     "shortcut": "Ctrl+Shift+D"},
-                    {"label": "Open eNotes", "action": "eoffice.open_enotes",
-                     "shortcut": "Ctrl+Shift+N"},
+                    {"label": "Open eDocs", "action": "eoffice.open_edocs", "shortcut": "Ctrl+Shift+D"},
+                    {"label": "Open eNotes", "action": "eoffice.open_enotes", "shortcut": "Ctrl+Shift+N"},
                     {"label": "Open eSheets", "action": "eoffice.open_esheets"},
                     {"label": "Open ePlanner", "action": "eoffice.open_eplanner"},
                     {"type": "separator"},
-                    {"label": "eBot: Summarize Selection",
-                     "action": "eoffice.ebot_summarize"},
-                    {"label": "eBot: Rewrite Selection",
-                     "action": "eoffice.ebot_rewrite"},
-                    {"label": "eBot: Generate Docs",
-                     "action": "eoffice.ebot_generate_docs"},
-                    {"label": "eBot Chat", "action": "eoffice.ebot_chat",
-                     "shortcut": "Ctrl+Shift+B"},
+                    {"label": "eBot: Summarize Selection", "action": "eoffice.ebot_summarize"},
+                    {"label": "eBot: Rewrite Selection", "action": "eoffice.ebot_rewrite"},
+                    {"label": "eBot: Generate Docs", "action": "eoffice.ebot_generate_docs"},
+                    {"label": "eBot Chat", "action": "eoffice.ebot_chat", "shortcut": "Ctrl+Shift+B"},
                     {"type": "separator"},
-                    {"label": "Export to eDrive",
-                     "action": "eoffice.export_edrive"},
-                    {"label": "Open eOffice Suite",
-                     "action": "eoffice.open_suite"},
+                    {"label": "Export to eDrive", "action": "eoffice.export_edrive"},
+                    {"label": "Open eOffice Suite", "action": "eoffice.open_suite"},
                 ],
             },
         ]
 
     def get_toolbar_items(self) -> List[Dict[str, Any]]:
         return [
-            {"icon": "📝", "label": "eDocs", "action": "eoffice.open_edocs",
-             "tooltip": "Open eDocs editor"},
-            {"icon": "🤖", "label": "eBot", "action": "eoffice.ebot_chat",
-             "tooltip": "eBot AI Assistant"},
-            {"icon": "📊", "label": "eSheets", "action": "eoffice.open_esheets",
-             "tooltip": "Open eSheets"},
+            {"icon": "📝", "label": "eDocs", "action": "eoffice.open_edocs", "tooltip": "Open eDocs editor"},
+            {"icon": "🤖", "label": "eBot", "action": "eoffice.ebot_chat", "tooltip": "eBot AI Assistant"},
+            {"icon": "📊", "label": "eSheets", "action": "eoffice.open_esheets", "tooltip": "Open eSheets"},
         ]
 
     def get_panel(self) -> Optional[Dict[str, Any]]:
@@ -465,16 +472,17 @@ class EOfficePlugin(Plugin):
                         {"label": "Backend", "value": status},
                         {"label": "Version", "value": self._eoffice_version or "—"},
                         {"label": "URL", "value": self._client.base_url},
-                        {"label": "eBot AI",
-                         "value": "Enabled" if self.config.get("ebot_enabled") else "Disabled"},
+                        {"label": "eBot AI", "value": "Enabled" if self.config.get("ebot_enabled") else "Disabled"},
                     ],
                 },
                 {
                     "title": "Apps",
                     "items": [
-                        {"label": app["name"],
-                         "value": f":{app['port']}",
-                         "action": f"eoffice.open_{app['name'].lower()}"}
+                        {
+                            "label": app["name"],
+                            "value": f":{app['port']}",
+                            "action": f"eoffice.open_{app['name'].lower()}",
+                        }
                         for app in apps
                     ],
                 },
@@ -492,12 +500,14 @@ class EOfficePlugin(Plugin):
 
     def get_status(self) -> Dict[str, Any]:
         base = super().get_status()
-        base.update({
-            "connected": self._connected,
-            "eoffice_version": self._eoffice_version,
-            "backend_url": self._client.base_url,
-            "ebot_enabled": self.config.get("ebot_enabled", True),
-            "auto_doc": self.config.get("auto_doc_on_export", True),
-            "auto_sheet": self.config.get("auto_sheet_on_simulate", True),
-        })
+        base.update(
+            {
+                "connected": self._connected,
+                "eoffice_version": self._eoffice_version,
+                "backend_url": self._client.base_url,
+                "ebot_enabled": self.config.get("ebot_enabled", True),
+                "auto_doc": self.config.get("auto_doc_on_export", True),
+                "auto_sheet": self.config.get("auto_sheet_on_simulate", True),
+            }
+        )
         return base

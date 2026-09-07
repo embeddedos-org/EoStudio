@@ -26,6 +26,7 @@ class EventType(Enum):
 @dataclass
 class InputEvent:
     """Platform-agnostic input event."""
+
     type: EventType
     x: int = 0
     y: int = 0
@@ -42,6 +43,7 @@ class InputEvent:
 @dataclass
 class WindowConfig:
     """Window creation configuration."""
+
     title: str = "EoStudio"
     width: int = 1280
     height: int = 800
@@ -101,8 +103,7 @@ class DisplayBackend(ABC):
     def wait_events(self, timeout_ms: int = -1) -> List[InputEvent]:
         """Block until at least one event is available."""
 
-    def register_handler(self, event_type: EventType,
-                         handler: Callable[[InputEvent], None]) -> None:
+    def register_handler(self, event_type: EventType, handler: Callable[[InputEvent], None]) -> None:
         self._event_handlers.setdefault(event_type, []).append(handler)
 
     def dispatch_events(self, events: List[InputEvent]) -> None:
@@ -111,29 +112,32 @@ class DisplayBackend(ABC):
                 handler(ev)
 
     @abstractmethod
-    def draw_rect(self, window_id: int, x: int, y: int, w: int, h: int,
-                  color: int, filled: bool = True) -> None:
+    def draw_rect(self, window_id: int, x: int, y: int, w: int, h: int, color: int, filled: bool = True) -> None:
         """Draw a rectangle. *color* is 0xRRGGBB."""
 
     @abstractmethod
-    def draw_line(self, window_id: int, x1: int, y1: int,
-                  x2: int, y2: int, color: int, width: int = 1) -> None:
+    def draw_line(self, window_id: int, x1: int, y1: int, x2: int, y2: int, color: int, width: int = 1) -> None:
         """Draw a line between two points."""
 
     @abstractmethod
-    def draw_circle(self, window_id: int, cx: int, cy: int, radius: int,
-                    color: int, filled: bool = True) -> None:
+    def draw_circle(self, window_id: int, cx: int, cy: int, radius: int, color: int, filled: bool = True) -> None:
         """Draw a circle."""
 
     @abstractmethod
-    def draw_text(self, window_id: int, x: int, y: int, text: str,
-                  color: int = 0x000000, font_size: int = 14,
-                  font_family: str = "") -> None:
+    def draw_text(
+        self,
+        window_id: int,
+        x: int,
+        y: int,
+        text: str,
+        color: int = 0x000000,
+        font_size: int = 14,
+        font_family: str = "",
+    ) -> None:
         """Render text at the given position."""
 
     @abstractmethod
-    def draw_image(self, window_id: int, x: int, y: int,
-                   image_data: bytes, width: int, height: int) -> None:
+    def draw_image(self, window_id: int, x: int, y: int, image_data: bytes, width: int, height: int) -> None:
         """Blit raw RGBA image data at (x, y)."""
 
     @abstractmethod
@@ -157,9 +161,7 @@ class DisplayBackend(ABC):
         """Set cursor: arrow, hand, crosshair, text, wait."""
 
     @abstractmethod
-    def schedule_timer(self, interval_ms: int,
-                       callback: Callable[[], None],
-                       repeat: bool = False) -> int:
+    def schedule_timer(self, interval_ms: int, callback: Callable[[], None], repeat: bool = False) -> int:
         """Schedule a timer callback. Return timer ID."""
 
     @abstractmethod

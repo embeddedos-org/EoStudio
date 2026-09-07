@@ -1,17 +1,20 @@
 """UI Designer — canvas with snap grid, component palette, flow view, animation timeline,
 design system, responsive preview, prototyping, AI generation, and code export."""
 
-
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -41,7 +44,12 @@ from eostudio.core.ui_flow.auto_layout import AutoLayout, LayoutDirection, Layou
 from eostudio.core.ui_flow.variants import VariantSet, ComponentState
 from eostudio.core.ui_flow.responsive import BREAKPOINTS, ResponsiveConfig
 
-from eostudio.core.prototyping.interactions import InteractionManager, InteractionTrigger, InteractionAction, Interaction
+from eostudio.core.prototyping.interactions import (
+    InteractionManager,
+    InteractionTrigger,
+    InteractionAction,
+    Interaction,
+)
 from eostudio.core.prototyping.transitions import ScreenTransition, TransitionType
 from eostudio.core.prototyping.player import PrototypePlayer, PrototypeScreen
 
@@ -83,8 +91,14 @@ class UIDesigner(tk.Frame):
         # New subsystems
         self._animation_timeline = AnimationTimeline(name="UI Animations")
         self._design_system = DesignSystem()
-        self._auto_layout = AutoLayout(direction=LayoutDirection.COLUMN, gap=12, padding_top=16,
-                                        padding_right=16, padding_bottom=16, padding_left=16)
+        self._auto_layout = AutoLayout(
+            direction=LayoutDirection.COLUMN,
+            gap=12,
+            padding_top=16,
+            padding_right=16,
+            padding_bottom=16,
+            padding_left=16,
+        )
         self._responsive_config = ResponsiveConfig()
         self._active_breakpoint = "mobile"
         self._prototype_player = PrototypePlayer()
@@ -107,12 +121,22 @@ class UIDesigner(tk.Frame):
         comp_frame = tk.Frame(left_nb, bg=self._bg)
         left_nb.add(comp_frame, text="Components")
 
-        tk.Label(comp_frame, text="Drag to Canvas", bg=self._bg, fg="#6c7086",
-                 font=("Segoe UI", 8)).pack(fill=tk.X, padx=8, pady=(4, 2))
+        tk.Label(comp_frame, text="Drag to Canvas", bg=self._bg, fg="#6c7086", font=("Segoe UI", 8)).pack(
+            fill=tk.X, padx=8, pady=(4, 2)
+        )
 
         for comp_id, comp_name, color in self.COMPONENTS:
-            btn = tk.Button(comp_frame, text=f"  {comp_name}", bg="#313244", fg=self._fg,
-                            relief=tk.FLAT, font=("Segoe UI", 9), anchor=tk.W, padx=8, pady=3)
+            btn = tk.Button(
+                comp_frame,
+                text=f"  {comp_name}",
+                bg="#313244",
+                fg=self._fg,
+                relief=tk.FLAT,
+                font=("Segoe UI", 9),
+                anchor=tk.W,
+                padx=8,
+                pady=3,
+            )
             btn.pack(fill=tk.X, padx=4, pady=1)
             btn.bind("<ButtonPress-1>", lambda e, cid=comp_id: self._start_drag(cid))
 
@@ -138,21 +162,33 @@ class UIDesigner(tk.Frame):
         props_tab = tk.Frame(right_nb, bg=self._bg)
         right_nb.add(props_tab, text="Properties")
 
-        self._properties = PropertiesPanel(props_tab, bg=self._bg, fg=self._fg,
-                                           on_change=self._on_prop_change)
+        self._properties = PropertiesPanel(props_tab, bg=self._bg, fg=self._fg, on_change=self._on_prop_change)
         self._properties.pack(fill=tk.BOTH, expand=True)
 
         # Variant state selector
-        state_frame = tk.LabelFrame(props_tab, text="Component State", bg=self._bg,
-                                    fg="#cba6f7", font=("Segoe UI", 8, "bold"),
-                                    bd=1, relief=tk.GROOVE)
+        state_frame = tk.LabelFrame(
+            props_tab,
+            text="Component State",
+            bg=self._bg,
+            fg="#cba6f7",
+            font=("Segoe UI", 8, "bold"),
+            bd=1,
+            relief=tk.GROOVE,
+        )
         state_frame.pack(fill=tk.X, padx=4, pady=2)
         self._state_var = tk.StringVar(value="default")
         for state in ["default", "hover", "active", "focus", "disabled"]:
-            tk.Radiobutton(state_frame, text=state.title(), variable=self._state_var,
-                          value=state, bg=self._bg, fg=self._fg, selectcolor="#313244",
-                          font=("Segoe UI", 8), command=self._on_state_change).pack(
-                side=tk.LEFT, padx=2)
+            tk.Radiobutton(
+                state_frame,
+                text=state.title(),
+                variable=self._state_var,
+                value=state,
+                bg=self._bg,
+                fg=self._fg,
+                selectcolor="#313244",
+                font=("Segoe UI", 8),
+                command=self._on_state_change,
+            ).pack(side=tk.LEFT, padx=2)
 
         # Export tab
         export_tab = tk.Frame(right_nb, bg=self._bg)
@@ -205,7 +241,9 @@ class UIDesigner(tk.Frame):
         timeline_container.pack_propagate(False)
 
         self._timeline_widget = TimelineWidget(
-            timeline_container, bg=self._bg, fg=self._fg,
+            timeline_container,
+            bg=self._bg,
+            fg=self._fg,
             on_time_change=self._on_timeline_time_change,
             on_keyframe_change=self._on_keyframe_changed,
         )
@@ -217,23 +255,41 @@ class UIDesigner(tk.Frame):
     # ------------------------------------------------------------------
 
     def _build_tokens_panel(self, parent: tk.Frame) -> None:
-        tk.Label(parent, text="Design System", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 10, "bold")).pack(fill=tk.X, padx=8, pady=(8, 4))
+        tk.Label(parent, text="Design System", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold")).pack(
+            fill=tk.X, padx=8, pady=(8, 4)
+        )
 
         # Theme toggle
         theme_frame = tk.Frame(parent, bg=self._bg)
         theme_frame.pack(fill=tk.X, padx=4, pady=2)
         self._theme_var = tk.StringVar(value="light")
-        tk.Radiobutton(theme_frame, text="Light", variable=self._theme_var, value="light",
-                       bg=self._bg, fg=self._fg, selectcolor="#313244", font=("Segoe UI", 8),
-                       command=self._toggle_theme).pack(side=tk.LEFT)
-        tk.Radiobutton(theme_frame, text="Dark", variable=self._theme_var, value="dark",
-                       bg=self._bg, fg=self._fg, selectcolor="#313244", font=("Segoe UI", 8),
-                       command=self._toggle_theme).pack(side=tk.LEFT)
+        tk.Radiobutton(
+            theme_frame,
+            text="Light",
+            variable=self._theme_var,
+            value="light",
+            bg=self._bg,
+            fg=self._fg,
+            selectcolor="#313244",
+            font=("Segoe UI", 8),
+            command=self._toggle_theme,
+        ).pack(side=tk.LEFT)
+        tk.Radiobutton(
+            theme_frame,
+            text="Dark",
+            variable=self._theme_var,
+            value="dark",
+            bg=self._bg,
+            fg=self._fg,
+            selectcolor="#313244",
+            font=("Segoe UI", 8),
+            command=self._toggle_theme,
+        ).pack(side=tk.LEFT)
 
         # Color tokens
-        colors_frame = tk.LabelFrame(parent, text="Colors", bg=self._bg, fg="#89b4fa",
-                                     font=("Segoe UI", 8, "bold"), bd=1, relief=tk.GROOVE)
+        colors_frame = tk.LabelFrame(
+            parent, text="Colors", bg=self._bg, fg="#89b4fa", font=("Segoe UI", 8, "bold"), bd=1, relief=tk.GROOVE
+        )
         colors_frame.pack(fill=tk.X, padx=4, pady=2)
 
         self._color_labels: Dict[str, tk.Label] = {}
@@ -243,45 +299,79 @@ class UIDesigner(tk.Frame):
             swatch = tk.Label(row, bg=token.value, width=3, height=1, relief=tk.SUNKEN)
             swatch.pack(side=tk.LEFT, padx=(0, 4))
             name = token.name.replace("color.", "")
-            tk.Label(row, text=name, bg=self._bg, fg="#6c7086",
-                     font=("Segoe UI", 7), anchor=tk.W).pack(side=tk.LEFT)
+            tk.Label(row, text=name, bg=self._bg, fg="#6c7086", font=("Segoe UI", 7), anchor=tk.W).pack(side=tk.LEFT)
             self._color_labels[token.name] = swatch
 
         # Typography
-        type_frame = tk.LabelFrame(parent, text="Typography", bg=self._bg, fg="#a6e3a1",
-                                   font=("Segoe UI", 8, "bold"), bd=1, relief=tk.GROOVE)
+        type_frame = tk.LabelFrame(
+            parent, text="Typography", bg=self._bg, fg="#a6e3a1", font=("Segoe UI", 8, "bold"), bd=1, relief=tk.GROOVE
+        )
         type_frame.pack(fill=tk.X, padx=4, pady=2)
         for token in self._design_system.current_theme.by_category("typography")[:4]:
             name = token.name.replace("type.", "")
-            tk.Label(type_frame, text=f"{name}: {token.font_size}px / {token.font_weight}",
-                     bg=self._bg, fg="#6c7086", font=("Segoe UI", 7), anchor=tk.W).pack(
-                fill=tk.X, padx=4, pady=1)
+            tk.Label(
+                type_frame,
+                text=f"{name}: {token.font_size}px / {token.font_weight}",
+                bg=self._bg,
+                fg="#6c7086",
+                font=("Segoe UI", 7),
+                anchor=tk.W,
+            ).pack(fill=tk.X, padx=4, pady=1)
 
         # Export buttons
-        tk.Button(parent, text="Export CSS", bg="#89b4fa", fg="#1e1e2e",
-                  font=("Segoe UI", 8), relief=tk.FLAT, padx=6,
-                  command=self._export_design_system_css).pack(fill=tk.X, padx=8, pady=2)
-        tk.Button(parent, text="Export Tailwind", bg="#a6e3a1", fg="#1e1e2e",
-                  font=("Segoe UI", 8), relief=tk.FLAT, padx=6,
-                  command=self._export_tailwind).pack(fill=tk.X, padx=8, pady=2)
+        tk.Button(
+            parent,
+            text="Export CSS",
+            bg="#89b4fa",
+            fg="#1e1e2e",
+            font=("Segoe UI", 8),
+            relief=tk.FLAT,
+            padx=6,
+            command=self._export_design_system_css,
+        ).pack(fill=tk.X, padx=8, pady=2)
+        tk.Button(
+            parent,
+            text="Export Tailwind",
+            bg="#a6e3a1",
+            fg="#1e1e2e",
+            font=("Segoe UI", 8),
+            relief=tk.FLAT,
+            padx=6,
+            command=self._export_tailwind,
+        ).pack(fill=tk.X, padx=8, pady=2)
 
     # ------------------------------------------------------------------
     # Animation Presets Panel
     # ------------------------------------------------------------------
 
     def _build_presets_panel(self, parent: tk.Frame) -> None:
-        tk.Label(parent, text="Animation Presets", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 10, "bold")).pack(fill=tk.X, padx=8, pady=(8, 4))
+        tk.Label(parent, text="Animation Presets", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold")).pack(
+            fill=tk.X, padx=8, pady=(8, 4)
+        )
 
         for category in preset_categories():
-            cat_frame = tk.LabelFrame(parent, text=category.title(), bg=self._bg,
-                                      fg="#f9e2af", font=("Segoe UI", 8, "bold"),
-                                      bd=1, relief=tk.GROOVE)
+            cat_frame = tk.LabelFrame(
+                parent,
+                text=category.title(),
+                bg=self._bg,
+                fg="#f9e2af",
+                font=("Segoe UI", 8, "bold"),
+                bd=1,
+                relief=tk.GROOVE,
+            )
             cat_frame.pack(fill=tk.X, padx=4, pady=2)
             for preset in list_presets(category)[:4]:
-                btn = tk.Button(cat_frame, text=preset.name, bg="#313244", fg="#89b4fa",
-                                relief=tk.FLAT, font=("Segoe UI", 8), anchor=tk.W, padx=6,
-                                command=lambda p=preset: self._apply_preset(p))
+                btn = tk.Button(
+                    cat_frame,
+                    text=preset.name,
+                    bg="#313244",
+                    fg="#89b4fa",
+                    relief=tk.FLAT,
+                    font=("Segoe UI", 8),
+                    anchor=tk.W,
+                    padx=6,
+                    command=lambda p=preset: self._apply_preset(p),
+                )
                 btn.pack(fill=tk.X, padx=2, pady=1)
 
     # ------------------------------------------------------------------
@@ -289,80 +379,113 @@ class UIDesigner(tk.Frame):
     # ------------------------------------------------------------------
 
     def _build_export_panel(self, parent: tk.Frame) -> None:
-        tk.Label(parent, text="Code Generation", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 10, "bold")).pack(fill=tk.X, padx=8, pady=(8, 4))
+        tk.Label(parent, text="Code Generation", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold")).pack(
+            fill=tk.X, padx=8, pady=(8, 4)
+        )
 
         self._framework_var = tk.StringVar(value=self.FRAMEWORKS[0])
-        ttk.Combobox(parent, textvariable=self._framework_var,
-                     values=self.FRAMEWORKS, width=22, state="readonly").pack(padx=8, pady=4)
+        ttk.Combobox(parent, textvariable=self._framework_var, values=self.FRAMEWORKS, width=22, state="readonly").pack(
+            padx=8, pady=4
+        )
 
-        tk.Button(parent, text="Generate Code", bg="#89b4fa", fg="#1e1e2e",
-                  relief=tk.FLAT, font=("Segoe UI", 10, "bold"), padx=12, pady=4,
-                  command=self._generate_code).pack(padx=8, pady=4)
+        tk.Button(
+            parent,
+            text="Generate Code",
+            bg="#89b4fa",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 10, "bold"),
+            padx=12,
+            pady=4,
+            command=self._generate_code,
+        ).pack(padx=8, pady=4)
 
         # Preview
-        preview_frame = tk.LabelFrame(parent, text="Live Preview", bg=self._bg,
-                                      fg="#a6e3a1", font=("Segoe UI", 9, "bold"),
-                                      bd=1, relief=tk.GROOVE)
+        preview_frame = tk.LabelFrame(
+            parent, text="Live Preview", bg=self._bg, fg="#a6e3a1", font=("Segoe UI", 9, "bold"), bd=1, relief=tk.GROOVE
+        )
         preview_frame.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
         self._preview_canvas = tk.Canvas(preview_frame, bg="#181825", highlightthickness=0)
         self._preview_canvas.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
 
         # Prototype export
-        tk.Button(parent, text="Export Prototype (HTML)", bg="#cba6f7", fg="#1e1e2e",
-                  relief=tk.FLAT, font=("Segoe UI", 9), padx=8,
-                  command=self._export_prototype_html).pack(padx=8, pady=2)
+        tk.Button(
+            parent,
+            text="Export Prototype (HTML)",
+            bg="#cba6f7",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 9),
+            padx=8,
+            command=self._export_prototype_html,
+        ).pack(padx=8, pady=2)
 
     # ------------------------------------------------------------------
     # Responsive Panel
     # ------------------------------------------------------------------
 
     def _build_responsive_panel(self, parent: tk.Frame) -> None:
-        tk.Label(parent, text="Responsive Preview", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 10, "bold")).pack(fill=tk.X, padx=8, pady=(8, 4))
+        tk.Label(parent, text="Responsive Preview", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold")).pack(
+            fill=tk.X, padx=8, pady=(8, 4)
+        )
 
         bp_frame = tk.Frame(parent, bg=self._bg)
         bp_frame.pack(fill=tk.X, padx=4, pady=4)
 
         self._bp_var = tk.StringVar(value="mobile")
         for bp_name, bp in BREAKPOINTS.items():
-            tk.Radiobutton(bp_frame, text=f"{bp.label}\n{bp.min_width}px",
-                          variable=self._bp_var, value=bp_name,
-                          bg=self._bg, fg=self._fg, selectcolor="#313244",
-                          font=("Segoe UI", 7), indicatoron=False, padx=4, pady=2,
-                          command=self._on_breakpoint_change).pack(
-                fill=tk.X, padx=2, pady=1)
+            tk.Radiobutton(
+                bp_frame,
+                text=f"{bp.label}\n{bp.min_width}px",
+                variable=self._bp_var,
+                value=bp_name,
+                bg=self._bg,
+                fg=self._fg,
+                selectcolor="#313244",
+                font=("Segoe UI", 7),
+                indicatoron=False,
+                padx=4,
+                pady=2,
+                command=self._on_breakpoint_change,
+            ).pack(fill=tk.X, padx=2, pady=1)
 
         # Auto-layout controls
-        layout_frame = tk.LabelFrame(parent, text="Auto Layout", bg=self._bg,
-                                     fg="#fab387", font=("Segoe UI", 8, "bold"),
-                                     bd=1, relief=tk.GROOVE)
+        layout_frame = tk.LabelFrame(
+            parent, text="Auto Layout", bg=self._bg, fg="#fab387", font=("Segoe UI", 8, "bold"), bd=1, relief=tk.GROOVE
+        )
         layout_frame.pack(fill=tk.X, padx=4, pady=4)
 
         dir_frame = tk.Frame(layout_frame, bg=self._bg)
         dir_frame.pack(fill=tk.X, padx=4, pady=2)
         self._layout_dir_var = tk.StringVar(value="column")
         for d in ["row", "column"]:
-            tk.Radiobutton(dir_frame, text=d.title(), variable=self._layout_dir_var,
-                          value=d, bg=self._bg, fg=self._fg, selectcolor="#313244",
-                          font=("Segoe UI", 8), command=self._on_layout_change).pack(
-                side=tk.LEFT, padx=4)
+            tk.Radiobutton(
+                dir_frame,
+                text=d.title(),
+                variable=self._layout_dir_var,
+                value=d,
+                bg=self._bg,
+                fg=self._fg,
+                selectcolor="#313244",
+                font=("Segoe UI", 8),
+                command=self._on_layout_change,
+            ).pack(side=tk.LEFT, padx=4)
 
         gap_frame = tk.Frame(layout_frame, bg=self._bg)
         gap_frame.pack(fill=tk.X, padx=4, pady=2)
-        tk.Label(gap_frame, text="Gap:", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 8)).pack(side=tk.LEFT)
+        tk.Label(gap_frame, text="Gap:", bg=self._bg, fg=self._fg, font=("Segoe UI", 8)).pack(side=tk.LEFT)
         self._gap_var = tk.StringVar(value="12")
-        tk.Entry(gap_frame, textvariable=self._gap_var, width=5, bg="#313244",
-                 fg=self._fg, font=("Segoe UI", 8)).pack(side=tk.LEFT, padx=4)
+        tk.Entry(gap_frame, textvariable=self._gap_var, width=5, bg="#313244", fg=self._fg, font=("Segoe UI", 8)).pack(
+            side=tk.LEFT, padx=4
+        )
 
         pad_frame = tk.Frame(layout_frame, bg=self._bg)
         pad_frame.pack(fill=tk.X, padx=4, pady=2)
-        tk.Label(pad_frame, text="Padding:", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 8)).pack(side=tk.LEFT)
+        tk.Label(pad_frame, text="Padding:", bg=self._bg, fg=self._fg, font=("Segoe UI", 8)).pack(side=tk.LEFT)
         self._pad_var = tk.StringVar(value="16")
-        tk.Entry(pad_frame, textvariable=self._pad_var, width=5, bg="#313244",
-                 fg=self._fg, font=("Segoe UI", 8)).pack(side=tk.LEFT, padx=4)
+        tk.Entry(pad_frame, textvariable=self._pad_var, width=5, bg="#313244", fg=self._fg, font=("Segoe UI", 8)).pack(
+            side=tk.LEFT, padx=4
+        )
 
     # ------------------------------------------------------------------
     # Prototype Tab
@@ -372,29 +495,57 @@ class UIDesigner(tk.Frame):
         toolbar = tk.Frame(parent, bg="#181825")
         toolbar.pack(fill=tk.X)
 
-        tk.Button(toolbar, text="Play", bg="#a6e3a1", fg="#1e1e2e",
-                  font=("Segoe UI", 9, "bold"), relief=tk.FLAT, padx=10,
-                  command=self._play_prototype).pack(side=tk.LEFT, padx=4, pady=4)
-        tk.Button(toolbar, text="Add Screen", bg="#89b4fa", fg="#1e1e2e",
-                  font=("Segoe UI", 9), relief=tk.FLAT, padx=8,
-                  command=self._add_prototype_screen).pack(side=tk.LEFT, padx=2, pady=4)
-        tk.Button(toolbar, text="Add Transition", bg="#cba6f7", fg="#1e1e2e",
-                  font=("Segoe UI", 9), relief=tk.FLAT, padx=8,
-                  command=self._add_prototype_transition).pack(side=tk.LEFT, padx=2, pady=4)
+        tk.Button(
+            toolbar,
+            text="Play",
+            bg="#a6e3a1",
+            fg="#1e1e2e",
+            font=("Segoe UI", 9, "bold"),
+            relief=tk.FLAT,
+            padx=10,
+            command=self._play_prototype,
+        ).pack(side=tk.LEFT, padx=4, pady=4)
+        tk.Button(
+            toolbar,
+            text="Add Screen",
+            bg="#89b4fa",
+            fg="#1e1e2e",
+            font=("Segoe UI", 9),
+            relief=tk.FLAT,
+            padx=8,
+            command=self._add_prototype_screen,
+        ).pack(side=tk.LEFT, padx=2, pady=4)
+        tk.Button(
+            toolbar,
+            text="Add Transition",
+            bg="#cba6f7",
+            fg="#1e1e2e",
+            font=("Segoe UI", 9),
+            relief=tk.FLAT,
+            padx=8,
+            command=self._add_prototype_transition,
+        ).pack(side=tk.LEFT, padx=2, pady=4)
 
         # Device selector
         self._device_var = tk.StringVar(value="iphone_14")
-        ttk.Combobox(toolbar, textvariable=self._device_var,
-                     values=list(PrototypePlayer.DEVICE_FRAMES.keys()),
-                     width=14, state="readonly").pack(side=tk.RIGHT, padx=4, pady=4)
-        tk.Label(toolbar, text="Device:", bg="#181825", fg=self._fg,
-                 font=("Segoe UI", 9)).pack(side=tk.RIGHT)
+        ttk.Combobox(
+            toolbar,
+            textvariable=self._device_var,
+            values=list(PrototypePlayer.DEVICE_FRAMES.keys()),
+            width=14,
+            state="readonly",
+        ).pack(side=tk.RIGHT, padx=4, pady=4)
+        tk.Label(toolbar, text="Device:", bg="#181825", fg=self._fg, font=("Segoe UI", 9)).pack(side=tk.RIGHT)
 
         # Transition type
         self._transition_var = tk.StringVar(value="push")
-        ttk.Combobox(toolbar, textvariable=self._transition_var,
-                     values=[t.value for t in TransitionType],
-                     width=12, state="readonly").pack(side=tk.RIGHT, padx=4, pady=4)
+        ttk.Combobox(
+            toolbar,
+            textvariable=self._transition_var,
+            values=[t.value for t in TransitionType],
+            width=12,
+            state="readonly",
+        ).pack(side=tk.RIGHT, padx=4, pady=4)
 
         # Prototype canvas
         self._proto_canvas = tk.Canvas(parent, bg="#0f0f1a", highlightthickness=0)
@@ -402,69 +553,139 @@ class UIDesigner(tk.Frame):
         self._proto_canvas.bind("<Configure>", lambda e: self._draw_prototype())
 
         # Interaction list
-        interact_frame = tk.LabelFrame(parent, text="Interactions", bg=self._bg,
-                                       fg="#f9e2af", font=("Segoe UI", 9, "bold"),
-                                       bd=1, relief=tk.GROOVE, height=100)
+        interact_frame = tk.LabelFrame(
+            parent,
+            text="Interactions",
+            bg=self._bg,
+            fg="#f9e2af",
+            font=("Segoe UI", 9, "bold"),
+            bd=1,
+            relief=tk.GROOVE,
+            height=100,
+        )
         interact_frame.pack(fill=tk.X, padx=4, pady=4)
         interact_frame.pack_propagate(False)
 
-        self._interaction_list = tk.Listbox(interact_frame, bg="#181825", fg=self._fg,
-                                            font=("Consolas", 8), selectbackground="#313244",
-                                            relief=tk.FLAT)
+        self._interaction_list = tk.Listbox(
+            interact_frame, bg="#181825", fg=self._fg, font=("Consolas", 8), selectbackground="#313244", relief=tk.FLAT
+        )
         self._interaction_list.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
 
         btn_row = tk.Frame(interact_frame, bg=self._bg)
         btn_row.pack(fill=tk.X)
-        tk.Button(btn_row, text="+ Click→Navigate", bg="#313244", fg="#89b4fa",
-                  font=("Segoe UI", 7), relief=tk.FLAT,
-                  command=self._add_click_navigate).pack(side=tk.LEFT, padx=2)
-        tk.Button(btn_row, text="+ Hover→Animate", bg="#313244", fg="#a6e3a1",
-                  font=("Segoe UI", 7), relief=tk.FLAT,
-                  command=self._add_hover_animate).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            btn_row,
+            text="+ Click→Navigate",
+            bg="#313244",
+            fg="#89b4fa",
+            font=("Segoe UI", 7),
+            relief=tk.FLAT,
+            command=self._add_click_navigate,
+        ).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            btn_row,
+            text="+ Hover→Animate",
+            bg="#313244",
+            fg="#a6e3a1",
+            font=("Segoe UI", 7),
+            relief=tk.FLAT,
+            command=self._add_hover_animate,
+        ).pack(side=tk.LEFT, padx=2)
 
     # ------------------------------------------------------------------
     # AI Generate Tab
     # ------------------------------------------------------------------
 
     def _build_ai_tab(self, parent: tk.Frame) -> None:
-        tk.Label(parent, text="AI UI Generation", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 12, "bold")).pack(padx=8, pady=(12, 4))
+        tk.Label(parent, text="AI UI Generation", bg=self._bg, fg=self._fg, font=("Segoe UI", 12, "bold")).pack(
+            padx=8, pady=(12, 4)
+        )
 
         prompt_frame = tk.Frame(parent, bg=self._bg)
         prompt_frame.pack(fill=tk.X, padx=8, pady=4)
 
-        self._ai_prompt = tk.Text(prompt_frame, bg="#313244", fg=self._fg,
-                                  insertbackground=self._fg, font=("Segoe UI", 10),
-                                  wrap=tk.WORD, height=4, relief=tk.FLAT)
+        self._ai_prompt = tk.Text(
+            prompt_frame,
+            bg="#313244",
+            fg=self._fg,
+            insertbackground=self._fg,
+            font=("Segoe UI", 10),
+            wrap=tk.WORD,
+            height=4,
+            relief=tk.FLAT,
+        )
         self._ai_prompt.pack(fill=tk.X, pady=4)
         self._ai_prompt.insert("1.0", "Design a responsive dashboard with charts and sidebar navigation")
 
         btn_row = tk.Frame(parent, bg=self._bg)
         btn_row.pack(fill=tk.X, padx=8, pady=4)
 
-        tk.Button(btn_row, text="Generate UI", bg="#89b4fa", fg="#1e1e2e",
-                  font=("Segoe UI", 10, "bold"), relief=tk.FLAT, padx=16, pady=4,
-                  command=self._ai_generate_ui).pack(side=tk.LEFT, padx=2)
-        tk.Button(btn_row, text="Generate Animated UI", bg="#cba6f7", fg="#1e1e2e",
-                  font=("Segoe UI", 10, "bold"), relief=tk.FLAT, padx=16, pady=4,
-                  command=self._ai_generate_animated_ui).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            btn_row,
+            text="Generate UI",
+            bg="#89b4fa",
+            fg="#1e1e2e",
+            font=("Segoe UI", 10, "bold"),
+            relief=tk.FLAT,
+            padx=16,
+            pady=4,
+            command=self._ai_generate_ui,
+        ).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            btn_row,
+            text="Generate Animated UI",
+            bg="#cba6f7",
+            fg="#1e1e2e",
+            font=("Segoe UI", 10, "bold"),
+            relief=tk.FLAT,
+            padx=16,
+            pady=4,
+            command=self._ai_generate_animated_ui,
+        ).pack(side=tk.LEFT, padx=2)
 
-        tk.Button(btn_row, text="Design System", bg="#a6e3a1", fg="#1e1e2e",
-                  font=("Segoe UI", 9), relief=tk.FLAT, padx=8,
-                  command=self._ai_generate_design_system).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            btn_row,
+            text="Design System",
+            bg="#a6e3a1",
+            fg="#1e1e2e",
+            font=("Segoe UI", 9),
+            relief=tk.FLAT,
+            padx=8,
+            command=self._ai_generate_design_system,
+        ).pack(side=tk.LEFT, padx=2)
 
-        tk.Button(btn_row, text="Screenshot → UI", bg="#f9e2af", fg="#1e1e2e",
-                  font=("Segoe UI", 9), relief=tk.FLAT, padx=8,
-                  command=self._ai_screenshot_to_ui).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            btn_row,
+            text="Screenshot → UI",
+            bg="#f9e2af",
+            fg="#1e1e2e",
+            font=("Segoe UI", 9),
+            relief=tk.FLAT,
+            padx=8,
+            command=self._ai_screenshot_to_ui,
+        ).pack(side=tk.LEFT, padx=2)
 
-        tk.Button(btn_row, text="A11y Audit", bg="#f38ba8", fg="#1e1e2e",
-                  font=("Segoe UI", 9), relief=tk.FLAT, padx=8,
-                  command=self._ai_accessibility_audit).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            btn_row,
+            text="A11y Audit",
+            bg="#f38ba8",
+            fg="#1e1e2e",
+            font=("Segoe UI", 9),
+            relief=tk.FLAT,
+            padx=8,
+            command=self._ai_accessibility_audit,
+        ).pack(side=tk.LEFT, padx=2)
 
         # Result area
-        self._ai_result = tk.Text(parent, bg="#181825", fg=self._fg,
-                                  insertbackground=self._fg, font=("Consolas", 9),
-                                  wrap=tk.WORD, relief=tk.FLAT)
+        self._ai_result = tk.Text(
+            parent,
+            bg="#181825",
+            fg=self._fg,
+            insertbackground=self._fg,
+            font=("Consolas", 9),
+            wrap=tk.WORD,
+            relief=tk.FLAT,
+        )
         self._ai_result.pack(fill=tk.BOTH, expand=True, padx=8, pady=4)
 
     # ------------------------------------------------------------------
@@ -529,10 +750,18 @@ class UIDesigner(tk.Frame):
 
     def _place_component(self, comp_id: str, x: float, y: float) -> None:
         sizes = {
-            "button": (120, 40), "text": (100, 24), "input": (200, 36),
-            "image": (100, 100), "container": (250, 200), "card": (200, 150),
-            "appbar": (300, 50), "bottomnav": (300, 50),
-            "toggle": (50, 28), "slider": (200, 24), "avatar": (48, 48), "badge": (60, 24),
+            "button": (120, 40),
+            "text": (100, 24),
+            "input": (200, 36),
+            "image": (100, 100),
+            "container": (250, 200),
+            "card": (200, 150),
+            "appbar": (300, 50),
+            "bottomnav": (300, 50),
+            "toggle": (50, 28),
+            "slider": (200, 24),
+            "avatar": (48, 48),
+            "badge": (60, 24),
         }
         w, h = sizes.get(comp_id, (100, 40))
         color = "#89b4fa"
@@ -542,11 +771,18 @@ class UIDesigner(tk.Frame):
                 break
 
         comp_data = {
-            "type": comp_id, "id": f"comp_{len(self._placed)}",
-            "x": x, "y": y, "width": w, "height": h,
-            "color": color, "text": comp_id.title(),
-            "font_size": 12, "padding": 8,
-            "variant": "default", "state": "default",
+            "type": comp_id,
+            "id": f"comp_{len(self._placed)}",
+            "x": x,
+            "y": y,
+            "width": w,
+            "height": h,
+            "color": color,
+            "text": comp_id.title(),
+            "font_size": 12,
+            "padding": 8,
+            "variant": "default",
+            "state": "default",
             "animation": None,
         }
         self._placed.append(comp_data)
@@ -558,27 +794,36 @@ class UIDesigner(tk.Frame):
         for i, comp in enumerate(self._placed):
             outline = "#f9e2af" if i == self._selected_idx else comp["color"]
             width = 2 if i == self._selected_idx else 1
-            self._canvas.draw_rect(comp["x"], comp["y"],
-                                   comp["x"] + comp["width"],
-                                   comp["y"] + comp["height"],
-                                   color=outline, fill="#313244", width=width, tag="comp")
+            self._canvas.draw_rect(
+                comp["x"],
+                comp["y"],
+                comp["x"] + comp["width"],
+                comp["y"] + comp["height"],
+                color=outline,
+                fill="#313244",
+                width=width,
+                tag="comp",
+            )
             label = comp["text"]
             if comp.get("animation"):
                 label += f" [{comp['animation']}]"
-            self._canvas.draw_text(comp["x"] + comp["width"] / 2,
-                                   comp["y"] + comp["height"] / 2,
-                                   label, color=comp["color"], tag="comp")
+            self._canvas.draw_text(
+                comp["x"] + comp["width"] / 2, comp["y"] + comp["height"] / 2, label, color=comp["color"], tag="comp"
+            )
 
     def _show_comp_properties(self, comp: Dict[str, Any]) -> None:
-        self._properties.show_properties(comp["type"].title(), {
-            "position": (comp["x"], comp["y"], 0),
-            "width": comp["width"],
-            "height": comp["height"],
-            "text": comp["text"],
-            "color": comp["color"],
-            "font_size": comp["font_size"],
-            "padding": comp["padding"],
-        })
+        self._properties.show_properties(
+            comp["type"].title(),
+            {
+                "position": (comp["x"], comp["y"], 0),
+                "width": comp["width"],
+                "height": comp["height"],
+                "text": comp["text"],
+                "color": comp["color"],
+                "font_size": comp["font_size"],
+                "padding": comp["padding"],
+            },
+        )
 
     def _on_prop_change(self, section: str, key: str, value: Any) -> None:
         if self._selected_idx is not None and self._selected_idx < len(self._placed):
@@ -650,8 +895,7 @@ class UIDesigner(tk.Frame):
     # ------------------------------------------------------------------
 
     def _export_design_system_css(self) -> None:
-        path = filedialog.asksaveasfilename(defaultextension=".css",
-                                             filetypes=[("CSS", "*.css")])
+        path = filedialog.asksaveasfilename(defaultextension=".css", filetypes=[("CSS", "*.css")])
         if path:
             css = self._design_system.export_css()
             with open(path, "w") as f:
@@ -659,8 +903,7 @@ class UIDesigner(tk.Frame):
             messagebox.showinfo("Exported", f"Design system CSS exported to {path}")
 
     def _export_tailwind(self) -> None:
-        path = filedialog.asksaveasfilename(defaultextension=".json",
-                                             filetypes=[("JSON", "*.json")])
+        path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON", "*.json")])
         if path:
             config = self._design_system.export_tailwind_config()
             with open(path, "w") as f:
@@ -675,11 +918,14 @@ class UIDesigner(tk.Frame):
         if not self._prototype_player.screens:
             # Auto-populate from screens
             for screen in self._screens:
-                self._prototype_player.add_screen(PrototypeScreen(
-                    id=screen["name"].lower(), name=screen["name"],
-                    components=[c for c in self._placed],
-                    device_frame=self._device_var.get(),
-                ))
+                self._prototype_player.add_screen(
+                    PrototypeScreen(
+                        id=screen["name"].lower(),
+                        name=screen["name"],
+                        components=[c for c in self._placed],
+                        device_frame=self._device_var.get(),
+                    )
+                )
         self._prototype_player.start()
         self._draw_prototype()
 
@@ -706,8 +952,7 @@ class UIDesigner(tk.Frame):
                 parameters={"transition": self._transition_var.get()},
             )
             self._interaction_manager.add_interaction(interaction)
-            self._interaction_list.insert(tk.END,
-                f"{comp['text']} → Click → Navigate to {self._screens[1]['name']}")
+            self._interaction_list.insert(tk.END, f"{comp['text']} → Click → Navigate to {self._screens[1]['name']}")
 
     def _add_hover_animate(self) -> None:
         if self._selected_idx is not None:
@@ -720,8 +965,7 @@ class UIDesigner(tk.Frame):
                 parameters={"preset": "pulse"},
             )
             self._interaction_manager.add_interaction(interaction)
-            self._interaction_list.insert(tk.END,
-                f"{comp['text']} → Hover → Pulse animation")
+            self._interaction_list.insert(tk.END, f"{comp['text']} → Hover → Pulse animation")
 
     def _draw_prototype(self) -> None:
         self._proto_canvas.delete("all")
@@ -736,13 +980,13 @@ class UIDesigner(tk.Frame):
         oy = (h - dh * scale) / 2
 
         # Device frame
-        self._proto_canvas.create_rectangle(ox - 10, oy - 10,
-                                             ox + dw * scale + 10, oy + dh * scale + 10,
-                                             fill="#1e1e2e", outline="#45475a", width=2)
-        self._proto_canvas.create_rectangle(ox, oy, ox + dw * scale, oy + dh * scale,
-                                             fill="#181825", outline="#585b70")
-        self._proto_canvas.create_text(w / 2, oy - 20, text=device_info["label"],
-                                        fill=self._fg, font=("Segoe UI", 10, "bold"))
+        self._proto_canvas.create_rectangle(
+            ox - 10, oy - 10, ox + dw * scale + 10, oy + dh * scale + 10, fill="#1e1e2e", outline="#45475a", width=2
+        )
+        self._proto_canvas.create_rectangle(ox, oy, ox + dw * scale, oy + dh * scale, fill="#181825", outline="#585b70")
+        self._proto_canvas.create_text(
+            w / 2, oy - 20, text=device_info["label"], fill=self._fg, font=("Segoe UI", 10, "bold")
+        )
 
         # Render components
         for comp in self._placed:
@@ -750,21 +994,22 @@ class UIDesigner(tk.Frame):
             cy = oy + (comp["y"] - 20) * scale
             cw = comp["width"] * scale
             ch = comp["height"] * scale
-            self._proto_canvas.create_rectangle(cx, cy, cx + cw, cy + ch,
-                                                 fill="#313244", outline=comp["color"])
+            self._proto_canvas.create_rectangle(cx, cy, cx + cw, cy + ch, fill="#313244", outline=comp["color"])
             if cw > 20 and ch > 10:
-                self._proto_canvas.create_text(cx + cw / 2, cy + ch / 2,
-                                                text=comp["text"][:10],
-                                                fill=comp["color"],
-                                                font=("Segoe UI", max(7, int(9 * scale))))
+                self._proto_canvas.create_text(
+                    cx + cw / 2,
+                    cy + ch / 2,
+                    text=comp["text"][:10],
+                    fill=comp["color"],
+                    font=("Segoe UI", max(7, int(9 * scale))),
+                )
 
     def _export_prototype_html(self) -> None:
         # Ensure player has screens
         if not self._prototype_player.screens:
             self._play_prototype()
 
-        path = filedialog.asksaveasfilename(defaultextension=".html",
-                                             filetypes=[("HTML", "*.html")])
+        path = filedialog.asksaveasfilename(defaultextension=".html", filetypes=[("HTML", "*.html")])
         if path:
             html = self._prototype_player.export_html()
             with open(path, "w") as f:
@@ -781,6 +1026,7 @@ class UIDesigner(tk.Frame):
             return
         try:
             from eostudio.core.ai.generator import AIDesignGenerator
+
             gen = AIDesignGenerator()
             result = gen.text_to_ui(prompt)
             self._ai_result.delete("1.0", tk.END)
@@ -796,6 +1042,7 @@ class UIDesigner(tk.Frame):
             return
         try:
             from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
+
             gen = AIDesignGeneratorPro()
             result = gen.text_to_animated_ui(prompt)
             self._ai_result.delete("1.0", tk.END)
@@ -816,6 +1063,7 @@ class UIDesigner(tk.Frame):
         prompt = self._ai_prompt.get("1.0", tk.END).strip()
         try:
             from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
+
             gen = AIDesignGeneratorPro()
             result = gen.text_to_design_system(prompt or "Modern SaaS product")
             self._ai_result.delete("1.0", tk.END)
@@ -830,6 +1078,7 @@ class UIDesigner(tk.Frame):
             return
         try:
             from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
+
             gen = AIDesignGeneratorPro()
             result = gen.screenshot_to_ui(path)
             self._ai_result.delete("1.0", tk.END)
@@ -840,11 +1089,18 @@ class UIDesigner(tk.Frame):
             self._ai_result.insert("1.0", f"Error: {e}")
 
     def _ai_accessibility_audit(self) -> None:
-        components = [{"id": c.get("id", f"comp_{i}"), "type": c["type"].title(),
-                       "label": c["text"], "size": {"width": c["width"], "height": c["height"]}}
-                      for i, c in enumerate(self._placed)]
+        components = [
+            {
+                "id": c.get("id", f"comp_{i}"),
+                "type": c["type"].title(),
+                "label": c["text"],
+                "size": {"width": c["width"], "height": c["height"]},
+            }
+            for i, c in enumerate(self._placed)
+        ]
         try:
             from eostudio.core.ai.generator_pro import AIDesignGeneratorPro
+
             gen = AIDesignGeneratorPro()
             result = gen.accessibility_audit(components)
             self._ai_result.delete("1.0", tk.END)
@@ -861,9 +1117,7 @@ class UIDesigner(tk.Frame):
             comp_type = comp.get("type", "Container").lower()
             if comp_type not in [c[0] for c in self.COMPONENTS]:
                 comp_type = "container"
-            self._place_component(comp_type,
-                                  pos.get("x", 200) + 150,
-                                  pos.get("y", 100) + 20)
+            self._place_component(comp_type, pos.get("x", 200) + 150, pos.get("y", 100) + 20)
             # Update text
             if self._placed:
                 self._placed[-1]["text"] = comp.get("label", comp.get("type", ""))
@@ -878,15 +1132,22 @@ class UIDesigner(tk.Frame):
             if si < len(self._screens) and di < len(self._screens):
                 s, d = self._screens[si], self._screens[di]
                 self._flow_canvas.create_line(
-                    s["x"] + 60, s["y"] + 40, d["x"] + 60, d["y"] + 40,
-                    fill="#585b70", width=2, arrow=tk.LAST, arrowshape=(10, 12, 5))
+                    s["x"] + 60,
+                    s["y"] + 40,
+                    d["x"] + 60,
+                    d["y"] + 40,
+                    fill="#585b70",
+                    width=2,
+                    arrow=tk.LAST,
+                    arrowshape=(10, 12, 5),
+                )
 
         for i, screen in enumerate(self._screens):
             x, y = screen["x"], screen["y"]
-            self._flow_canvas.create_rectangle(x, y, x + 120, y + 80,
-                                               fill="#313244", outline="#89b4fa", width=2)
-            self._flow_canvas.create_text(x + 60, y + 40, text=screen["name"],
-                                          fill=self._fg, font=("Segoe UI", 10, "bold"))
+            self._flow_canvas.create_rectangle(x, y, x + 120, y + 80, fill="#313244", outline="#89b4fa", width=2)
+            self._flow_canvas.create_text(
+                x + 60, y + 40, text=screen["name"], fill=self._fg, font=("Segoe UI", 10, "bold")
+            )
 
     # ------------------------------------------------------------------
     # Preview and code export
@@ -899,21 +1160,23 @@ class UIDesigner(tk.Frame):
         scale = min(pw / 300, ph / 660) * 0.9
 
         self._preview_canvas.create_rectangle(
-            10, 10, 10 + 300 * scale, 10 + 660 * scale,
-            fill="#181825", outline="#45475a")
+            10, 10, 10 + 300 * scale, 10 + 660 * scale, fill="#181825", outline="#45475a"
+        )
 
         for comp in self._placed:
             x = 10 + (comp["x"] - 150) * scale
             y = 10 + (comp["y"] - 20) * scale
             w = comp["width"] * scale
             h = comp["height"] * scale
-            self._preview_canvas.create_rectangle(x, y, x + w, y + h,
-                                                  fill="#313244", outline=comp["color"])
+            self._preview_canvas.create_rectangle(x, y, x + w, y + h, fill="#313244", outline=comp["color"])
             if w > 20 and h > 10:
-                self._preview_canvas.create_text(x + w / 2, y + h / 2,
-                                                 text=comp["text"][:8],
-                                                 fill=comp["color"],
-                                                 font=("Segoe UI", max(6, int(8 * scale))))
+                self._preview_canvas.create_text(
+                    x + w / 2,
+                    y + h / 2,
+                    text=comp["text"][:8],
+                    fill=comp["color"],
+                    font=("Segoe UI", max(6, int(8 * scale))),
+                )
 
     def _generate_code(self) -> None:
         framework = self._framework_var.get()
@@ -930,8 +1193,15 @@ class UIDesigner(tk.Frame):
         for filename, code in files.items():
             frame = tk.Frame(nb, bg="#181825")
             nb.add(frame, text=filename.split("/")[-1])
-            text = tk.Text(frame, bg="#181825", fg=self._fg, insertbackground=self._fg,
-                           font=("Consolas", 10), wrap=tk.NONE, relief=tk.FLAT)
+            text = tk.Text(
+                frame,
+                bg="#181825",
+                fg=self._fg,
+                insertbackground=self._fg,
+                font=("Consolas", 10),
+                wrap=tk.NONE,
+                relief=tk.FLAT,
+            )
             scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=text.yview)
             text.configure(yscrollcommand=scrollbar.set)
             scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
@@ -940,54 +1210,83 @@ class UIDesigner(tk.Frame):
             text.config(state=tk.DISABLED)
 
         # Save all button
-        tk.Button(win, text="Save All Files", bg="#a6e3a1", fg="#1e1e2e",
-                  font=("Segoe UI", 10, "bold"), relief=tk.FLAT, padx=16,
-                  command=lambda: self._save_generated_files(files)).pack(pady=4)
+        tk.Button(
+            win,
+            text="Save All Files",
+            bg="#a6e3a1",
+            fg="#1e1e2e",
+            font=("Segoe UI", 10, "bold"),
+            relief=tk.FLAT,
+            padx=16,
+            command=lambda: self._save_generated_files(files),
+        ).pack(pady=4)
 
     def _build_code_files(self, framework: str) -> Dict[str, str]:
-        components = [{"type": c["type"].title(), "label": c["text"],
-                       "id": c.get("id", f"comp_{i}"),
-                       "position": {"x": c["x"], "y": c["y"]},
-                       "size": {"width": c["width"], "height": c["height"]}}
-                      for i, c in enumerate(self._placed)]
+        components = [
+            {
+                "type": c["type"].title(),
+                "label": c["text"],
+                "id": c.get("id", f"comp_{i}"),
+                "position": {"x": c["x"], "y": c["y"]},
+                "size": {"width": c["width"], "height": c["height"]},
+            }
+            for i, c in enumerate(self._placed)
+        ]
         screens = [{"name": s["name"], "components": components} for s in self._screens]
 
         if framework == "React + Framer Motion":
             from eostudio.codegen.react_motion import ReactMotionGenerator
+
             gen = ReactMotionGenerator(library="framer-motion")
             return gen.generate(self._animation_timeline, components, screens)
         elif framework == "React + GSAP":
             from eostudio.codegen.react_motion import ReactMotionGenerator
+
             gen = ReactMotionGenerator(library="gsap")
             return gen.generate(self._animation_timeline, components, screens)
         elif framework == "React":
             from eostudio.codegen.react import ReactGenerator
+
             return ReactGenerator().generate(components, screens)
         elif framework == "Flutter":
             from eostudio.codegen.flutter import FlutterGenerator
+
             return FlutterGenerator().generate(components, screens)
         elif framework == "Compose":
             from eostudio.codegen.compose import ComposeGenerator
+
             return ComposeGenerator().generate(components, screens)
         else:
             # HTML/CSS fallback
             return {"index.html": self._build_html(components)}
 
     def _build_html(self, components: List[Dict[str, Any]]) -> str:
-        lines = ["<!DOCTYPE html>", '<html lang="en"><head><meta charset="UTF-8">',
-                 '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
-                 "<style>"]
+        lines = [
+            "<!DOCTYPE html>",
+            '<html lang="en"><head><meta charset="UTF-8">',
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+            "<style>",
+        ]
         lines.append(self._design_system.export_css())
         lines.append("  .container { position: relative; width: 300px; margin: auto; }")
         lines.append("</style></head><body>")
         lines.append('<div class="container">')
         for comp in self._placed:
-            tag = {"button": "button", "text": "p", "input": "input",
-                   "image": "img", "container": "div", "card": "div",
-                   "appbar": "header", "bottomnav": "nav"}.get(comp["type"], "div")
-            style = (f"position:absolute;left:{comp['x'] - 150}px;"
-                     f"top:{comp['y'] - 20}px;"
-                     f"width:{comp['width']}px;height:{comp['height']}px;")
+            tag = {
+                "button": "button",
+                "text": "p",
+                "input": "input",
+                "image": "img",
+                "container": "div",
+                "card": "div",
+                "appbar": "header",
+                "bottomnav": "nav",
+            }.get(comp["type"], "div")
+            style = (
+                f"position:absolute;left:{comp['x'] - 150}px;"
+                f"top:{comp['y'] - 20}px;"
+                f"width:{comp['width']}px;height:{comp['height']}px;"
+            )
             if tag == "input":
                 lines.append(f'  <input style="{style}" placeholder="{comp["text"]}"/>')
             elif tag == "img":
@@ -999,6 +1298,7 @@ class UIDesigner(tk.Frame):
 
     def _save_generated_files(self, files: Dict[str, str]) -> None:
         import os
+
         directory = filedialog.askdirectory(title="Select output directory")
         if not directory:
             return

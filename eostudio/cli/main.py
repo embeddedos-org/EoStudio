@@ -19,10 +19,23 @@ def cli():
 @cli.command()
 @click.option(
     "--editor",
-    type=click.Choice([
-        "3d", "cad", "paint", "game", "ui", "product", "interior",
-        "uml", "simulation", "database", "ide", "promo", "all",
-    ]),
+    type=click.Choice(
+        [
+            "3d",
+            "cad",
+            "paint",
+            "game",
+            "ui",
+            "product",
+            "interior",
+            "uml",
+            "simulation",
+            "database",
+            "ide",
+            "promo",
+            "all",
+        ]
+    ),
     default="all",
     help="Editor to launch.",
 )
@@ -56,7 +69,9 @@ def export(path: str, fmt: str, output: str):
 
 @cli.command()
 @click.argument("spec", type=click.Path(exists=True))
-@click.option("--lang", type=click.Choice(["python", "cpp", "rust", "js", "ts"]), default="python", help="Target language.")
+@click.option(
+    "--lang", type=click.Choice(["python", "cpp", "rust", "js", "ts"]), default="python", help="Target language."
+)
 @click.option("--output", "-o", type=click.Path(), default=None, help="Output directory.")
 def codegen(spec: str, lang: str, output: str):
     """Generate code from a specification file."""
@@ -158,10 +173,25 @@ def ide(path: str, port: int, theme: str):
 @click.argument("name")
 @click.option(
     "--template",
-    type=click.Choice([
-        "python", "cpp", "rust", "js", "ts", "react", "vue", "svelte",
-        "fastapi", "flask", "django", "express", "game", "cad", "empty",
-    ]),
+    type=click.Choice(
+        [
+            "python",
+            "cpp",
+            "rust",
+            "js",
+            "ts",
+            "react",
+            "vue",
+            "svelte",
+            "fastapi",
+            "flask",
+            "django",
+            "express",
+            "game",
+            "cad",
+            "empty",
+        ]
+    ),
     default="empty",
     help="Project template.",
 )
@@ -236,7 +266,9 @@ def screenshot_to_ui(image: str, framework: str, output: str, provider: str):
 @cli.command()
 @click.argument("product")
 @click.option("--style", type=click.Choice(["modern", "minimal", "bold", "playful"]), default="modern")
-@click.option("--size", type=click.Choice(["instagram", "twitter", "linkedin", "banner", "custom"]), default="instagram")
+@click.option(
+    "--size", type=click.Choice(["instagram", "twitter", "linkedin", "banner", "custom"]), default="instagram"
+)
 @click.option("--output", "-o", type=click.Path(), default=None)
 def promo(product: str, style: str, size: str, output: str):
     """Generate promotional graphics for a product."""
@@ -319,7 +351,12 @@ def ui_kit(spec: str, framework: str, output: str):
 
 @cli.command()
 @click.argument("path", type=click.Path(exists=True), default=".")
-@click.option("--target", type=click.Choice(["vercel", "netlify", "docker", "aws", "gcp", "fly"]), default="docker", help="Deployment target.")
+@click.option(
+    "--target",
+    type=click.Choice(["vercel", "netlify", "docker", "aws", "gcp", "fly"]),
+    default="docker",
+    help="Deployment target.",
+)
 @click.option("--env", type=click.Choice(["dev", "staging", "production"]), default="production")
 def deploy(path: str, target: str, env: str):
     """Deploy the project to a hosting target."""
@@ -613,9 +650,7 @@ def security(path: str, scan: str, output: str, fmt: str):
 
     click.echo(f"Scan complete — {result.issue_count} issues found")
     for issue in result.issues:
-        icon = {"critical": "C", "high": "H", "medium": "M", "low": "L"}.get(
-            issue.severity, "?"
-        )
+        icon = {"critical": "C", "high": "H", "medium": "M", "low": "L"}.get(issue.severity, "?")
         click.echo(f"  [{icon}] [{issue.severity.upper()}] {issue.title}")
         click.echo(f"    {issue.location}")
 
@@ -729,7 +764,9 @@ def collab(action: str, session: str, port: int, user: str):
     help="AI action to perform.",
 )
 @click.option("--file", "file_path", type=click.Path(exists=True), default=None, help="Source file for context.")
-@click.option("--provider", type=click.Choice(["ollama", "openai", "anthropic", "local"]), default="ollama", help="LLM provider.")
+@click.option(
+    "--provider", type=click.Choice(["ollama", "openai", "anthropic", "local"]), default="ollama", help="LLM provider."
+)
 @click.option("--model", default=None, help="Model name override.")
 @click.argument("prompt", required=False)
 def ai(action: str, file_path: str, provider: str, model: str, prompt: str):
@@ -940,12 +977,20 @@ def update():
 @click.option("--product-name", default="EoStudio", help="Product name for the video.")
 @click.option("--tagline", default="", help="Tagline text for the hero slide.")
 def release_video(
-    ver: str, output: str, voice: str, no_narration: bool,
-    from_tag: str, to_tag: str, product_name: str, tagline: str,
+    ver: str,
+    output: str,
+    voice: str,
+    no_narration: bool,
+    from_tag: str,
+    to_tag: str,
+    product_name: str,
+    tagline: str,
 ):
     """Generate a release video from the git changelog."""
     from eostudio.core.video.release_video import (
-        ChangelogParser, ReleaseVideoConfig, ReleaseVideoGenerator,
+        ChangelogParser,
+        ReleaseVideoConfig,
+        ReleaseVideoGenerator,
     )
 
     parser = ChangelogParser()

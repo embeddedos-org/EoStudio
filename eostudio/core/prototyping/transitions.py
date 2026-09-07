@@ -34,6 +34,7 @@ class TransitionDirection(Enum):
 @dataclass
 class ScreenTransition:
     """A transition between two screens in a prototype."""
+
     from_screen: str
     to_screen: str
     transition_type: TransitionType = TransitionType.PUSH

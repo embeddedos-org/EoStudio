@@ -58,9 +58,7 @@ class FlutterGenerator:
             sname = self._dart_class(screen.get("name", "Home"))
             fname = self._snake(screen.get("name", "home"))
             screen_comps = screen.get("components", components)
-            files[f"lib/screens/{fname}_screen.dart"] = self._generate_screen(
-                sname, screen_comps, screens
-            )
+            files[f"lib/screens/{fname}_screen.dart"] = self._generate_screen(sname, screen_comps, screens)
 
         return files
 
@@ -150,10 +148,7 @@ class FlutterGenerator:
 
             if ctype == "Button":
                 lines.append(
-                    f"{pad}ElevatedButton(\n"
-                    f"{pad}  onPressed: () {{}},\n"
-                    f"{pad}  child: Text('{label}'),\n"
-                    f"{pad}),\n"
+                    f"{pad}ElevatedButton(\n{pad}  onPressed: () {{}},\n{pad}  child: Text('{label}'),\n{pad}),\n"
                 )
             elif ctype in ("Text", "Heading"):
                 style = "Theme.of(context).textTheme.headlineMedium" if ctype == "Heading" else "null"
@@ -197,13 +192,7 @@ class FlutterGenerator:
                 direction = comp.get("direction", "column")
                 widget = "Row" if direction == "row" else "Column"
                 child_body = self._render_widgets(children, indent + 2)
-                lines.append(
-                    f"{pad}{widget}(\n"
-                    f"{pad}  children: [\n"
-                    f"{child_body}"
-                    f"{pad}  ],\n"
-                    f"{pad}),\n"
-                )
+                lines.append(f"{pad}{widget}(\n{pad}  children: [\n{child_body}{pad}  ],\n{pad}),\n")
             else:
                 lines.append(f"{pad}Text('{label}'),\n")
 

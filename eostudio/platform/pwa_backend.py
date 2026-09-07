@@ -3,6 +3,7 @@ EoStudio PWA Backend — Progressive Web App display backend.
 
 Phase 3: Cross-Platform Universal Support.
 """
+
 from __future__ import annotations
 
 import json
@@ -20,6 +21,7 @@ from eostudio.platform.display_backend import (
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class PWAIcon:
@@ -51,25 +53,30 @@ class PWAConfig:
     start_url: str = "/"
     scope: str = "/"
     orientation: str = "any"
-    icons: List[PWAIcon] = field(default_factory=lambda: [
-        PWAIcon(src="/icons/icon-192.png", sizes="192x192"),
-        PWAIcon(src="/icons/icon-512.png", sizes="512x512"),
-    ])
+    icons: List[PWAIcon] = field(
+        default_factory=lambda: [
+            PWAIcon(src="/icons/icon-192.png", sizes="192x192"),
+            PWAIcon(src="/icons/icon-512.png", sizes="512x512"),
+        ]
+    )
     categories: List[str] = field(default_factory=lambda: ["development", "productivity"])
     description: str = "EoStudio — the universal code editor"
     cache_name: str = "eostudio-v1"
-    precache_urls: List[str] = field(default_factory=lambda: [
-        "/",
-        "/index.html",
-        "/app.js",
-        "/app.css",
-    ])
+    precache_urls: List[str] = field(
+        default_factory=lambda: [
+            "/",
+            "/index.html",
+            "/app.js",
+            "/app.css",
+        ]
+    )
     offline_fallback: str = "/offline.html"
 
 
 # ---------------------------------------------------------------------------
 # Manifest & Service Worker generators
 # ---------------------------------------------------------------------------
+
 
 def generate_manifest(config: Optional[PWAConfig] = None) -> dict:
     """Generate a W3C Web App Manifest dict from *config*."""
@@ -159,6 +166,7 @@ if ("serviceWorker" in navigator) {
 # ---------------------------------------------------------------------------
 # PWABackend
 # ---------------------------------------------------------------------------
+
 
 class PWABackend(DisplayBackend):
     """Display backend that serves the UI as a Progressive Web App.

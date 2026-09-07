@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional, Tuple
 # Data model
 # ------------------------------------------------------------------
 
+
 @dataclass
 class DeviceTreeNode:
     """A single node in a device tree hierarchy."""
@@ -130,6 +131,7 @@ ARCH_TEMPLATES: Dict[str, Dict[str, Any]] = {
 # Generator
 # ------------------------------------------------------------------
 
+
 class DeviceTreeGenerator:
     """Generates Device Tree source files from board configurations."""
 
@@ -171,44 +173,52 @@ class DeviceTreeGenerator:
             root.add_child(DeviceTreeNode(name="aliases", properties=alias_data))
 
         # cpus
-        cpus_node = root.add_child(DeviceTreeNode(
-            name="cpus",
-            properties={"#address-cells": 1, "#size-cells": 0},
-        ))
+        cpus_node = root.add_child(
+            DeviceTreeNode(
+                name="cpus",
+                properties={"#address-cells": 1, "#size-cells": 0},
+            )
+        )
         cpu_info = tmpl.get("cpu", {})
         cpu_compat = config.get("cpu", cpu_info.get("compatible", "arm,cortex-m4"))
         clock_hz = config.get("clock_mhz", 168) * 1_000_000
         cpu_props: Dict[str, Any] = {"device_type": "cpu", "clock-frequency": clock_hz}
         if "riscv,isa" in cpu_info:
             cpu_props["riscv,isa"] = cpu_info["riscv,isa"]
-        cpus_node.add_child(DeviceTreeNode(
-            name="cpu@0",
-            compatible=cpu_compat,
-            reg=[(0, 0)],
-            properties=cpu_props,
-        ))
+        cpus_node.add_child(
+            DeviceTreeNode(
+                name="cpu@0",
+                compatible=cpu_compat,
+                reg=[(0, 0)],
+                properties=cpu_props,
+            )
+        )
 
         # memory
         for mem in config.get("memory", [{"name": "sram", "base": 0x20000000, "size": 0x20000}]):
             base = mem.get("base", 0x20000000)
             size = mem.get("size", 0x20000)
-            root.add_child(DeviceTreeNode(
-                name=f"memory@{base:x}",
-                compatible="mmio-sram" if "sram" in mem.get("name", "").lower() else "memory",
-                reg=[(base, size)],
-                properties={"device_type": "memory"},
-            ))
+            root.add_child(
+                DeviceTreeNode(
+                    name=f"memory@{base:x}",
+                    compatible="mmio-sram" if "sram" in mem.get("name", "").lower() else "memory",
+                    reg=[(base, size)],
+                    properties={"device_type": "memory"},
+                )
+            )
 
         # soc node for peripherals
-        soc = root.add_child(DeviceTreeNode(
-            name="soc",
-            compatible="simple-bus",
-            properties={
-                "#address-cells": tmpl.get("#address-cells", 1),
-                "#size-cells": tmpl.get("#size-cells", 1),
-                "ranges": True,
-            },
-        ))
+        soc = root.add_child(
+            DeviceTreeNode(
+                name="soc",
+                compatible="simple-bus",
+                properties={
+                    "#address-cells": tmpl.get("#address-cells", 1),
+                    "#size-cells": tmpl.get("#size-cells", 1),
+                    "ranges": True,
+                },
+            )
+        )
 
         # interrupt controller
         for ic_key in ("nvic", "gic", "plic", "intc"):
@@ -217,9 +227,7 @@ class DeviceTreeGenerator:
                 ic_node = DeviceTreeNode(
                     name=ic_key,
                     compatible=ic["compatible"],
-                    properties={
-                        k: v for k, v in ic.items() if k != "compatible"
-                    },
+                    properties={k: v for k, v in ic.items() if k != "compatible"},
                 )
                 soc.add_child(ic_node)
                 break
@@ -252,17 +260,16 @@ class DeviceTreeGenerator:
                 props["interrupts"] = [irq]
             if periph.get("clock"):
                 props["clock-frequency"] = periph["clock"]
-            props.update({
-                k: v for k, v in periph.items()
-                if k not in ("type", "name", "base", "size", "irq", "clock")
-            })
-            soc.add_child(DeviceTreeNode(
-                name=f"{pname}@{base:x}",
-                compatible=periph.get("compatible", _PERIPH_COMPAT.get(ptype, f"vendor,{ptype}")),
-                reg=[(base, size)],
-                status=periph.get("status", "okay"),
-                properties=props,
-            ))
+            props.update({k: v for k, v in periph.items() if k not in ("type", "name", "base", "size", "irq", "clock")})
+            soc.add_child(
+                DeviceTreeNode(
+                    name=f"{pname}@{base:x}",
+                    compatible=periph.get("compatible", _PERIPH_COMPAT.get(ptype, f"vendor,{ptype}")),
+                    reg=[(base, size)],
+                    status=periph.get("status", "okay"),
+                    properties=props,
+                )
+            )
 
         return root
 

@@ -18,15 +18,15 @@ class ExportFormat(Enum):
 
 
 class ExportPreset(Enum):
-    SOCIAL_SQUARE = "social_square"       # 1080x1080
-    SOCIAL_PORTRAIT = "social_portrait"   # 1080x1920
-    SOCIAL_LANDSCAPE = "social_landscape" # 1920x1080
-    APP_STORE = "app_store"               # 1290x2796
-    PLAY_STORE = "play_store"             # 1080x1920
-    TWITTER = "twitter"                   # 1200x675
-    LINKEDIN = "linkedin"                 # 1200x627
-    YOUTUBE_THUMB = "youtube_thumb"       # 1280x720
-    PRODUCT_HUNT = "product_hunt"         # 1270x760
+    SOCIAL_SQUARE = "social_square"  # 1080x1080
+    SOCIAL_PORTRAIT = "social_portrait"  # 1080x1920
+    SOCIAL_LANDSCAPE = "social_landscape"  # 1920x1080
+    APP_STORE = "app_store"  # 1290x2796
+    PLAY_STORE = "play_store"  # 1080x1920
+    TWITTER = "twitter"  # 1200x675
+    LINKEDIN = "linkedin"  # 1200x627
+    YOUTUBE_THUMB = "youtube_thumb"  # 1280x720
+    PRODUCT_HUNT = "product_hunt"  # 1270x760
 
 
 PRESET_SIZES: Dict[ExportPreset, Dict[str, int]] = {
@@ -45,6 +45,7 @@ PRESET_SIZES: Dict[ExportPreset, Dict[str, int]] = {
 @dataclass
 class ExportConfig:
     """Configuration for video export."""
+
     format: ExportFormat = ExportFormat.MP4
     preset: Optional[ExportPreset] = None
     width: int = 1920
@@ -75,8 +76,7 @@ class VideoExporter:
 
     def _find_ffmpeg(self) -> str:
         """Locate ffmpeg binary."""
-        for path in ["ffmpeg", "/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg",
-                      "C:\\ffmpeg\\bin\\ffmpeg.exe"]:
+        for path in ["ffmpeg", "/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg", "C:\\ffmpeg\\bin\\ffmpeg.exe"]:
             try:
                 subprocess.run([path, "-version"], capture_output=True, timeout=5)
                 return path
@@ -92,28 +92,36 @@ class VideoExporter:
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return False
 
-    def export_mp4(self, frame_dir: str, output_path: str,
-                   audio_path: Optional[str] = None) -> Dict[str, Any]:
+    def export_mp4(self, frame_dir: str, output_path: str, audio_path: Optional[str] = None) -> Dict[str, Any]:
         """Export frames as MP4 video."""
         cfg = self.config
         crf = int(51 - cfg.quality * 46)  # quality 0.0->CRF51, 1.0->CRF5
 
         cmd = [
-            self._ffmpeg_path, "-y",
-            "-framerate", str(cfg.fps),
-            "-i", os.path.join(frame_dir, "frame_%06d.png"),
+            self._ffmpeg_path,
+            "-y",
+            "-framerate",
+            str(cfg.fps),
+            "-i",
+            os.path.join(frame_dir, "frame_%06d.png"),
         ]
 
         if audio_path and cfg.include_audio:
             cmd.extend(["-i", audio_path, "-map", "0:v", "-map", "1:a", "-shortest"])
 
-        cmd.extend([
-            "-c:v", cfg.codec,
-            "-pix_fmt", "yuv420p",
-            "-crf", str(crf),
-            "-s", f"{cfg.width}x{cfg.height}",
-            output_path,
-        ])
+        cmd.extend(
+            [
+                "-c:v",
+                cfg.codec,
+                "-pix_fmt",
+                "yuv420p",
+                "-crf",
+                str(crf),
+                "-s",
+                f"{cfg.width}x{cfg.height}",
+                output_path,
+            ]
+        )
 
         return self._run_command(cmd, output_path)
 
@@ -124,20 +132,27 @@ class VideoExporter:
 
         # Generate palette
         palette_cmd = [
-            self._ffmpeg_path, "-y",
-            "-framerate", str(cfg.fps),
-            "-i", os.path.join(frame_dir, "frame_%06d.png"),
-            "-vf", f"fps={min(cfg.fps, 15)},scale={cfg.width}:-1:flags=lanczos,"
-                   f"palettegen=max_colors={cfg.max_colors_gif}",
+            self._ffmpeg_path,
+            "-y",
+            "-framerate",
+            str(cfg.fps),
+            "-i",
+            os.path.join(frame_dir, "frame_%06d.png"),
+            "-vf",
+            f"fps={min(cfg.fps, 15)},scale={cfg.width}:-1:flags=lanczos,palettegen=max_colors={cfg.max_colors_gif}",
             palette_path,
         ]
 
         # Generate GIF
         gif_cmd = [
-            self._ffmpeg_path, "-y",
-            "-framerate", str(cfg.fps),
-            "-i", os.path.join(frame_dir, "frame_%06d.png"),
-            "-i", palette_path,
+            self._ffmpeg_path,
+            "-y",
+            "-framerate",
+            str(cfg.fps),
+            "-i",
+            os.path.join(frame_dir, "frame_%06d.png"),
+            "-i",
+            palette_path,
             "-filter_complex",
             f"fps={min(cfg.fps, 15)},scale={cfg.width}:-1:flags=lanczos[x];[x][1:v]paletteuse",
         ]
@@ -156,20 +171,26 @@ class VideoExporter:
         crf = int(63 - cfg.quality * 53)
 
         cmd = [
-            self._ffmpeg_path, "-y",
-            "-framerate", str(cfg.fps),
-            "-i", os.path.join(frame_dir, "frame_%06d.png"),
-            "-c:v", "libvpx-vp9",
-            "-crf", str(crf),
-            "-b:v", "0",
-            "-s", f"{cfg.width}x{cfg.height}",
+            self._ffmpeg_path,
+            "-y",
+            "-framerate",
+            str(cfg.fps),
+            "-i",
+            os.path.join(frame_dir, "frame_%06d.png"),
+            "-c:v",
+            "libvpx-vp9",
+            "-crf",
+            str(crf),
+            "-b:v",
+            "0",
+            "-s",
+            f"{cfg.width}x{cfg.height}",
             output_path,
         ]
 
         return self._run_command(cmd, output_path)
 
-    def export(self, frame_dir: str, output_path: str,
-               audio_path: Optional[str] = None) -> Dict[str, Any]:
+    def export(self, frame_dir: str, output_path: str, audio_path: Optional[str] = None) -> Dict[str, Any]:
         """Export using the configured format."""
         fmt = self.config.format
         if fmt == ExportFormat.MP4:
@@ -189,11 +210,11 @@ class VideoExporter:
         cfg = self.config
         crf = int(51 - cfg.quality * 46)
         return (
-            f'{self._ffmpeg_path} -y '
-            f'-framerate {cfg.fps} '
+            f"{self._ffmpeg_path} -y "
+            f"-framerate {cfg.fps} "
             f'-i "{os.path.join(frame_dir, "frame_%06d.png")}" '
-            f'-c:v {cfg.codec} -pix_fmt yuv420p -crf {crf} '
-            f'-s {cfg.width}x{cfg.height} '
+            f"-c:v {cfg.codec} -pix_fmt yuv420p -crf {crf} "
+            f"-s {cfg.width}x{cfg.height} "
             f'"{output_path}"'
         )
 

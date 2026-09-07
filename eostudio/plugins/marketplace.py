@@ -10,6 +10,7 @@ Features:
 - Featured/trending plugins
 - Plugin compatibility checking
 """
+
 from __future__ import annotations
 
 import json
@@ -41,6 +42,7 @@ class PluginCategory(Enum):
 @dataclass
 class MarketplacePlugin:
     """A plugin available in the marketplace."""
+
     id: str
     name: str
     description: str
@@ -50,7 +52,7 @@ class MarketplacePlugin:
     tags: List[str] = field(default_factory=list)
     stars: int = 0
     downloads: int = 0
-    source: str = ""          # GitHub URL or PyPI package name
+    source: str = ""  # GitHub URL or PyPI package name
     install_method: str = "pip"  # "pip" | "git" | "local"
     min_eostudio_version: str = "1.0.0"
     homepage: str = ""
@@ -244,6 +246,7 @@ BUILTIN_CATALOG: List[MarketplacePlugin] = [
 @dataclass
 class InstallResult:
     """Result of a plugin installation."""
+
     success: bool
     plugin_id: str
     message: str
@@ -297,10 +300,7 @@ class PluginMarketplace:
             try:
                 data = json.loads(manifest_path.read_text())
                 for item in data:
-                    p = MarketplacePlugin(**{
-                        k: v for k, v in item.items()
-                        if k != "category"
-                    })
+                    p = MarketplacePlugin(**{k: v for k, v in item.items() if k != "category"})
                     p.category = PluginCategory(item.get("category", "productivity"))
                     self._installed[p.id] = p
             except Exception as exc:
@@ -312,10 +312,15 @@ class PluginMarketplace:
         data = []
         for p in self._installed.values():
             d = {
-                "id": p.id, "name": p.name, "description": p.description,
-                "author": p.author, "version": p.version,
-                "category": p.category.value, "tags": p.tags,
-                "source": p.source, "install_method": p.install_method,
+                "id": p.id,
+                "name": p.name,
+                "description": p.description,
+                "author": p.author,
+                "version": p.version,
+                "category": p.category.value,
+                "tags": p.tags,
+                "source": p.source,
+                "install_method": p.install_method,
             }
             data.append(d)
         manifest_path.write_text(json.dumps(data, indent=2))
@@ -330,6 +335,7 @@ class PluginMarketplace:
             return len(self._catalog)
         try:
             import httpx
+
             resp = httpx.get(self._catalog_url, timeout=10.0)
             resp.raise_for_status()
             remote = resp.json()
@@ -370,19 +376,14 @@ class PluginMarketplace:
         if query:
             q = query.lower()
             results = [
-                p for p in results
-                if q in p.name.lower() or q in p.description.lower()
-                or any(q in t for t in p.tags)
+                p for p in results if q in p.name.lower() or q in p.description.lower() or any(q in t for t in p.tags)
             ]
 
         if category:
             results = [p for p in results if p.category == category]
 
         if tags:
-            results = [
-                p for p in results
-                if any(t in p.tags for t in tags)
-            ]
+            results = [p for p in results if any(t in p.tags for t in tags)]
 
         if verified_only:
             results = [p for p in results if p.is_verified]
@@ -415,13 +416,15 @@ class PluginMarketplace:
         plugin = self.get_plugin(plugin_id)
         if not plugin:
             return InstallResult(
-                success=False, plugin_id=plugin_id,
+                success=False,
+                plugin_id=plugin_id,
                 message=f"Plugin '{plugin_id}' not found in catalog",
             )
 
         if plugin_id in self._installed:
             return InstallResult(
-                success=True, plugin_id=plugin_id,
+                success=True,
+                plugin_id=plugin_id,
                 message="Already installed",
                 installed_version=self._installed[plugin_id].version,
             )
@@ -430,7 +433,8 @@ class PluginMarketplace:
         compat = self._check_compatibility(plugin)
         if not compat:
             return InstallResult(
-                success=False, plugin_id=plugin_id,
+                success=False,
+                plugin_id=plugin_id,
                 message="Plugin is not compatible with this version of EoStudio",
             )
 
@@ -450,14 +454,16 @@ class PluginMarketplace:
             self._save_installed()
             log.info("Installed plugin %s v%s", plugin_id, plugin.version)
             return InstallResult(
-                success=True, plugin_id=plugin_id,
+                success=True,
+                plugin_id=plugin_id,
                 message=f"Successfully installed {plugin.name} v{plugin.version}",
                 installed_version=plugin.version,
                 install_path=install_path,
             )
         else:
             return InstallResult(
-                success=False, plugin_id=plugin_id,
+                success=False,
+                plugin_id=plugin_id,
                 message=f"Installation failed for {plugin.name}",
             )
 
@@ -469,6 +475,7 @@ class PluginMarketplace:
         install_path = self._install_dir / plugin_id
         if install_path.exists():
             import shutil
+
             shutil.rmtree(str(install_path), ignore_errors=True)
         self._save_installed()
         log.info("Uninstalled plugin %s", plugin_id)
@@ -496,6 +503,7 @@ class PluginMarketplace:
         """Check if plugin is compatible with current EoStudio version."""
         try:
             from eostudio import __version__
+
             min_v = tuple(int(x) for x in plugin.min_eostudio_version.split("."))
             cur_v = tuple(int(x) for x in __version__.split("."))
             return cur_v >= min_v
@@ -506,7 +514,9 @@ class PluginMarketplace:
         try:
             result = subprocess.run(
                 ["pip", "install", package],
-                capture_output=True, text=True, timeout=120,
+                capture_output=True,
+                text=True,
+                timeout=120,
             )
             return result.returncode == 0
         except Exception as exc:
@@ -517,7 +527,9 @@ class PluginMarketplace:
         try:
             result = subprocess.run(
                 ["git", "clone", "--depth=1", repo_url, dest],
-                capture_output=True, text=True, timeout=60,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             return result.returncode == 0
         except Exception as exc:
