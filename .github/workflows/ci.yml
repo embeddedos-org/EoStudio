@@ -90,6 +90,12 @@ jobs:
       - name: Install scanners
         run: pip install pip-audit bandit
       - name: Pip audit
-        run: pip install -e "." && pip-audit --strict
+        # Audit the project's declared dependencies rather than the installed
+        # environment. Installing EoStudio into the environment first made it a
+        # subject of the audit, and --strict then failed on it unconditionally
+        # because EoStudio is not published on PyPI:
+        #   "EoStudio: Dependency not found on PyPI and could not be audited".
+        # --strict is kept: dependency vulnerabilities still fail this job.
+        run: pip-audit --strict .
       - name: Bandit
         run: bandit -r eostudio/ -ll --skip B101
