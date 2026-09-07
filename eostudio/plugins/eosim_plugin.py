@@ -234,10 +234,26 @@ class EoSimPlugin(Plugin):
             result = self._bridge.build(board_config, source_dir, platform)
             return {"success": result.get("success", False), "output": result.get("output", "")}
 
+        # The fallback tells the developer what to run by hand, so it has to be
+        # something that runs. The previous text — "ebuild --platform {p}
+        # --config board.yaml {dir}" — used two flags ebuild does not have:
+        #
+        #     $ ebuild --platform stm32f4 --config board.yaml .
+        #     Usage: ebuild [OPTIONS] COMMAND [ARGS]...
+        #
+        # It was stored in a dict and never executed, so nothing found out. The
+        # board is selected by `ebuild configure --board`, which is a separate
+        # step from the build.
+        commands = [
+            f"ebuild configure --board {platform}",
+            "ebuild build",
+        ]
         return {
             "success": False,
             "output": "EoSim bridge not available; manual build required.",
-            "command": f"ebuild --platform {platform} --config board.yaml {source_dir}",
+            "command": " && ".join(commands),
+            "commands": commands,
+            "cwd": source_dir,
         }
 
     def _on_simulate(self, data: Dict[str, Any]) -> Dict[str, Any]:

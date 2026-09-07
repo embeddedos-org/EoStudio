@@ -16,6 +16,34 @@ with [eOffice](https://github.com/embeddedos-org/eOffice) and
 [EoSim](https://github.com/embeddedos-org/EoSim) through bundled plugins.
 Version 3.1.0.
 
+## Building EmbeddedOS projects
+
+EoStudio is a front end for [ebuild](https://github.com/embeddedos-org/ebuild),
+the platform's build control plane — it drives ebuild rather than reimplementing
+what ebuild does.
+
+A project containing a `build.yaml` is recognised as an ebuild project and built
+through the real CLI:
+
+| Action | Command |
+|---|---|
+| Build | `ebuild build` |
+| Test | `ebuild test` |
+| Clean | `ebuild clean` |
+| Run | `ebuild monitor` |
+
+The board is selected separately, by `ebuild configure --board <board>`; there
+is no top-level `--platform` or `--config` flag.
+
+`build.yaml` is matched ahead of every other marker on purpose. ebuild generates
+its build files into the build directory, so a project that has been configured
+once carries a `CMakeLists.txt` as well — matching CMake first would hand the
+project to a backend that bypasses the toolchain that owns it.
+
+The generic backends below (npm, Cargo, Gradle and the rest) remain available
+for ordinary projects opened in the IDE. They are not used for EmbeddedOS
+targets.
+
 ## What's inside
 
 | Path | Contents |
