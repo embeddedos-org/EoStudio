@@ -1,4 +1,5 @@
 """Universal build system integration for EoStudio devtools."""
+
 from __future__ import annotations
 
 import json
@@ -430,34 +431,40 @@ class BuildSystemManager:
 
         # Always add standard lifecycle tasks
         config = self.get_config()
-        tasks.extend([
-            BuildTask(name="build", command=config.build_command, description="Build the project", group="build"),
-            BuildTask(name="test", command=config.test_command, description="Run tests", group="test"),
-            BuildTask(name="clean", command=config.clean_command, description="Clean artifacts", group="clean"),
-            BuildTask(name="run", command=config.run_command, description="Run the project", group="run"),
-        ])
+        tasks.extend(
+            [
+                BuildTask(name="build", command=config.build_command, description="Build the project", group="build"),
+                BuildTask(name="test", command=config.test_command, description="Run tests", group="test"),
+                BuildTask(name="clean", command=config.clean_command, description="Clean artifacts", group="clean"),
+                BuildTask(name="run", command=config.run_command, description="Run the project", group="run"),
+            ]
+        )
 
         # Add system-specific tasks
         if system in (BuildSystem.NPM, BuildSystem.YARN, BuildSystem.PNPM):
             for name, script_cmd in self.get_scripts_from_package_json().items():
                 prefix = {BuildSystem.NPM: "npm run", BuildSystem.YARN: "yarn", BuildSystem.PNPM: "pnpm"}[system]
                 group = "test" if "test" in name else "build" if "build" in name else "run"
-                tasks.append(BuildTask(
-                    name=name,
-                    command=f"{prefix} {name}",
-                    description=f"npm script: {script_cmd}",
-                    group=group,
-                ))
+                tasks.append(
+                    BuildTask(
+                        name=name,
+                        command=f"{prefix} {name}",
+                        description=f"npm script: {script_cmd}",
+                        group=group,
+                    )
+                )
 
         if system == BuildSystem.MAKE:
             for target_name in self.get_targets_from_makefile():
                 group = "test" if "test" in target_name else "clean" if "clean" in target_name else "build"
-                tasks.append(BuildTask(
-                    name=target_name,
-                    command=f"make {target_name}",
-                    description=f"Makefile target: {target_name}",
-                    group=group,
-                ))
+                tasks.append(
+                    BuildTask(
+                        name=target_name,
+                        command=f"make {target_name}",
+                        description=f"Makefile target: {target_name}",
+                        group=group,
+                    )
+                )
 
         return tasks
 
@@ -494,13 +501,15 @@ class BuildSystemManager:
                     key = (file_path, line_num, col, msg)
                     if key not in seen:
                         seen.add(key)
-                        diagnostics.append(BuildDiagnostic(
-                            file=file_path,
-                            line=line_num,
-                            column=col,
-                            message=msg,
-                            severity=severity,
-                        ))
+                        diagnostics.append(
+                            BuildDiagnostic(
+                                file=file_path,
+                                line=line_num,
+                                column=col,
+                                message=msg,
+                                severity=severity,
+                            )
+                        )
                     break
 
         return diagnostics
@@ -524,7 +533,9 @@ class BuildSystemManager:
         # Build initial snapshot
         watch_extensions = {".py", ".js", ".ts", ".jsx", ".tsx", ".rs", ".go", ".java", ".c", ".cpp", ".h"}
         for root, dirs, files in os.walk(self.workspace_path):
-            dirs[:] = [d for d in dirs if d not in {".git", "node_modules", "__pycache__", ".venv", "dist", "build", "target"}]
+            dirs[:] = [
+                d for d in dirs if d not in {".git", "node_modules", "__pycache__", ".venv", "dist", "build", "target"}
+            ]
             for fname in files:
                 fpath = Path(root) / fname
                 if fpath.suffix in watch_extensions:
@@ -535,7 +546,11 @@ class BuildSystemManager:
                 time.sleep(1)
                 changed = False
                 for root, dirs, files in os.walk(self.workspace_path):
-                    dirs[:] = [d for d in dirs if d not in {".git", "node_modules", "__pycache__", ".venv", "dist", "build", "target"}]
+                    dirs[:] = [
+                        d
+                        for d in dirs
+                        if d not in {".git", "node_modules", "__pycache__", ".venv", "dist", "build", "target"}
+                    ]
                     for fname in files:
                         fpath = Path(root) / fname
                         if fpath.suffix not in watch_extensions:

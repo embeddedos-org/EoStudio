@@ -28,9 +28,7 @@ class TestGenerator:
         return self.llm_client.complete(prompt)
 
     def generate_unit_tests(self, code: str, filename: str) -> list[TestCase]:
-        prompt = (
-            f"Generate unit tests for the following code from {filename}:\n\n{code}"
-        )
+        prompt = f"Generate unit tests for the following code from {filename}:\n\n{code}"
         result = self._ask(prompt)
         return [
             TestCase(
@@ -42,10 +40,7 @@ class TestGenerator:
         ]
 
     def generate_integration_tests(self, code: str, filename: str) -> list[TestCase]:
-        prompt = (
-            f"Generate integration tests for the following code "
-            f"from {filename}:\n\n{code}"
-        )
+        prompt = f"Generate integration tests for the following code from {filename}:\n\n{code}"
         result = self._ask(prompt)
         return [
             TestCase(
@@ -57,10 +52,7 @@ class TestGenerator:
         ]
 
     def generate_edge_cases(self, code: str, filename: str) -> list[TestCase]:
-        prompt = (
-            f"Generate edge case tests for the following code "
-            f"from {filename}:\n\n{code}"
-        )
+        prompt = f"Generate edge case tests for the following code from {filename}:\n\n{code}"
         result = self._ask(prompt)
         return [
             TestCase(
@@ -71,14 +63,9 @@ class TestGenerator:
             )
         ]
 
-    def generate_from_coverage(
-        self, code: str, uncovered_lines: list[int], filename: str
-    ) -> list[TestCase]:
+    def generate_from_coverage(self, code: str, uncovered_lines: list[int], filename: str) -> list[TestCase]:
         lines_str = ", ".join(str(ln) for ln in uncovered_lines)
-        prompt = (
-            f"Generate tests to cover lines {lines_str} in the following "
-            f"code from {filename}:\n\n{code}"
-        )
+        prompt = f"Generate tests to cover lines {lines_str} in the following code from {filename}:\n\n{code}"
         result = self._ask(prompt)
         return [
             TestCase(

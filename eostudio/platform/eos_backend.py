@@ -10,7 +10,10 @@ import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from eostudio.platform.display_backend import (
-    DisplayBackend, EventType, InputEvent, WindowConfig,
+    DisplayBackend,
+    EventType,
+    InputEvent,
+    WindowConfig,
 )
 
 
@@ -28,9 +31,9 @@ class EosBackend(DisplayBackend):
 
     def init(self) -> None:
         from eostudio.platform.eos_display import EosFrameBuffer
+
         backend = os.environ.get("EOS_DISPLAY", "auto")
-        self._fb = EosFrameBuffer(width=self._width, height=self._height,
-                                  display_id=0, backend=backend)
+        self._fb = EosFrameBuffer(width=self._width, height=self._height, display_id=0, backend=backend)
         self._fb.init()
 
     def shutdown(self) -> None:
@@ -39,9 +42,11 @@ class EosBackend(DisplayBackend):
             self._fb = None
 
     def is_available(self) -> bool:
-        return (os.environ.get("EOS_DISPLAY") is not None
-                or os.path.exists("/proc/eos")
-                or os.environ.get("EOS_ROOT") is not None)
+        return (
+            os.environ.get("EOS_DISPLAY") is not None
+            or os.path.exists("/proc/eos")
+            or os.environ.get("EOS_ROOT") is not None
+        )
 
     def create_window(self, config: WindowConfig) -> int:
         self._width = config.width
@@ -56,7 +61,7 @@ class EosBackend(DisplayBackend):
 
     def set_window_title(self, window_id: int, title: str) -> None:
         self._title = title
-        if self._fb and hasattr(self._fb, 'set_title'):
+        if self._fb and hasattr(self._fb, "set_title"):
             self._fb.set_title(title)
 
     def get_window_size(self, window_id: int) -> Tuple[int, int]:
@@ -75,13 +80,11 @@ class EosBackend(DisplayBackend):
     def _pack_color(self, color: int) -> int:
         return color & 0xFFFFFF
 
-    def draw_rect(self, window_id: int, x: int, y: int, w: int, h: int,
-                  color: int, filled: bool = True) -> None:
+    def draw_rect(self, window_id: int, x: int, y: int, w: int, h: int, color: int, filled: bool = True) -> None:
         if self._fb and filled:
             self._fb.draw_rect(x, y, w, h, self._pack_color(color))
 
-    def draw_line(self, window_id: int, x1: int, y1: int,
-                  x2: int, y2: int, color: int, width: int = 1) -> None:
+    def draw_line(self, window_id: int, x1: int, y1: int, x2: int, y2: int, color: int, width: int = 1) -> None:
         if not self._fb:
             return
         c = self._pack_color(color)
@@ -101,8 +104,7 @@ class EosBackend(DisplayBackend):
                 err += dx
                 y1 += sy
 
-    def draw_circle(self, window_id: int, cx: int, cy: int, radius: int,
-                    color: int, filled: bool = True) -> None:
+    def draw_circle(self, window_id: int, cx: int, cy: int, radius: int, color: int, filled: bool = True) -> None:
         if not self._fb:
             return
         c = self._pack_color(color)
@@ -114,15 +116,21 @@ class EosBackend(DisplayBackend):
                         if 0 <= px < self._width and 0 <= py < self._height:
                             self._fb.draw_pixel(px, py, c)
 
-    def draw_text(self, window_id: int, x: int, y: int, text: str,
-                  color: int = 0x000000, font_size: int = 14,
-                  font_family: str = "") -> None:
+    def draw_text(
+        self,
+        window_id: int,
+        x: int,
+        y: int,
+        text: str,
+        color: int = 0x000000,
+        font_size: int = 14,
+        font_family: str = "",
+    ) -> None:
         if self._fb:
             c = self._pack_color(color)
             self._fb.draw_rect(x, y, len(text) * 8, font_size + 4, c)
 
-    def draw_image(self, window_id: int, x: int, y: int,
-                   image_data: bytes, width: int, height: int) -> None:
+    def draw_image(self, window_id: int, x: int, y: int, image_data: bytes, width: int, height: int) -> None:
         if self._fb:
             self._fb.draw_bitmap(x, y, width, height, image_data)
 
@@ -135,7 +143,7 @@ class EosBackend(DisplayBackend):
             self._fb.flush()
 
     def get_clipboard_text(self) -> str:
-        return getattr(self, '_clipboard', '')
+        return getattr(self, "_clipboard", "")
 
     def set_clipboard_text(self, text: str) -> None:
         self._clipboard = text
@@ -145,12 +153,10 @@ class EosBackend(DisplayBackend):
         self._cursor_type = cursor_type
         logger.debug("Cursor set to '%s' — not supported on framebuffer", cursor_type)
 
-    def schedule_timer(self, interval_ms: int, callback: Callable[[], None],
-                       repeat: bool = False) -> int:
+    def schedule_timer(self, interval_ms: int, callback: Callable[[], None], repeat: bool = False) -> int:
         tid = self._next_timer_id
         self._next_timer_id += 1
-        self._timers[tid] = {"interval": interval_ms, "callback": callback,
-                             "repeat": repeat}
+        self._timers[tid] = {"interval": interval_ms, "callback": callback, "repeat": repeat}
         return tid
 
     def cancel_timer(self, timer_id: int) -> None:

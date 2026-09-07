@@ -82,9 +82,7 @@ class CRDTDocument:
     def get_history(self) -> list[CRDTOperation]:
         return list(self._history)
 
-    def transform(
-        self, op1: CRDTOperation, op2: CRDTOperation
-    ) -> tuple[CRDTOperation, CRDTOperation]:
+    def transform(self, op1: CRDTOperation, op2: CRDTOperation) -> tuple[CRDTOperation, CRDTOperation]:
         new_op1 = CRDTOperation(
             type=op1.type,
             position=op1.position,
@@ -128,18 +126,12 @@ class CRDTDocument:
             elif op2.position >= op1.position + op1.length:
                 new_op2.position -= op1.length
             elif op1.position <= op2.position:
-                overlap = (
-                    min(op1.position + op1.length, op2.position + op2.length)
-                    - op2.position
-                )
+                overlap = min(op1.position + op1.length, op2.position + op2.length) - op2.position
                 new_op1.length -= overlap
                 new_op2.position = op1.position
                 new_op2.length -= overlap
             else:
-                overlap = (
-                    min(op2.position + op2.length, op1.position + op1.length)
-                    - op1.position
-                )
+                overlap = min(op2.position + op2.length, op1.position + op1.length) - op1.position
                 new_op2.length -= overlap
                 new_op1.position = op2.position
                 new_op1.length -= overlap

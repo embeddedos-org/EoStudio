@@ -94,11 +94,11 @@ class ReactGenerator:
             f"{imports_str}\n\n"
             "function App() {\n"
             "  return (\n"
-            "    <div className=\"app\">\n"
-            "      <nav className=\"app-nav\">\n"
+            '    <div className="app">\n'
+            '      <nav className="app-nav">\n'
             f"{nav_str}\n"
             "      </nav>\n"
-            "      <main className=\"app-main\">\n"
+            '      <main className="app-main">\n'
             "        <Routes>\n"
             f"{routes_str}\n"
             "        </Routes>\n"
@@ -170,20 +170,12 @@ class ReactGenerator:
                 lines.append(f'{pad}<img src="{src}" alt="{label}" className={{styles.image}} />\n')
             elif ctype == "Card":
                 child_body = self._render_jsx(children, indent + 1) if children else f"{pad}  <p>{label}</p>\n"
-                lines.append(
-                    f"{pad}<div className={{styles.card}}>\n"
-                    f"{child_body}"
-                    f"{pad}</div>\n"
-                )
+                lines.append(f"{pad}<div className={{styles.card}}>\n{child_body}{pad}</div>\n")
             elif ctype == "Container" and children:
                 direction = comp.get("direction", "column")
                 cls = "containerRow" if direction == "row" else "container"
                 child_body = self._render_jsx(children, indent + 1)
-                lines.append(
-                    f"{pad}<div className={{styles.{cls}}}>\n"
-                    f"{child_body}"
-                    f"{pad}</div>\n"
-                )
+                lines.append(f"{pad}<div className={{styles.{cls}}}>\n{child_body}{pad}</div>\n")
             else:
                 lines.append(f"{pad}<p>{label}</p>\n")
 

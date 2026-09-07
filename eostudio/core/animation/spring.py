@@ -21,6 +21,7 @@ class SpringConfig:
       - slow:    stiffness=50,  damping=15, mass=1
       - molasses: stiffness=30, damping=20, mass=1
     """
+
     stiffness: float = 100.0
     damping: float = 10.0
     mass: float = 1.0
@@ -69,8 +70,7 @@ class SpringConfig:
 class SpringSimulator:
     """Simulate spring motion from an initial value to a target value."""
 
-    def __init__(self, from_value: float, to_value: float,
-                 config: SpringConfig | None = None) -> None:
+    def __init__(self, from_value: float, to_value: float, config: SpringConfig | None = None) -> None:
         self.config = config or SpringConfig.default()
         self.from_value = from_value
         self.to_value = to_value
@@ -112,8 +112,10 @@ class SpringSimulator:
             else:
                 self._position = max(self._position, self.to_value)
 
-        if (abs(self._position - self.to_value) < cfg.rest_threshold and
-                abs(self._velocity) < cfg.rest_velocity_threshold):
+        if (
+            abs(self._position - self.to_value) < cfg.rest_threshold
+            and abs(self._velocity) < cfg.rest_velocity_threshold
+        ):
             self._position = self.to_value
             self._velocity = 0.0
             self._at_rest = True
@@ -163,8 +165,7 @@ class SpringSimulator:
 class MultiSpringSimulator:
     """Simulate spring motion for multi-dimensional values (x,y,z etc.)."""
 
-    def __init__(self, from_value: NumericValue, to_value: NumericValue,
-                 config: SpringConfig | None = None) -> None:
+    def __init__(self, from_value: NumericValue, to_value: NumericValue, config: SpringConfig | None = None) -> None:
         self.config = config or SpringConfig.default()
         from_seq = [from_value] if isinstance(from_value, (int, float)) else list(from_value)
         to_seq = [to_value] if isinstance(to_value, (int, float)) else list(to_value)
@@ -173,15 +174,21 @@ class MultiSpringSimulator:
         for i in range(length):
             fv = from_seq[i] if i < len(from_seq) else 0.0
             tv = to_seq[i] if i < len(to_seq) else 0.0
-            self._springs.append(SpringSimulator(fv, tv, SpringConfig(
-                stiffness=self.config.stiffness,
-                damping=self.config.damping,
-                mass=self.config.mass,
-                velocity=self.config.velocity,
-                rest_threshold=self.config.rest_threshold,
-                rest_velocity_threshold=self.config.rest_velocity_threshold,
-                clamp=self.config.clamp,
-            )))
+            self._springs.append(
+                SpringSimulator(
+                    fv,
+                    tv,
+                    SpringConfig(
+                        stiffness=self.config.stiffness,
+                        damping=self.config.damping,
+                        mass=self.config.mass,
+                        velocity=self.config.velocity,
+                        rest_threshold=self.config.rest_threshold,
+                        rest_velocity_threshold=self.config.rest_velocity_threshold,
+                        clamp=self.config.clamp,
+                    ),
+                )
+            )
 
     def step(self, dt: float) -> NumericValue:
         values = [s.step(dt) for s in self._springs]

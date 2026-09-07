@@ -16,37 +16,74 @@ class DesktopAppGenerator:
 
     COMPONENT_MAPS: Dict[str, Dict[str, str]] = {
         "electron": {
-            "Button": "button", "Text": "p", "Input": "input",
-            "Container": "div", "Card": "div.card", "AppBar": "header",
-            "BottomNav": "nav", "List": "ul", "Grid": "div.grid",
-            "Image": "img", "Dialog": "dialog", "TabBar": "div.tabs",
+            "Button": "button",
+            "Text": "p",
+            "Input": "input",
+            "Container": "div",
+            "Card": "div.card",
+            "AppBar": "header",
+            "BottomNav": "nav",
+            "List": "ul",
+            "Grid": "div.grid",
+            "Image": "img",
+            "Dialog": "dialog",
+            "TabBar": "div.tabs",
         },
         "tauri": {
-            "Button": "button", "Text": "p", "Input": "input",
-            "Container": "div", "Card": "div.card", "AppBar": "header",
-            "BottomNav": "nav", "List": "ul", "Grid": "div.grid",
-            "Image": "img", "Dialog": "dialog", "TabBar": "div.tabs",
+            "Button": "button",
+            "Text": "p",
+            "Input": "input",
+            "Container": "div",
+            "Card": "div.card",
+            "AppBar": "header",
+            "BottomNav": "nav",
+            "List": "ul",
+            "Grid": "div.grid",
+            "Image": "img",
+            "Dialog": "dialog",
+            "TabBar": "div.tabs",
         },
         "tkinter": {
-            "Button": "ttk.Button", "Text": "ttk.Label", "Input": "ttk.Entry",
-            "Container": "ttk.Frame", "Card": "ttk.LabelFrame",
-            "AppBar": "tk.Menu", "BottomNav": "ttk.Frame",
-            "List": "tk.Listbox", "Grid": "ttk.Frame", "Image": "tk.Label",
-            "Dialog": "tk.Toplevel", "TabBar": "ttk.Notebook",
+            "Button": "ttk.Button",
+            "Text": "ttk.Label",
+            "Input": "ttk.Entry",
+            "Container": "ttk.Frame",
+            "Card": "ttk.LabelFrame",
+            "AppBar": "tk.Menu",
+            "BottomNav": "ttk.Frame",
+            "List": "tk.Listbox",
+            "Grid": "ttk.Frame",
+            "Image": "tk.Label",
+            "Dialog": "tk.Toplevel",
+            "TabBar": "ttk.Notebook",
         },
         "qt": {
-            "Button": "QPushButton", "Text": "QLabel", "Input": "QLineEdit",
-            "Container": "QWidget", "Card": "QGroupBox", "AppBar": "QMenuBar",
-            "BottomNav": "QToolBar", "List": "QListWidget",
-            "Grid": "QGridLayout", "Image": "QLabel", "Dialog": "QDialog",
+            "Button": "QPushButton",
+            "Text": "QLabel",
+            "Input": "QLineEdit",
+            "Container": "QWidget",
+            "Card": "QGroupBox",
+            "AppBar": "QMenuBar",
+            "BottomNav": "QToolBar",
+            "List": "QListWidget",
+            "Grid": "QGridLayout",
+            "Image": "QLabel",
+            "Dialog": "QDialog",
             "TabBar": "QTabWidget",
         },
         "compose_desktop": {
-            "Button": "Button", "Text": "Text", "Input": "OutlinedTextField",
-            "Container": "Column", "Card": "Card", "AppBar": "TopAppBar",
-            "BottomNav": "NavigationBar", "List": "LazyColumn",
-            "Grid": "LazyVerticalGrid", "Image": "Image",
-            "Dialog": "AlertDialog", "TabBar": "TabRow",
+            "Button": "Button",
+            "Text": "Text",
+            "Input": "OutlinedTextField",
+            "Container": "Column",
+            "Card": "Card",
+            "AppBar": "TopAppBar",
+            "BottomNav": "NavigationBar",
+            "List": "LazyColumn",
+            "Grid": "LazyVerticalGrid",
+            "Image": "Image",
+            "Dialog": "AlertDialog",
+            "TabBar": "TabRow",
         },
     }
 
@@ -59,10 +96,7 @@ class DesktopAppGenerator:
             ValueError: If *target* is not supported.
         """
         if target not in self.SUPPORTED_TARGETS:
-            raise ValueError(
-                f"Unknown target {target!r}. "
-                f"Supported: {', '.join(self.SUPPORTED_TARGETS)}"
-            )
+            raise ValueError(f"Unknown target {target!r}. Supported: {', '.join(self.SUPPORTED_TARGETS)}")
         self._target = target
 
     # ------------------------------------------------------------------
@@ -118,7 +152,9 @@ class DesktopAppGenerator:
         menu = []
         for s in screens:
             n = s.get("name", "Home")
-            menu.append(f"        {{ label: '{n}', click: () => mainWindow.webContents.send('navigate', '{self._kebab(n)}') }}")
+            menu.append(
+                f"        {{ label: '{n}', click: () => mainWindow.webContents.send('navigate', '{self._kebab(n)}') }}"
+            )
         ipc = []
         for s in screens:
             n = s.get("name", "Home")
@@ -148,8 +184,7 @@ class DesktopAppGenerator:
             "      { label: 'New Window', accelerator: 'CmdOrCtrl+N', click: createWindow },\n"
             "      { type: 'separator' }, { role: 'quit' },\n"
             "    ]},\n"
-            "    { label: 'View', submenu: [\n"
-            + ",\n".join(menu) + "\n"
+            "    { label: 'View', submenu: [\n" + ",\n".join(menu) + "\n"
             "    ]},\n"
             "    { label: 'Help', submenu: [\n"
             f"      {{ label: 'About {app_name}', click: () => {{}} }},\n"
@@ -160,8 +195,7 @@ class DesktopAppGenerator:
             f"  tray.setToolTip('{app_name}');\n"
             "  tray.on('click', () => {\n"
             "    if (mainWindow) mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();\n"
-            "  });\n}\n\n"
-            + "\n".join(ipc) + "\n\n"
+            "  });\n}\n\n" + "\n".join(ipc) + "\n\n"
             "app.whenReady().then(() => {\n"
             "  createWindow(); createMenu(); createTray();\n"
             "  app.on('activate', () => {\n"
@@ -194,24 +228,19 @@ class DesktopAppGenerator:
             nav.append(f'      <button data-screen="{sid}"{ac}>{n}</button>')
             disp = "block" if i == 0 else "none"
             body = self._render_html_components(s.get("components", []), 4)
-            secs.append(
-                f'    <section id="{sid}" style="display:{disp}">\n'
-                f"      <h2>{n}</h2>\n{body}    </section>"
-            )
+            secs.append(f'    <section id="{sid}" style="display:{disp}">\n      <h2>{n}</h2>\n{body}    </section>')
         return (
-            "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n"
-            "  <meta charset=\"UTF-8\" />\n"
-            "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n"
+            '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+            '  <meta charset="UTF-8" />\n'
+            '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
             f"  <title>{app_name}</title>\n"
-            "  <link rel=\"stylesheet\" href=\"styles.css\" />\n"
+            '  <link rel="stylesheet" href="styles.css" />\n'
             "</head>\n<body>\n"
-            "  <header class=\"app-bar\">\n"
-            f"    <h1>{app_name}</h1>\n    <nav>\n"
-            + "\n".join(nav) + "\n    </nav>\n  </header>\n"
-            "  <main id=\"app-content\">\n"
-            + "\n".join(secs) + "\n  </main>\n"
-            "  <footer class=\"bottom-nav\" id=\"bottom-nav\"></footer>\n"
-            "  <script src=\"renderer.js\"></script>\n"
+            '  <header class="app-bar">\n'
+            f"    <h1>{app_name}</h1>\n    <nav>\n" + "\n".join(nav) + "\n    </nav>\n  </header>\n"
+            '  <main id="app-content">\n' + "\n".join(secs) + "\n  </main>\n"
+            '  <footer class="bottom-nav" id="bottom-nav"></footer>\n'
+            '  <script src="renderer.js"></script>\n'
             "</body>\n</html>\n"
         )
 
@@ -240,20 +269,26 @@ class DesktopAppGenerator:
             elif ct == "AppBar":
                 lines.append(f'{pad}<header class="app-bar"><h1>{lb}</h1></header>\n')
             elif ct == "BottomNav":
-                lines.append(f'{pad}<nav class="bottom-nav">\n{self._render_html_components(ch, indent + 1)}{pad}</nav>\n')
+                lines.append(
+                    f'{pad}<nav class="bottom-nav">\n{self._render_html_components(ch, indent + 1)}{pad}</nav>\n'
+                )
             elif ct == "List":
                 items = c.get("items", [lb] if lb else ["Item"])
                 li = "".join(f"{pad}  <li>{it}</li>\n" for it in items)
                 lines.append(f"{pad}<ul>\n{li}{pad}</ul>\n")
             elif ct == "Grid":
                 cols = c.get("columns", 3)
-                lines.append(f'{pad}<div class="grid" style="grid-template-columns:repeat({cols},1fr)">\n{self._render_html_components(ch, indent + 1)}{pad}</div>\n')
+                lines.append(
+                    f'{pad}<div class="grid" style="grid-template-columns:repeat({cols},1fr)">\n{self._render_html_components(ch, indent + 1)}{pad}</div>\n'
+                )
             elif ct == "Image":
                 lines.append(f'{pad}<img src="{src}" alt="{lb}" class="image" />\n')
             elif ct == "Dialog":
                 did = self._kebab(lb or "dialog")
                 inner = self._render_html_components(ch, indent + 1) if ch else f"{pad}  <p>{lb}</p>\n"
-                lines.append(f'{pad}<dialog id="{did}">\n{inner}{pad}  <button class="btn" onclick="this.closest(\'dialog\').close()">Close</button>\n{pad}</dialog>\n')
+                lines.append(
+                    f'{pad}<dialog id="{did}">\n{inner}{pad}  <button class="btn" onclick="this.closest(\'dialog\').close()">Close</button>\n{pad}</dialog>\n'
+                )
             elif ct == "TabBar":
                 tabs = c.get("tabs", ch)
                 btns = ""
@@ -267,8 +302,12 @@ class DesktopAppGenerator:
                     tc = self._render_html_components(t.get("children", t.get("components", [])), indent + 2)
                     if not tc.strip():
                         tc = f"{pad}      <p>{tn} content</p>\n"
-                    panels += f'{pad}    <div class="tab-panel" id="tab-{tid}" style="display:{disp}">\n{tc}{pad}    </div>\n'
-                lines.append(f'{pad}<div class="tabs">\n{pad}  <div class="tab-bar">\n{btns}{pad}  </div>\n{panels}{pad}</div>\n')
+                    panels += (
+                        f'{pad}    <div class="tab-panel" id="tab-{tid}" style="display:{disp}">\n{tc}{pad}    </div>\n'
+                    )
+                lines.append(
+                    f'{pad}<div class="tabs">\n{pad}  <div class="tab-bar">\n{btns}{pad}  </div>\n{panels}{pad}</div>\n'
+                )
             else:
                 lines.append(f"{pad}<p>{lb}</p>\n")
         return "".join(lines)
@@ -350,13 +389,25 @@ class DesktopAppGenerator:
         )
 
     def _electron_package_json(self, app_name: str) -> str:
-        return json.dumps({
-            "name": self._kebab(app_name), "version": "1.0.0",
-            "description": f"{app_name} â€” built with EoStudio", "main": "main.js",
-            "scripts": {"start": "electron .", "dev": "electron . --enable-logging",
-                        "build": "electron-builder --dir", "dist": "electron-builder"},
-            "devDependencies": {"electron": "^28.0.0", "electron-builder": "^24.0.0"},
-        }, indent=2) + "\n"
+        return (
+            json.dumps(
+                {
+                    "name": self._kebab(app_name),
+                    "version": "1.0.0",
+                    "description": f"{app_name} â€” built with EoStudio",
+                    "main": "main.js",
+                    "scripts": {
+                        "start": "electron .",
+                        "dev": "electron . --enable-logging",
+                        "build": "electron-builder --dir",
+                        "dist": "electron-builder",
+                    },
+                    "devDependencies": {"electron": "^28.0.0", "electron-builder": "^24.0.0"},
+                },
+                indent=2,
+            )
+            + "\n"
+        )
 
     # ------------------------------------------------------------------
     # Tauri
@@ -382,15 +433,14 @@ class DesktopAppGenerator:
             n = s.get("name", "Home")
             cmds.append(
                 "#[tauri::command]\n"
-                f'fn get_{fn}_data() -> String {{\n'
+                f"fn get_{fn}_data() -> String {{\n"
                 f'    format!("{{\\"screen\\": \\"{n}\\", \\"ts\\": {{}}}}", '
                 "std::time::SystemTime::now()\n"
                 "        .duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis())\n}"
             )
             names.append(f"get_{fn}_data")
         return (
-            '#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]\n\n'
-            + "\n\n".join(cmds) + "\n\n"
+            '#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]\n\n' + "\n\n".join(cmds) + "\n\n"
             "fn main() {\n"
             "    tauri::Builder::default()\n"
             f"        .invoke_handler(tauri::generate_handler![{', '.join(names)}])\n"
@@ -412,16 +462,32 @@ class DesktopAppGenerator:
         )
 
     def _tauri_conf_json(self, app_name: str) -> str:
-        return json.dumps({
-            "build": {"beforeDevCommand": "npm run dev", "beforeBuildCommand": "npm run build",
-                      "devPath": "http://localhost:5173", "distDir": "../dist"},
-            "package": {"productName": app_name, "version": "1.0.0"},
-            "tauri": {
-                "allowlist": {"all": False, "shell": {"all": False, "open": True}},
-                "bundle": {"active": True, "identifier": f"com.EoStudio.{self._kebab(app_name)}", "targets": "all"},
-                "windows": [{"fullscreen": False, "height": 800, "width": 1200, "resizable": True, "title": app_name}],
-            },
-        }, indent=2) + "\n"
+        return (
+            json.dumps(
+                {
+                    "build": {
+                        "beforeDevCommand": "npm run dev",
+                        "beforeBuildCommand": "npm run build",
+                        "devPath": "http://localhost:5173",
+                        "distDir": "../dist",
+                    },
+                    "package": {"productName": app_name, "version": "1.0.0"},
+                    "tauri": {
+                        "allowlist": {"all": False, "shell": {"all": False, "open": True}},
+                        "bundle": {
+                            "active": True,
+                            "identifier": f"com.EoStudio.{self._kebab(app_name)}",
+                            "targets": "all",
+                        },
+                        "windows": [
+                            {"fullscreen": False, "height": 800, "width": 1200, "resizable": True, "title": app_name}
+                        ],
+                    },
+                },
+                indent=2,
+            )
+            + "\n"
+        )
 
     def _tauri_app_tsx(self, screens: List[Dict[str, Any]], app_name: str) -> str:
         state = "  const [activeScreen, setActiveScreen] = useState(0);\n"
@@ -429,7 +495,9 @@ class DesktopAppGenerator:
         for s in screens:
             fn = self._snake(s.get("name", "Home"))
             p = self._pascal(s.get("name", "Home"))
-            state += f"  const [{self._camel(s.get('name', 'Home'))}Data, set{p}Data] = useState<string | null>(null);\n"
+            state += (
+                f"  const [{self._camel(s.get('name', 'Home'))}Data, set{p}Data] = useState<string | null>(null);\n"
+            )
             fetchers.append(
                 f"  async function fetch{p}() {{\n"
                 f"    const r = await invoke<string>('get_{fn}_data');\n"
@@ -439,15 +507,20 @@ class DesktopAppGenerator:
         panels = []
         for i, s in enumerate(screens):
             n = s.get("name", "Home")
-            nav.append(f'          <button className={{activeScreen === {i} ? "active" : ""}} onClick={{() => setActiveScreen({i})}}>{n}</button>')
+            nav.append(
+                f'          <button className={{activeScreen === {i} ? "active" : ""}} onClick={{() => setActiveScreen({i})}}>{n}</button>'
+            )
             body = self._render_html_components(s.get("components", []), 6)
-            panels.append(f"        {{activeScreen === {i} && (\n          <section>\n            <h2>{n}</h2>\n{body}          </section>\n        )}}")
+            panels.append(
+                f"        {{activeScreen === {i} && (\n          <section>\n            <h2>{n}</h2>\n{body}          </section>\n        )}}"
+            )
         return (
             "import { useState } from 'react';\nimport { invoke } from '@tauri-apps/api/tauri';\nimport './App.css';\n\n"
             "function App() {\n" + state + "\n" + "\n\n".join(fetchers) + "\n\n"
-            "  return (\n    <div className=\"app\">\n"
-            f"      <header className=\"app-bar\"><h1>{app_name}</h1>\n        <nav>\n"
-            + "\n".join(nav) + "\n        </nav>\n      </header>\n"
+            '  return (\n    <div className="app">\n'
+            f'      <header className="app-bar"><h1>{app_name}</h1>\n        <nav>\n'
+            + "\n".join(nav)
+            + "\n        </nav>\n      </header>\n"
             "      <main>\n" + "\n".join(panels) + "\n      </main>\n"
             "    </div>\n  );\n}\n\nexport default App;\n"
         )
@@ -460,14 +533,33 @@ class DesktopAppGenerator:
         )
 
     def _tauri_package_json(self, app_name: str) -> str:
-        return json.dumps({
-            "name": self._kebab(app_name), "version": "1.0.0", "private": True, "type": "module",
-            "scripts": {"dev": "vite", "build": "tsc && vite build", "preview": "vite preview", "tauri": "tauri"},
-            "dependencies": {"@tauri-apps/api": "^1.5.0", "react": "^18.2.0", "react-dom": "^18.2.0"},
-            "devDependencies": {"@tauri-apps/cli": "^1.5.0", "@types/react": "^18.2.0",
-                                "@types/react-dom": "^18.2.0", "@vitejs/plugin-react": "^4.0.0",
-                                "typescript": "^5.0.0", "vite": "^5.0.0"},
-        }, indent=2) + "\n"
+        return (
+            json.dumps(
+                {
+                    "name": self._kebab(app_name),
+                    "version": "1.0.0",
+                    "private": True,
+                    "type": "module",
+                    "scripts": {
+                        "dev": "vite",
+                        "build": "tsc && vite build",
+                        "preview": "vite preview",
+                        "tauri": "tauri",
+                    },
+                    "dependencies": {"@tauri-apps/api": "^1.5.0", "react": "^18.2.0", "react-dom": "^18.2.0"},
+                    "devDependencies": {
+                        "@tauri-apps/cli": "^1.5.0",
+                        "@types/react": "^18.2.0",
+                        "@types/react-dom": "^18.2.0",
+                        "@vitejs/plugin-react": "^4.0.0",
+                        "typescript": "^5.0.0",
+                        "vite": "^5.0.0",
+                    },
+                },
+                indent=2,
+            )
+            + "\n"
+        )
 
     # ------------------------------------------------------------------
     # tkinter
@@ -505,12 +597,10 @@ class DesktopAppGenerator:
         screen_build: List[str] = []
         for s in screens:
             sn = self._snake(s.get("name", "Home"))
-            screen_build.append(
-                f"        self._screens['{sn}'] = self._build_{sn}(self._container)"
-            )
+            screen_build.append(f"        self._screens['{sn}'] = self._build_{sn}(self._container)")
 
         return (
-            "\"\"\"" + app_name + " â€” tkinter desktop application.\"\"\"\n\n"
+            '"""' + app_name + ' â€” tkinter desktop application."""\n\n'
             "import tkinter as tk\n"
             "from tkinter import ttk, messagebox\n\n\n"
             "class App(tk.Tk):\n"
@@ -524,8 +614,7 @@ class DesktopAppGenerator:
             "        self._build_statusbar()\n\n"
             "        self._container = ttk.Frame(self)\n"
             "        self._container.pack(fill='both', expand=True, padx=16, pady=8)\n\n"
-            "        self._screens = {}\n"
-            + "\n".join(screen_build) + "\n\n"
+            "        self._screens = {}\n" + "\n".join(screen_build) + "\n\n"
             "        self._current = None\n"
             f"        self._show_screen('{self._snake(screens[0].get('name', 'Home'))}')\n\n"
             "    def _build_menubar(self):\n"
@@ -550,8 +639,7 @@ class DesktopAppGenerator:
             "        self.config(menu=menubar)\n\n"
             "    def _build_navbar(self):\n"
             "        nav = ttk.Frame(self)\n"
-            "        nav.pack(fill='x', padx=8, pady=(8, 0))\n"
-            + "\n".join(nav_btns) + "\n\n"
+            "        nav.pack(fill='x', padx=8, pady=(8, 0))\n" + "\n".join(nav_btns) + "\n\n"
             "    def _build_statusbar(self):\n"
             "        self._status_var = tk.StringVar(value='Ready')\n"
             "        status = ttk.Label(self, textvariable=self._status_var, relief='sunken', anchor='w')\n"
@@ -562,8 +650,7 @@ class DesktopAppGenerator:
             "        self._current = self._screens.get(name)\n"
             "        if self._current:\n"
             "            self._current.pack(fill='both', expand=True)\n"
-            "        self._status_var.set(f'Screen: {name}')\n\n"
-            + "\n\n".join(screen_methods) + "\n\n"
+            "        self._status_var.set(f'Screen: {name}')\n\n" + "\n\n".join(screen_methods) + "\n\n"
             "if __name__ == '__main__':\n"
             "    app = App()\n"
             "    app.mainloop()\n"
@@ -578,14 +665,18 @@ class DesktopAppGenerator:
             lb = c.get("label", c.get("text", ""))
             ch = c.get("children", [])
             if ct == "Button":
-                lines.append(f"{pad}ttk.Button({parent}, text='{lb}', command=lambda: None).grid(row={row}, column=0, pady=4, sticky='w')\n")
+                lines.append(
+                    f"{pad}ttk.Button({parent}, text='{lb}', command=lambda: None).grid(row={row}, column=0, pady=4, sticky='w')\n"
+                )
             elif ct == "Text":
                 lines.append(f"{pad}ttk.Label({parent}, text='{lb}').grid(row={row}, column=0, pady=2, sticky='w')\n")
             elif ct == "Input":
                 ph = c.get("placeholder", lb)
                 var = self._snake(lb or "entry") + "_var"
                 lines.append(f"{pad}{var} = tk.StringVar()\n")
-                lines.append(f"{pad}ttk.Entry({parent}, textvariable={var}, width=40).grid(row={row}, column=0, pady=4, sticky='ew')\n")
+                lines.append(
+                    f"{pad}ttk.Entry({parent}, textvariable={var}, width=40).grid(row={row}, column=0, pady=4, sticky='ew')\n"
+                )
             elif ct == "Container":
                 fname = f"cont_{row}"
                 lines.append(f"{pad}{fname} = ttk.Frame({parent})\n")
@@ -600,14 +691,18 @@ class DesktopAppGenerator:
                 else:
                     lines.append(f"{pad}ttk.Label({fname}, text='{lb}').pack(anchor='w')\n")
             elif ct == "AppBar":
-                lines.append(f"{pad}ttk.Label({parent}, text='{lb}', font=('Helvetica', 16, 'bold')).grid(row={row}, column=0, pady=4, sticky='w')\n")
+                lines.append(
+                    f"{pad}ttk.Label({parent}, text='{lb}', font=('Helvetica', 16, 'bold')).grid(row={row}, column=0, pady=4, sticky='w')\n"
+                )
             elif ct == "BottomNav":
                 fname = f"bnav_{row}"
                 lines.append(f"{pad}{fname} = ttk.Frame({parent})\n")
                 lines.append(f"{pad}{fname}.grid(row=999, column=0, columnspan=2, sticky='ew', pady=8)\n")
                 for bi, bc in enumerate(ch):
                     bl = bc.get("label", bc.get("text", f"Nav{bi}"))
-                    lines.append(f"{pad}ttk.Button({fname}, text='{bl}', command=lambda: None).pack(side='left', padx=4)\n")
+                    lines.append(
+                        f"{pad}ttk.Button({fname}, text='{bl}', command=lambda: None).pack(side='left', padx=4)\n"
+                    )
             elif ct == "List":
                 items = c.get("items", [lb] if lb else ["Item 1"])
                 lname = f"lst_{row}"
@@ -624,9 +719,13 @@ class DesktopAppGenerator:
                     gl = gc.get("label", gc.get("text", f"Cell{gi}"))
                     gr = gi // cols
                     gc_col = gi % cols
-                    lines.append(f"{pad}ttk.Label({fname}, text='{gl}', relief='groove', padding=8).grid(row={gr}, column={gc_col}, padx=2, pady=2, sticky='ew')\n")
+                    lines.append(
+                        f"{pad}ttk.Label({fname}, text='{gl}', relief='groove', padding=8).grid(row={gr}, column={gc_col}, padx=2, pady=2, sticky='ew')\n"
+                    )
             elif ct == "Image":
-                lines.append(f"{pad}tk.Label({parent}, text='[Image: {lb}]', bg='#ddd', width=30, height=5).grid(row={row}, column=0, pady=4, sticky='w')\n")
+                lines.append(
+                    f"{pad}tk.Label({parent}, text='[Image: {lb}]', bg='#ddd', width=30, height=5).grid(row={row}, column=0, pady=4, sticky='w')\n"
+                )
             elif ct == "Dialog":
                 dname = f"dlg_{row}"
                 lines.append(
@@ -637,7 +736,9 @@ class DesktopAppGenerator:
                     f"{pad}    ttk.Label(dlg, text='{lb}').pack(pady=12)\n"
                     f"{pad}    ttk.Button(dlg, text='Close', command=dlg.destroy).pack(pady=8)\n"
                 )
-                lines.append(f"{pad}ttk.Button({parent}, text='Open {lb}', command=_open_{dname}).grid(row={row}, column=0, pady=4, sticky='w')\n")
+                lines.append(
+                    f"{pad}ttk.Button({parent}, text='Open {lb}', command=_open_{dname}).grid(row={row}, column=0, pady=4, sticky='w')\n"
+                )
             elif ct == "TabBar":
                 tabs = c.get("tabs", ch)
                 nbname = f"nb_{row}"
@@ -724,13 +825,11 @@ class DesktopAppGenerator:
             "        main_layout = QVBoxLayout(central)\n\n"
             "        nav = QWidget()\n"
             "        nav_layout = QHBoxLayout(nav)\n"
-            "        nav_layout.setContentsMargins(0, 0, 0, 0)\n"
-            + "\n".join(nav_btns) + "\n"
+            "        nav_layout.setContentsMargins(0, 0, 0, 0)\n" + "\n".join(nav_btns) + "\n"
             "        nav_layout.addStretch()\n"
             "        main_layout.addWidget(nav)\n\n"
             "        self._stack = QStackedWidget()\n"
-            "        self._screen_map = {}\n"
-            + "\n".join(stack_adds) + "\n\n"
+            "        self._screen_map = {}\n" + "\n".join(stack_adds) + "\n\n"
             "        main_layout.addWidget(self._stack)\n"
             "        self.setCentralWidget(central)\n"
             f"        self._show_screen('{self._snake(screens[0].get('name', 'Home'))}')\n\n"
@@ -758,8 +857,7 @@ class DesktopAppGenerator:
             "    def _show_screen(self, name):\n"
             "        idx = self._screen_map.get(name, 0)\n"
             "        self._stack.setCurrentIndex(idx)\n"
-            "        self.statusBar().showMessage(f'Screen: {name}')\n\n"
-            + "\n\n".join(screen_methods) + "\n\n"
+            "        self.statusBar().showMessage(f'Screen: {name}')\n\n" + "\n\n".join(screen_methods) + "\n\n"
             "if __name__ == '__main__':\n"
             "    app = QApplication(sys.argv)\n"
             "    window = MainWindow()\n"
@@ -898,7 +996,7 @@ class DesktopAppGenerator:
                 f"        modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),\n"
                 f"        verticalArrangement = Arrangement.spacedBy(12.dp)\n"
                 f"    ) {{\n"
-                f"        Text(\"{fname}\", style = MaterialTheme.typography.headlineMedium)\n"
+                f'        Text("{fname}", style = MaterialTheme.typography.headlineMedium)\n'
                 f"{body}"
                 "    }\n}\n"
             )
@@ -911,8 +1009,8 @@ class DesktopAppGenerator:
                 f"                NavigationBarItem(\n"
                 f"                    selected = currentScreen == {idx},\n"
                 f"                    onClick = {{ currentScreen = {idx} }},\n"
-                f"                    icon = {{ Icon(Icons.Default.Home, contentDescription = \"{n}\") }},\n"
-                f"                    label = {{ Text(\"{n}\") }}\n"
+                f'                    icon = {{ Icon(Icons.Default.Home, contentDescription = "{n}") }},\n'
+                f'                    label = {{ Text("{n}") }}\n'
                 "                )"
             )
 
@@ -935,7 +1033,7 @@ class DesktopAppGenerator:
             "import androidx.compose.ui.window.Window\n"
             "import androidx.compose.ui.window.application\n\n"
             "fun main() = application {\n"
-            f"    Window(onCloseRequest = ::exitApplication, title = \"{app_name}\") {{\n"
+            f'    Window(onCloseRequest = ::exitApplication, title = "{app_name}") {{\n'
             "        MaterialTheme {\n"
             "            App()\n"
             "        }\n"
@@ -945,21 +1043,18 @@ class DesktopAppGenerator:
             "    var currentScreen by remember { mutableStateOf(0) }\n\n"
             "    Scaffold(\n"
             "        topBar = {\n"
-            f"            TopAppBar(title = {{ Text(\"{app_name}\") }})\n"
+            f'            TopAppBar(title = {{ Text("{app_name}") }})\n'
             "        },\n"
             "        bottomBar = {\n"
-            "            NavigationBar {\n"
-            + "\n".join(nav_items) + "\n"
+            "            NavigationBar {\n" + "\n".join(nav_items) + "\n"
             "            }\n"
             "        }\n"
             "    ) { padding ->\n"
             "        Box(modifier = Modifier.padding(padding)) {\n"
-            "            when (currentScreen) {\n"
-            + "\n".join(when_branches) + "\n"
+            "            when (currentScreen) {\n" + "\n".join(when_branches) + "\n"
             "            }\n"
             "        }\n"
-            "    }\n}\n\n"
-            + "\n\n".join(screen_fns)
+            "    }\n}\n\n" + "\n\n".join(screen_fns)
         )
 
     def _compose_render_components(self, components: List[Dict[str, Any]], indent: int) -> str:
@@ -970,27 +1065,24 @@ class DesktopAppGenerator:
             lb = c.get("label", c.get("text", ""))
             ch = c.get("children", [])
             if ct == "Button":
-                lines.append(f"{pad}Button(onClick = {{ }}) {{ Text(\"{lb}\") }}\n")
+                lines.append(f'{pad}Button(onClick = {{ }}) {{ Text("{lb}") }}\n')
             elif ct == "Text":
-                lines.append(f"{pad}Text(\"{lb}\")\n")
+                lines.append(f'{pad}Text("{lb}")\n')
             elif ct == "Input":
                 var = self._camel(lb or "field")
-                lines.append(f"{pad}var {var} by remember {{ mutableStateOf(\"\") }}\n")
+                lines.append(f'{pad}var {var} by remember {{ mutableStateOf("") }}\n')
                 lines.append(
                     f"{pad}OutlinedTextField(value = {var}, onValueChange = {{ {var} = it }},\n"
-                    f"{pad}    label = {{ Text(\"{lb}\") }}, modifier = Modifier.fillMaxWidth())\n"
+                    f'{pad}    label = {{ Text("{lb}") }}, modifier = Modifier.fillMaxWidth())\n'
                 )
             elif ct == "Container":
                 d = c.get("direction", "column")
                 wrapper = "Row" if d == "row" else "Column"
                 arr = "horizontalArrangement" if d == "row" else "verticalArrangement"
                 inner = self._compose_render_components(ch, indent + 1)
-                lines.append(
-                    f"{pad}{wrapper}({arr} = Arrangement.spacedBy(8.dp)) {{\n"
-                    f"{inner}{pad}}}\n"
-                )
+                lines.append(f"{pad}{wrapper}({arr} = Arrangement.spacedBy(8.dp)) {{\n{inner}{pad}}}\n")
             elif ct == "Card":
-                inner = self._compose_render_components(ch, indent + 2) if ch else f"{pad}        Text(\"{lb}\")\n"
+                inner = self._compose_render_components(ch, indent + 2) if ch else f'{pad}        Text("{lb}")\n'
                 lines.append(
                     f"{pad}Card(modifier = Modifier.fillMaxWidth()) {{\n"
                     f"{pad}    Column(modifier = Modifier.padding(16.dp)) {{\n"
@@ -998,15 +1090,15 @@ class DesktopAppGenerator:
                     f"{pad}    }}\n{pad}}}\n"
                 )
             elif ct == "AppBar":
-                lines.append(f"{pad}Text(\"{lb}\", style = MaterialTheme.typography.headlineMedium)\n")
+                lines.append(f'{pad}Text("{lb}", style = MaterialTheme.typography.headlineMedium)\n')
             elif ct == "BottomNav":
                 lines.append(f"{pad}NavigationBar {{\n")
                 for bi, bc in enumerate(ch):
                     bl = bc.get("label", bc.get("text", f"Nav{bi}"))
                     lines.append(
                         f"{pad}    NavigationBarItem(selected = false, onClick = {{ }},\n"
-                        f"{pad}        icon = {{ Icon(Icons.Default.Home, \"{bl}\") }},\n"
-                        f"{pad}        label = {{ Text(\"{bl}\") }})\n"
+                        f'{pad}        icon = {{ Icon(Icons.Default.Home, "{bl}") }},\n'
+                        f'{pad}        label = {{ Text("{bl}") }})\n'
                     )
                 lines.append(f"{pad}}}\n")
             elif ct == "List":
@@ -1014,7 +1106,7 @@ class DesktopAppGenerator:
                 lines.append(f"{pad}Column {{\n")
                 for it in items:
                     lines.append(
-                        f"{pad}    Text(\"{it}\", modifier = Modifier.fillMaxWidth()\n"
+                        f'{pad}    Text("{it}", modifier = Modifier.fillMaxWidth()\n'
                         f"{pad}        .padding(vertical = 8.dp))\n"
                         f"{pad}    Divider()\n"
                     )
@@ -1025,11 +1117,11 @@ class DesktopAppGenerator:
                 lines.append(f"{pad}Column {{\n")
                 for gi in range(0, len(ch), cols):
                     lines.append(f"{pad}    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {{\n")
-                    for gc in ch[gi:gi + cols]:
+                    for gc in ch[gi : gi + cols]:
                         gl = gc.get("label", gc.get("text", "Cell"))
                         lines.append(
                             f"{pad}        Card(modifier = Modifier.weight(1f)) {{\n"
-                            f"{pad}            Text(\"{gl}\", modifier = Modifier.padding(8.dp))\n"
+                            f'{pad}            Text("{gl}", modifier = Modifier.padding(8.dp))\n'
                             f"{pad}        }}\n"
                         )
                     lines.append(f"{pad}    }}\n")
@@ -1039,20 +1131,20 @@ class DesktopAppGenerator:
                     f"{pad}Box(modifier = Modifier.fillMaxWidth().height(200.dp)\n"
                     f"{pad}    .background(MaterialTheme.colorScheme.surfaceVariant),\n"
                     f"{pad}    contentAlignment = Alignment.Center) {{\n"
-                    f"{pad}    Text(\"[Image: {lb}]\")\n{pad}}}\n"
+                    f'{pad}    Text("[Image: {lb}]")\n{pad}}}\n'
                 )
             elif ct == "Dialog":
                 var = f"show{self._pascal(lb or 'Dialog')}"
                 lines.append(
                     f"{pad}var {var} by remember {{ mutableStateOf(false) }}\n"
-                    f"{pad}Button(onClick = {{ {var} = true }}) {{ Text(\"Open {lb}\") }}\n"
+                    f'{pad}Button(onClick = {{ {var} = true }}) {{ Text("Open {lb}") }}\n'
                     f"{pad}if ({var}) {{\n"
                     f"{pad}    AlertDialog(\n"
                     f"{pad}        onDismissRequest = {{ {var} = false }},\n"
-                    f"{pad}        title = {{ Text(\"{lb}\") }},\n"
-                    f"{pad}        text = {{ Text(\"{lb} content\") }},\n"
-                    f"{pad}        confirmButton = {{ TextButton(onClick = {{ {var} = false }}) {{ Text(\"OK\") }} }},\n"
-                    f"{pad}        dismissButton = {{ TextButton(onClick = {{ {var} = false }}) {{ Text(\"Cancel\") }} }}\n"
+                    f'{pad}        title = {{ Text("{lb}") }},\n'
+                    f'{pad}        text = {{ Text("{lb} content") }},\n'
+                    f'{pad}        confirmButton = {{ TextButton(onClick = {{ {var} = false }}) {{ Text("OK") }} }},\n'
+                    f'{pad}        dismissButton = {{ TextButton(onClick = {{ {var} = false }}) {{ Text("Cancel") }} }}\n'
                     f"{pad}    )\n{pad}}}\n"
                 )
             elif ct == "TabBar":
@@ -1064,19 +1156,18 @@ class DesktopAppGenerator:
                     lines.append(
                         f"{pad}    Tab(selected = selectedTab == {ti},\n"
                         f"{pad}        onClick = {{ selectedTab = {ti} }},\n"
-                        f"{pad}        text = {{ Text(\"{tn}\") }})\n"
+                        f'{pad}        text = {{ Text("{tn}") }})\n'
                     )
                 lines.append(f"{pad}}}\n")
                 for ti, t in enumerate(tabs):
                     tn = t.get("label", t.get("name", f"Tab {ti + 1}"))
                     tc = t.get("children", t.get("components", []))
-                    inner = self._compose_render_components(tc, indent + 1) if tc else f"{pad}    Text(\"{tn} content\")\n"
-                    lines.append(
-                        f"{pad}if (selectedTab == {ti}) {{\n"
-                        f"{inner}{pad}}}\n"
+                    inner = (
+                        self._compose_render_components(tc, indent + 1) if tc else f'{pad}    Text("{tn} content")\n'
                     )
+                    lines.append(f"{pad}if (selectedTab == {ti}) {{\n{inner}{pad}}}\n")
             else:
-                lines.append(f"{pad}Text(\"{lb}\")\n")
+                lines.append(f'{pad}Text("{lb}")\n')
         return "".join(lines)
 
     def _compose_build_gradle(self, app_name: str) -> str:
@@ -1084,13 +1175,13 @@ class DesktopAppGenerator:
         return (
             "import org.jetbrains.compose.desktop.application.dsl.TargetFormat\n\n"
             "plugins {\n"
-            "    kotlin(\"jvm\")\n"
-            "    id(\"org.jetbrains.compose\")\n"
-            "    id(\"org.jetbrains.kotlin.plugin.compose\")\n"
+            '    kotlin("jvm")\n'
+            '    id("org.jetbrains.compose")\n'
+            '    id("org.jetbrains.kotlin.plugin.compose")\n'
             "}\n\n"
-            "group = \"com.EoStudio\"\nversion = \"1.0.0\"\n\n"
+            'group = "com.EoStudio"\nversion = "1.0.0"\n\n'
             "repositories {\n    mavenCentral()\n"
-            "    maven(\"https://maven.pkg.jetbrains.space/public/p/compose/dev\")\n"
+            '    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")\n'
             "    google()\n}\n\n"
             "dependencies {\n"
             "    implementation(compose.desktop.currentOs)\n"
@@ -1099,11 +1190,11 @@ class DesktopAppGenerator:
             "}\n\n"
             "compose.desktop {\n"
             "    application {\n"
-            f"        mainClass = \"MainKt\"\n"
+            f'        mainClass = "MainKt"\n'
             "        nativeDistributions {\n"
             "            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)\n"
-            f"            packageName = \"{self._kebab(app_name)}\"\n"
-            "            packageVersion = \"1.0.0\"\n"
+            f'            packageName = "{self._kebab(app_name)}"\n'
+            '            packageVersion = "1.0.0"\n'
             "        }\n    }\n}\n"
         )
 

@@ -12,6 +12,7 @@ The AgenticCoder can:
 Architecture:
     Task → Planner → SubtaskQueue → Executor → Verifier → Committer
 """
+
 from __future__ import annotations
 
 import json
@@ -45,11 +46,12 @@ class AgentStatus(Enum):
 @dataclass
 class SubTask:
     """A single step in the agent's execution plan."""
+
     id: str
     description: str
-    action: str          # "create_file", "edit_file", "run_command", "search", "test"
-    target: str = ""     # File path or command
-    content: str = ""    # File content or search query
+    action: str  # "create_file", "edit_file", "run_command", "search", "test"
+    target: str = ""  # File path or command
+    content: str = ""  # File content or search query
     depends_on: List[str] = field(default_factory=list)
     status: str = "pending"  # pending | running | done | failed
     result: str = ""
@@ -58,6 +60,7 @@ class SubTask:
 @dataclass
 class AgentPlan:
     """The agent's execution plan for a task."""
+
     task: str
     subtasks: List[SubTask]
     estimated_files: int = 0
@@ -68,6 +71,7 @@ class AgentPlan:
 @dataclass
 class AgentResult:
     """Final result from the agentic coder."""
+
     success: bool
     task: str
     files_created: List[str] = field(default_factory=list)
@@ -110,9 +114,7 @@ class AgenticCoder:
         auto_commit: bool = False,
     ) -> None:
         self.workspace = Path(workspace).resolve()
-        self._router = router or MultiModelRouter(
-            RouterConfig(primary_model="gpt-4.1", fallback_model="gpt-4.1-mini")
-        )
+        self._router = router or MultiModelRouter(RouterConfig(primary_model="gpt-4.1", fallback_model="gpt-4.1-mini"))
         self.auto_commit = auto_commit
         self._status = AgentStatus.IDLE
         self._current_plan: Optional[AgentPlan] = None
@@ -146,7 +148,8 @@ class AgenticCoder:
             self._emit(
                 AgentStatus.PLANNING,
                 f"Plan ready: {len(plan.subtasks)} steps",
-                None, on_progress,
+                None,
+                on_progress,
             )
         except Exception as exc:
             log.error("Planning failed: %s", exc)
@@ -239,26 +242,34 @@ class AgenticCoder:
         lock_event = __import__("threading").Event()
 
         def on_progress(status: AgentStatus, message: str, subtask: Optional[SubTask]) -> None:
-            events.append({
-                "type": "progress",
-                "status": status.name,
-                "message": message,
-                "subtask": subtask.description if subtask else None,
-            })
+            events.append(
+                {
+                    "type": "progress",
+                    "status": status.name,
+                    "message": message,
+                    "subtask": subtask.description if subtask else None,
+                }
+            )
             lock_event.set()
 
         import threading
+
         result_holder: List[AgentResult] = []
 
         def _run() -> None:
             result = self.run(task, on_progress=on_progress)
             result_holder.append(result)
-            events.append({"type": "done", "result": {
-                "success": result.success,
-                "summary": result.summary,
-                "files_created": result.files_created,
-                "files_modified": result.files_modified,
-            }})
+            events.append(
+                {
+                    "type": "done",
+                    "result": {
+                        "success": result.success,
+                        "summary": result.summary,
+                        "files_created": result.files_created,
+                        "files_modified": result.files_modified,
+                    },
+                }
+            )
             lock_event.set()
 
         t = threading.Thread(target=_run, daemon=True)
@@ -315,13 +326,15 @@ class AgenticCoder:
         # Fallback: single-step plan
         return AgentPlan(
             task=task,
-            subtasks=[SubTask(
-                id="step_1",
-                description=f"Implement: {task}",
-                action="create_file",
-                target="implementation.py",
-                content="# TODO: implement",
-            )],
+            subtasks=[
+                SubTask(
+                    id="step_1",
+                    description=f"Implement: {task}",
+                    action="create_file",
+                    target="implementation.py",
+                    content="# TODO: implement",
+                )
+            ],
         )
 
     # ------------------------------------------------------------------
@@ -378,8 +391,15 @@ class AgenticCoder:
     def _generate_file_content(self, rel_path: str, description: str) -> str:
         """Generate file content using AI."""
         ext = Path(rel_path).suffix
-        lang_map = {".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript React",
-                    ".js": "JavaScript", ".rs": "Rust", ".go": "Go", ".cpp": "C++"}
+        lang_map = {
+            ".py": "Python",
+            ".ts": "TypeScript",
+            ".tsx": "TypeScript React",
+            ".js": "JavaScript",
+            ".rs": "Rust",
+            ".go": "Go",
+            ".cpp": "C++",
+        }
         lang = lang_map.get(ext, "code")
 
         prompt = (
@@ -423,9 +443,7 @@ class AgenticCoder:
 
     def _has_tests(self) -> bool:
         """Check if the workspace has a test suite."""
-        return (self.workspace / "tests").exists() or bool(
-            list(self.workspace.glob("test_*.py"))
-        )
+        return (self.workspace / "tests").exists() or bool(list(self.workspace.glob("test_*.py")))
 
     def _run_tests(self) -> Tuple[int, int, str]:
         """Run the test suite and return (passed, failed, output)."""

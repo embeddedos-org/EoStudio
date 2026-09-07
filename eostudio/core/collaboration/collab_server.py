@@ -53,9 +53,7 @@ class CollabServer:
         if session and user_id in session.participants:
             session.participants.remove(user_id)
 
-    def broadcast_operation(
-        self, session_id: str, op: CRDTOperation
-    ) -> None:
+    def broadcast_operation(self, session_id: str, op: CRDTOperation) -> None:
         _session = self._sessions.get(session_id)
         # In a real implementation this would broadcast to all participants
 

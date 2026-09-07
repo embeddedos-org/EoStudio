@@ -1,4 +1,5 @@
 """Performance profiling tools for Python and Node.js."""
+
 from __future__ import annotations
 
 import json
@@ -14,6 +15,7 @@ from typing import Dict, List, Optional
 
 class ProfileType(Enum):
     """Types of profiling."""
+
     CPU = "cpu"
     MEMORY = "memory"
     NETWORK = "network"
@@ -23,6 +25,7 @@ class ProfileType(Enum):
 @dataclass
 class ProfileSample:
     """A single profile sample entry."""
+
     function: str
     file: str
     line: int
@@ -34,6 +37,7 @@ class ProfileSample:
 @dataclass
 class ProfileResult:
     """Complete profiling result."""
+
     type: ProfileType
     samples: List[ProfileSample] = field(default_factory=list)
     total_time_ms: float = 0.0
@@ -44,6 +48,7 @@ class ProfileResult:
 @dataclass
 class FlameGraphNode:
     """A node in a flame graph tree."""
+
     name: str
     value: float
     children: List[FlameGraphNode] = field(default_factory=list)
@@ -52,6 +57,7 @@ class FlameGraphNode:
 @dataclass
 class FlameGraph:
     """A flame graph representation of profiling data."""
+
     root: FlameGraphNode = field(default_factory=lambda: FlameGraphNode("root", 0))
     total_samples: int = 0
 
@@ -63,17 +69,18 @@ class Profiler:
         self.workspace_path = os.path.abspath(workspace_path)
         self._history: List[ProfileResult] = []
 
-    def profile_python(
-        self, script: str, args: Optional[List[str]] = None
-    ) -> ProfileResult:
+    def profile_python(self, script: str, args: Optional[List[str]] = None) -> ProfileResult:
         """Profile a Python script using cProfile via subprocess."""
         stats_file = os.path.join(
             tempfile.gettempdir(),
             f"eostudio_profile_{os.getpid()}.prof",
         )
         cmd = [
-            "python", "-m", "cProfile",
-            "-o", stats_file,
+            "python",
+            "-m",
+            "cProfile",
+            "-o",
+            stats_file,
             script,
         ]
         if args:
@@ -134,14 +141,16 @@ class Profiler:
                 data = json.loads(proc.stdout.strip().splitlines()[-1])
                 result.peak_memory_mb = data.get("peak", 0) / (1024 * 1024)
                 for entry in data.get("entries", []):
-                    result.samples.append(ProfileSample(
-                        function="<memory>",
-                        file=entry.get("file", ""),
-                        line=entry.get("line", 0),
-                        time_ms=0.0,
-                        calls=entry.get("count", 0),
-                        cumulative_ms=entry.get("size", 0) / 1024,  # KB
-                    ))
+                    result.samples.append(
+                        ProfileSample(
+                            function="<memory>",
+                            file=entry.get("file", ""),
+                            line=entry.get("line", 0),
+                            time_ms=0.0,
+                            calls=entry.get("count", 0),
+                            cumulative_ms=entry.get("size", 0) / 1024,  # KB
+                        )
+                    )
             except (json.JSONDecodeError, IndexError):
                 pass
 
@@ -163,10 +172,7 @@ class Profiler:
             timestamp=datetime.now().isoformat(),
         )
 
-        log_files = [
-            f for f in os.listdir(self.workspace_path)
-            if f.startswith("isolate-") and f.endswith(".log")
-        ]
+        log_files = [f for f in os.listdir(self.workspace_path) if f.startswith("isolate-") and f.endswith(".log")]
         if not log_files:
             self._history.append(result)
             return result
@@ -208,10 +214,7 @@ class Profiler:
 
         # Use pstats via subprocess to dump stats as text
         dump_script = (
-            "import pstats, sys;"
-            f"s = pstats.Stats({stats_file!r});"
-            "s.sort_stats('cumulative');"
-            "s.print_stats(50)"
+            f"import pstats, sys;s = pstats.Stats({stats_file!r});s.sort_stats('cumulative');s.print_stats(50)"
         )
         proc = subprocess.run(
             ["python", "-c", dump_script],
@@ -236,12 +239,12 @@ class Profiler:
 
             # Match stat lines
             match = re.match(
-                r"(\d+(?:/\d+)?)\s+"      # ncalls
-                r"([\d.]+)\s+"             # tottime
-                r"([\d.]+)\s+"             # percall
-                r"([\d.]+)\s+"             # cumtime
-                r"([\d.]+)\s+"             # percall
-                r"(.+)",                   # filename:lineno(function)
+                r"(\d+(?:/\d+)?)\s+"  # ncalls
+                r"([\d.]+)\s+"  # tottime
+                r"([\d.]+)\s+"  # percall
+                r"([\d.]+)\s+"  # cumtime
+                r"([\d.]+)\s+"  # percall
+                r"(.+)",  # filename:lineno(function)
                 line,
             )
             if not match:
@@ -269,14 +272,16 @@ class Profiler:
                 line_no = 0
                 func_name = location
 
-            result.samples.append(ProfileSample(
-                function=func_name,
-                file=file_path,
-                line=line_no,
-                time_ms=tottime * 1000,
-                calls=ncalls,
-                cumulative_ms=cumtime * 1000,
-            ))
+            result.samples.append(
+                ProfileSample(
+                    function=func_name,
+                    file=file_path,
+                    line=line_no,
+                    time_ms=tottime * 1000,
+                    calls=ncalls,
+                    cumulative_ms=cumtime * 1000,
+                )
+            )
 
         if result.samples:
             result.total_time_ms = sum(s.time_ms for s in result.samples)
@@ -323,7 +328,8 @@ class Profiler:
 
         data_json = json.dumps(node_to_dict(graph.root), indent=2)
 
-        html = """<!DOCTYPE html>
+        html = (
+            """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -355,11 +361,15 @@ class Profiler:
 </head>
 <body>
 <h1>EoStudio Flame Graph</h1>
-<div class="info">Total samples: """ + str(graph.total_samples) + """</div>
+<div class="info">Total samples: """
+            + str(graph.total_samples)
+            + """</div>
 <div id="chart"></div>
 <div class="tooltip" id="tooltip"></div>
 <script>
-const data = """ + data_json + """;
+const data = """
+            + data_json
+            + """;
 const chart = document.getElementById('chart');
 const tooltip = document.getElementById('tooltip');
 const totalValue = data.value || 1;
@@ -406,6 +416,7 @@ data.children
 </script>
 </body>
 </html>"""
+        )
 
         os.makedirs(os.path.dirname(output) or ".", exist_ok=True)
         with open(output, "w") as f:
@@ -415,15 +426,14 @@ data.children
         """Return the history of profiling results from this session."""
         return list(self._history)
 
-    def compare(
-        self, result1: ProfileResult, result2: ProfileResult
-    ) -> Dict:
+    def compare(self, result1: ProfileResult, result2: ProfileResult) -> Dict:
         """Compare two profiling results and return a diff summary."""
         comparison: Dict = {
             "total_time_diff_ms": result2.total_time_ms - result1.total_time_ms,
             "total_time_pct_change": (
                 ((result2.total_time_ms - result1.total_time_ms) / result1.total_time_ms * 100)
-                if result1.total_time_ms > 0 else 0.0
+                if result1.total_time_ms > 0
+                else 0.0
             ),
             "peak_memory_diff_mb": result2.peak_memory_mb - result1.peak_memory_mb,
             "sample_count_diff": len(result2.samples) - len(result1.samples),
@@ -441,30 +451,38 @@ data.children
                 s1 = funcs1[name]
                 diff = s2.time_ms - s1.time_ms
                 if diff < -0.1:
-                    comparison["faster"].append({
-                        "function": name,
-                        "before_ms": round(s1.time_ms, 2),
-                        "after_ms": round(s2.time_ms, 2),
-                        "diff_ms": round(diff, 2),
-                    })
+                    comparison["faster"].append(
+                        {
+                            "function": name,
+                            "before_ms": round(s1.time_ms, 2),
+                            "after_ms": round(s2.time_ms, 2),
+                            "diff_ms": round(diff, 2),
+                        }
+                    )
                 elif diff > 0.1:
-                    comparison["slower"].append({
-                        "function": name,
-                        "before_ms": round(s1.time_ms, 2),
-                        "after_ms": round(s2.time_ms, 2),
-                        "diff_ms": round(diff, 2),
-                    })
+                    comparison["slower"].append(
+                        {
+                            "function": name,
+                            "before_ms": round(s1.time_ms, 2),
+                            "after_ms": round(s2.time_ms, 2),
+                            "diff_ms": round(diff, 2),
+                        }
+                    )
             else:
-                comparison["new"].append({
-                    "function": name,
-                    "time_ms": round(s2.time_ms, 2),
-                })
+                comparison["new"].append(
+                    {
+                        "function": name,
+                        "time_ms": round(s2.time_ms, 2),
+                    }
+                )
 
         for name in funcs1:
             if name not in funcs2:
-                comparison["removed"].append({
-                    "function": name,
-                    "time_ms": round(funcs1[name].time_ms, 2),
-                })
+                comparison["removed"].append(
+                    {
+                        "function": name,
+                        "time_ms": round(funcs1[name].time_ms, 2),
+                    }
+                )
 
         return comparison

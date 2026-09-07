@@ -4,6 +4,7 @@ Language Server Protocol client implementation for EoStudio.
 Provides a full LSP client using JSON-RPC over stdio, supporting completion,
 hover, go-to-definition, references, rename, formatting, and diagnostics.
 """
+
 from __future__ import annotations
 
 import json
@@ -188,9 +189,7 @@ class LanguageServer:
                 "Make sure the server is installed and on your PATH."
             )
 
-        self._reader_thread = threading.Thread(
-            target=self._reader_loop, daemon=True, name="lsp-reader"
-        )
+        self._reader_thread = threading.Thread(target=self._reader_loop, daemon=True, name="lsp-reader")
         self._reader_thread.start()
 
         self.initialize()
@@ -351,9 +350,7 @@ class LanguageServer:
             with self._pending_lock:
                 self._pending.pop(rid, None)
                 self._responses.pop(rid, None)
-            raise TimeoutError(
-                f"LSP request '{method}' (id={rid}) timed out"
-            )
+            raise TimeoutError(f"LSP request '{method}' (id={rid}) timed out")
 
         with self._pending_lock:
             self._pending.pop(rid, None)
@@ -361,9 +358,7 @@ class LanguageServer:
 
         if "error" in response:
             err = response["error"]
-            raise RuntimeError(
-                f"LSP error [{err.get('code')}]: {err.get('message')}"
-            )
+            raise RuntimeError(f"LSP error [{err.get('code')}]: {err.get('message')}")
         return response.get("result")
 
     def _send_notification(self, method: str, params: Any = None) -> None:
@@ -421,9 +416,7 @@ class LanguageServer:
             ],
         }
         if self.config.initialization_options:
-            params["initializationOptions"] = (
-                self.config.initialization_options
-            )
+            params["initializationOptions"] = self.config.initialization_options
         result = self._send_request("initialize", params)
         return result or {}
 
@@ -491,9 +484,7 @@ class LanguageServer:
         document URI is synthesized.
         """
         if uri is None:
-            uri = self._path_to_uri(
-                os.path.join(self.workspace_path, "__eostudio_tmp__.py")
-            )
+            uri = self._path_to_uri(os.path.join(self.workspace_path, "__eostudio_tmp__.py"))
             self.did_open(uri, self.language, source)
 
         result = self._send_request(
@@ -505,29 +496,19 @@ class LanguageServer:
         )
         if result is None:
             return []
-        items = (
-            result
-            if isinstance(result, list)
-            else result.get("items", [])
-        )
+        items = result if isinstance(result, list) else result.get("items", [])
         return [
             {
                 "label": item.get("label", ""),
                 "kind": item.get("kind"),
                 "detail": item.get("detail", ""),
-                "documentation": _extract_documentation(
-                    item.get("documentation")
-                ),
-                "insertText": (
-                    item.get("insertText") or item.get("label", "")
-                ),
+                "documentation": _extract_documentation(item.get("documentation")),
+                "insertText": (item.get("insertText") or item.get("label", "")),
             }
             for item in items
         ]
 
-    def hover(
-        self, uri: str, line: int, character: int
-    ) -> Dict[str, Any]:
+    def hover(self, uri: str, line: int, character: int) -> Dict[str, Any]:
         """Request hover information at a position."""
         result = self._send_request(
             "textDocument/hover",
@@ -544,9 +525,7 @@ class LanguageServer:
             "range": result.get("range"),
         }
 
-    def definition(
-        self, uri: str, line: int, character: int
-    ) -> List[Dict[str, Any]]:
+    def definition(self, uri: str, line: int, character: int) -> List[Dict[str, Any]]:
         """Request go-to-definition at a position."""
         result = self._send_request(
             "textDocument/definition",
@@ -557,9 +536,7 @@ class LanguageServer:
         )
         return _normalize_locations(result)
 
-    def references(
-        self, uri: str, line: int, character: int
-    ) -> List[Dict[str, Any]]:
+    def references(self, uri: str, line: int, character: int) -> List[Dict[str, Any]]:
         """Request find-references at a position."""
         result = self._send_request(
             "textDocument/references",
@@ -571,9 +548,7 @@ class LanguageServer:
         )
         return _normalize_locations(result)
 
-    def rename(
-        self, uri: str, line: int, character: int, new_name: str
-    ) -> Dict[str, Any]:
+    def rename(self, uri: str, line: int, character: int, new_name: str) -> Dict[str, Any]:
         """Request a rename refactoring."""
         result = self._send_request(
             "textDocument/rename",
@@ -598,9 +573,7 @@ class LanguageServer:
         )
         return result if isinstance(result, list) else []
 
-    def diagnostics(
-        self, source: str, uri: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    def diagnostics(self, source: str, uri: Optional[str] = None) -> List[Dict[str, Any]]:
         """Return the latest diagnostics for a document.
 
         Backward-compatible: accepts raw *source* text.  If the document has
@@ -608,9 +581,7 @@ class LanguageServer:
         analyse it.
         """
         if uri is None:
-            uri = self._path_to_uri(
-                os.path.join(self.workspace_path, "__eostudio_tmp__.py")
-            )
+            uri = self._path_to_uri(os.path.join(self.workspace_path, "__eostudio_tmp__.py"))
             self.did_open(uri, self.language, source)
         else:
             self.did_change(uri, source)
@@ -677,9 +648,7 @@ class LanguageServerManager:
             server = self._servers.get(key)
             if server is not None and server.is_running():
                 return server
-            server = LanguageServer(
-                language=key, workspace_path=self.workspace_path
-            )
+            server = LanguageServer(language=key, workspace_path=self.workspace_path)
             server.start()
             self._servers[key] = server
             return server
@@ -706,9 +675,7 @@ class LanguageServerManager:
     def running_languages(self) -> List[str]:
         """Return a list of languages with running servers."""
         with self._lock:
-            return [
-                k for k, v in self._servers.items() if v.is_running()
-            ]
+            return [k for k, v in self._servers.items() if v.is_running()]
 
 
 # ---------------------------------------------------------------------------
@@ -752,10 +719,7 @@ def _normalize_locations(result: Any) -> List[Dict[str, Any]]:
         elif "targetUri" in item:
             # LocationLink
             loc["uri"] = item["targetUri"]
-            loc["range"] = (
-                item.get("targetSelectionRange")
-                or item.get("targetRange")
-            )
+            loc["range"] = item.get("targetSelectionRange") or item.get("targetRange")
         else:
             continue
         locations.append(loc)

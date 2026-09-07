@@ -40,8 +40,7 @@ class EditorManager:
             log.warning("Unknown editor: %s", name)
             return False
         if name not in self._editors:
-            self._editors[name] = {"module": self.EDITOR_REGISTRY[name],
-                                   "state": "loaded"}
+            self._editors[name] = {"module": self.EDITOR_REGISTRY[name], "state": "loaded"}
         self._active = name
         log.info("Switched to editor: %s", name)
         return True
@@ -72,8 +71,7 @@ class EoStudioApp:
     and project I/O into a unified application.
     """
 
-    def __init__(self, editor: Optional[str] = None,
-                 theme: str = "dark") -> None:
+    def __init__(self, editor: Optional[str] = None, theme: str = "dark") -> None:
         self._backend: Any = None
         self._plugin_manager: Any = None
         self._editor_manager = EditorManager()
@@ -106,22 +104,25 @@ class EoStudioApp:
         else:
             self._editor_manager.open_editor("3d")
 
-        log.info("EoStudio initialized (editor=%s, theme=%s)",
-                 self._editor_manager.active_editor, self._theme)
+        log.info("EoStudio initialized (editor=%s, theme=%s)", self._editor_manager.active_editor, self._theme)
 
     def _init_plugin_manager(self) -> None:
         try:
             from eostudio.plugins.plugin_base import PluginManager
+
             self._plugin_manager = PluginManager()
             self._plugin_manager.discover()
 
             for pid in list(self._plugin_manager._manifests.keys()):
                 try:
                     self._plugin_manager.load(pid)
-                    self._plugin_manager.activate(pid, {
-                        "app": self,
-                        "editor_manager": self._editor_manager,
-                    })
+                    self._plugin_manager.activate(
+                        pid,
+                        {
+                            "app": self,
+                            "editor_manager": self._editor_manager,
+                        },
+                    )
                 except Exception as exc:
                     log.warning("Failed to activate plugin %s: %s", pid, exc)
         except Exception as exc:
@@ -129,73 +130,99 @@ class EoStudioApp:
 
     def _build_menus(self) -> None:
         self._menu_items = [
-            {"label": "File", "children": [
-                {"label": "New Project", "shortcut": "Ctrl+N"},
-                {"label": "Open Project", "shortcut": "Ctrl+O"},
-                {"label": "Save Project", "shortcut": "Ctrl+S"},
-                {"label": "Export", "shortcut": "Ctrl+E"},
-                {"label": "Exit", "shortcut": "Alt+F4"},
-            ]},
-            {"label": "Edit", "children": [
-                {"label": "Undo", "shortcut": "Ctrl+Z"},
-                {"label": "Redo", "shortcut": "Ctrl+Y"},
-                {"label": "Preferences"},
-            ]},
-            {"label": "View", "children": [
-                {"label": f"Open {name.title()} Editor"}
-                for name in self._editor_manager.list_editors()
-            ]},
-            {"label": "Simulate", "children": [
-                {"label": "Run with EoSim"},
-                {"label": "Select Platform"},
-                {"label": "View 3D Product"},
-            ]},
-            {"label": "Animation", "children": [
-                {"label": "Open Timeline"},
-                {"label": "Animation Presets"},
-                {"label": "Spring Physics"},
-                {"label": "Export React + Framer Motion"},
-                {"label": "Export React + GSAP"},
-            ]},
-            {"label": "Prototype", "children": [
-                {"label": "Play Prototype"},
-                {"label": "Export HTML Prototype"},
-                {"label": "Add Interaction"},
-                {"label": "Screen Transitions"},
-                {"label": "Gesture Settings"},
-            ]},
-            {"label": "Design System", "children": [
-                {"label": "Edit Design Tokens"},
-                {"label": "Switch Theme"},
-                {"label": "Export CSS Variables"},
-                {"label": "Export Tailwind Config"},
-                {"label": "Export Style Dictionary"},
-                {"label": "AI Generate Design System"},
-                {"label": "AI Generate Palette"},
-            ]},
-            {"label": "Video & Promo", "children": [
-                {"label": "Open Promo Editor"},
-                {"label": "App Store Preview"},
-                {"label": "Social Media Post"},
-                {"label": "Product Launch Video"},
-                {"label": "Export Video (MP4)"},
-                {"label": "Export GIF"},
-            ]},
-            {"label": "Help", "children": [
-                {"label": "About EoStudio"},
-                {"label": "Documentation"},
-                {"label": "AI Tutor"},
-            ]},
+            {
+                "label": "File",
+                "children": [
+                    {"label": "New Project", "shortcut": "Ctrl+N"},
+                    {"label": "Open Project", "shortcut": "Ctrl+O"},
+                    {"label": "Save Project", "shortcut": "Ctrl+S"},
+                    {"label": "Export", "shortcut": "Ctrl+E"},
+                    {"label": "Exit", "shortcut": "Alt+F4"},
+                ],
+            },
+            {
+                "label": "Edit",
+                "children": [
+                    {"label": "Undo", "shortcut": "Ctrl+Z"},
+                    {"label": "Redo", "shortcut": "Ctrl+Y"},
+                    {"label": "Preferences"},
+                ],
+            },
+            {
+                "label": "View",
+                "children": [{"label": f"Open {name.title()} Editor"} for name in self._editor_manager.list_editors()],
+            },
+            {
+                "label": "Simulate",
+                "children": [
+                    {"label": "Run with EoSim"},
+                    {"label": "Select Platform"},
+                    {"label": "View 3D Product"},
+                ],
+            },
+            {
+                "label": "Animation",
+                "children": [
+                    {"label": "Open Timeline"},
+                    {"label": "Animation Presets"},
+                    {"label": "Spring Physics"},
+                    {"label": "Export React + Framer Motion"},
+                    {"label": "Export React + GSAP"},
+                ],
+            },
+            {
+                "label": "Prototype",
+                "children": [
+                    {"label": "Play Prototype"},
+                    {"label": "Export HTML Prototype"},
+                    {"label": "Add Interaction"},
+                    {"label": "Screen Transitions"},
+                    {"label": "Gesture Settings"},
+                ],
+            },
+            {
+                "label": "Design System",
+                "children": [
+                    {"label": "Edit Design Tokens"},
+                    {"label": "Switch Theme"},
+                    {"label": "Export CSS Variables"},
+                    {"label": "Export Tailwind Config"},
+                    {"label": "Export Style Dictionary"},
+                    {"label": "AI Generate Design System"},
+                    {"label": "AI Generate Palette"},
+                ],
+            },
+            {
+                "label": "Video & Promo",
+                "children": [
+                    {"label": "Open Promo Editor"},
+                    {"label": "App Store Preview"},
+                    {"label": "Social Media Post"},
+                    {"label": "Product Launch Video"},
+                    {"label": "Export Video (MP4)"},
+                    {"label": "Export GIF"},
+                ],
+            },
+            {
+                "label": "Help",
+                "children": [
+                    {"label": "About EoStudio"},
+                    {"label": "Documentation"},
+                    {"label": "AI Tutor"},
+                ],
+            },
         ]
 
         if self._plugin_manager:
             for plugin in self._plugin_manager.plugins.values():
                 items = plugin.get_menu_items()
                 if items:
-                    self._menu_items.append({
-                        "label": plugin.manifest.name,
-                        "children": items,
-                    })
+                    self._menu_items.append(
+                        {
+                            "label": plugin.manifest.name,
+                            "children": items,
+                        }
+                    )
 
     def run(self) -> None:
         """Run the main event loop."""
@@ -214,32 +241,27 @@ class EoStudioApp:
 
     def _draw_toolbar(self) -> None:
         self._backend.draw_rect(self._window_id, 0, 0, 1280, 40, 0x2563EB)
-        self._backend.draw_text(self._window_id, 12, 10, "EoStudio",
-                                color=0xFFFFFF, font_size=16)
+        self._backend.draw_text(self._window_id, 12, 10, "EoStudio", color=0xFFFFFF, font_size=16)
         x = 120
         for editor in self._editor_manager.list_open():
             is_active = editor == self._editor_manager.active_editor
             bg = 0x1D4ED8 if is_active else 0x3B82F6
             self._backend.draw_rect(self._window_id, x, 4, 80, 32, bg)
-            self._backend.draw_text(self._window_id, x + 8, 10,
-                                    editor.title(), color=0xFFFFFF,
-                                    font_size=12)
+            self._backend.draw_text(self._window_id, x + 8, 10, editor.title(), color=0xFFFFFF, font_size=12)
             x += 88
 
     def _draw_status_bar(self) -> None:
         w, h = self._backend.get_window_size(self._window_id)
         self._backend.draw_rect(self._window_id, 0, h - 24, w, 24, 0xE5E7EB)
-        self._backend.draw_text(self._window_id, 8, h - 20,
-                                self._status_text, color=0x6B7280,
-                                font_size=11)
+        self._backend.draw_text(self._window_id, 8, h - 20, self._status_text, color=0x6B7280, font_size=11)
         eosim_text = "EoSim: Connected" if self._is_eosim_connected() else "EoSim: Not connected"
-        self._backend.draw_text(self._window_id, w - 200, h - 20,
-                                eosim_text, color=0x6B7280, font_size=11)
+        self._backend.draw_text(self._window_id, w - 200, h - 20, eosim_text, color=0x6B7280, font_size=11)
 
     def _is_eosim_connected(self) -> bool:
         if self._plugin_manager and "eosim" in self._plugin_manager.plugins:
             plugin = self._plugin_manager.plugins["eosim"]
             from eostudio.plugins.plugin_base import PluginState
+
             return plugin.state == PluginState.ACTIVE  # type: ignore[no-any-return]
         return False
 
@@ -249,6 +271,7 @@ class EoStudioApp:
     def load_project(self, path: str) -> bool:
         try:
             from eostudio.formats.project import EoStudioProject
+
             self._project = EoStudioProject.load(path)
             self.set_status(f"Loaded: {path}")
             return True

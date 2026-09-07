@@ -26,9 +26,12 @@ class ReactMotionGenerator:
         """
         self.library = library
 
-    def generate(self, timeline: AnimationTimeline,
-                 components: List[Dict[str, Any]],
-                 screens: Optional[List[Dict[str, Any]]] = None) -> Dict[str, str]:
+    def generate(
+        self,
+        timeline: AnimationTimeline,
+        components: List[Dict[str, Any]],
+        screens: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, str]:
         """Generate React source files with animation code.
 
         Returns mapping of filename -> source code.
@@ -44,9 +47,9 @@ class ReactMotionGenerator:
     # Framer Motion generation
     # ------------------------------------------------------------------
 
-    def _generate_framer_motion(self, timeline: AnimationTimeline,
-                                 components: List[Dict[str, Any]],
-                                 screens: Optional[List[Dict[str, Any]]]) -> Dict[str, str]:
+    def _generate_framer_motion(
+        self, timeline: AnimationTimeline, components: List[Dict[str, Any]], screens: Optional[List[Dict[str, Any]]]
+    ) -> Dict[str, str]:
         files: Dict[str, str] = {}
 
         files["src/App.jsx"] = self._fm_app(screens or [{"name": "Home", "components": components}])
@@ -86,10 +89,12 @@ class ReactMotionGenerator:
         )
 
     def _fm_app(self, screens: List[Dict[str, Any]]) -> str:
-        imports = ["import React from 'react';",
-                   "import { Routes, Route, Link, useLocation } from 'react-router-dom';",
-                   "import { AnimatePresence } from 'framer-motion';",
-                   "import PageTransition from './components/PageTransition';"]
+        imports = [
+            "import React from 'react';",
+            "import { Routes, Route, Link, useLocation } from 'react-router-dom';",
+            "import { AnimatePresence } from 'framer-motion';",
+            "import PageTransition from './components/PageTransition';",
+        ]
 
         routes = []
         nav_links = []
@@ -100,25 +105,27 @@ class ReactMotionGenerator:
             routes.append(f'          <Route path="{path}" element={{<PageTransition><{name} /></PageTransition>}} />')
             nav_links.append(f'        <Link to="{path}">{screen.get("name", "Home")}</Link>')
 
-        return "\n".join(imports) + "\n\n" + (
-            "function App() {\n"
-            "  const location = useLocation();\n"
-            "  return (\n"
-            "    <div className=\"app\">\n"
-            "      <nav className=\"app-nav\">\n"
-            + "\n".join(nav_links) + "\n"
-            "      </nav>\n"
-            "      <main className=\"app-main\">\n"
-            "        <AnimatePresence mode=\"wait\">\n"
-            "          <Routes location={location} key={location.pathname}>\n"
-            + "\n".join(routes) + "\n"
-            "          </Routes>\n"
-            "        </AnimatePresence>\n"
-            "      </main>\n"
-            "    </div>\n"
-            "  );\n"
-            "}\n\n"
-            "export default App;\n"
+        return (
+            "\n".join(imports)
+            + "\n\n"
+            + (
+                "function App() {\n"
+                "  const location = useLocation();\n"
+                "  return (\n"
+                '    <div className="app">\n'
+                '      <nav className="app-nav">\n' + "\n".join(nav_links) + "\n"
+                "      </nav>\n"
+                '      <main className="app-main">\n'
+                '        <AnimatePresence mode="wait">\n'
+                "          <Routes location={location} key={location.pathname}>\n" + "\n".join(routes) + "\n"
+                "          </Routes>\n"
+                "        </AnimatePresence>\n"
+                "      </main>\n"
+                "    </div>\n"
+                "  );\n"
+                "}\n\n"
+                "export default App;\n"
+            )
         )
 
     def _fm_animated_component(self) -> str:
@@ -178,9 +185,9 @@ class ReactMotionGenerator:
             "  return (\n"
             "    <motion.div\n"
             "      variants={pageVariants}\n"
-            "      initial=\"initial\"\n"
-            "      animate=\"animate\"\n"
-            "      exit=\"exit\"\n"
+            '      initial="initial"\n'
+            '      animate="animate"\n'
+            '      exit="exit"\n'
             "    >\n"
             "      {children}\n"
             "    </motion.div>\n"
@@ -266,11 +273,16 @@ class ReactMotionGenerator:
             "slideUp": {"initial": {"y": 100, "opacity": 0}, "animate": {"y": 0, "opacity": 1}},
             "slideDown": {"initial": {"y": -100, "opacity": 0}, "animate": {"y": 0, "opacity": 1}},
             "scaleIn": {"initial": {"scale": 0, "opacity": 0}, "animate": {"scale": 1, "opacity": 1}},
-            "popIn": {"initial": {"scale": 0.5, "opacity": 0}, "animate": {"scale": 1, "opacity": 1},
-                      "ease": [0.175, 0.885, 0.32, 1.275]},
-            "bounceIn": {"initial": {"scale": 0.3, "opacity": 0},
-                         "animate": {"scale": 1, "opacity": 1},
-                         "ease": [0.68, -0.55, 0.265, 1.55]},
+            "popIn": {
+                "initial": {"scale": 0.5, "opacity": 0},
+                "animate": {"scale": 1, "opacity": 1},
+                "ease": [0.175, 0.885, 0.32, 1.275],
+            },
+            "bounceIn": {
+                "initial": {"scale": 0.3, "opacity": 0},
+                "animate": {"scale": 1, "opacity": 1},
+                "ease": [0.68, -0.55, 0.265, 1.55],
+            },
             "rotateIn": {"initial": {"rotate": -180, "opacity": 0}, "animate": {"rotate": 0, "opacity": 1}},
             "spin": {"initial": {"rotate": 0}, "animate": {"rotate": 360}},
             "pulse": {"animate": {"scale": [1, 1.05, 1]}, "transition": {"repeat": "Infinity", "duration": 2}},
@@ -301,8 +313,10 @@ class ReactMotionGenerator:
         return "\n".join(lines) + "\n"
 
     def _fm_variants(self, timeline: AnimationTimeline) -> str:
-        lines = ["// Auto-generated animation variants from EoStudio timeline\n",
-                 "import { presets } from './presets';\n"]
+        lines = [
+            "// Auto-generated animation variants from EoStudio timeline\n",
+            "import { presets } from './presets';\n",
+        ]
         lines.append("export const timelineVariants = {")
 
         for clip in timeline.clips:
@@ -336,8 +350,7 @@ class ReactMotionGenerator:
 
         return "\n".join(lines) + "\n"
 
-    def _fm_screen(self, name: str, components: List[Dict[str, Any]],
-                   clips: List[AnimationClip]) -> str:
+    def _fm_screen(self, name: str, components: List[Dict[str, Any]], clips: List[AnimationClip]) -> str:
         lines = [
             "import React from 'react';",
             "import { motion } from 'framer-motion';",
@@ -347,7 +360,7 @@ class ReactMotionGenerator:
             "",
             f"export default function {name}() {{",
             "  return (",
-            f"    <motion.div className={{styles.screen}} variants={{staggerContainer}} initial=\"hidden\" animate=\"visible\">",
+            f'    <motion.div className={{styles.screen}} variants={{staggerContainer}} initial="hidden" animate="visible">',
             f"      <h1>{name}</h1>",
         ]
 
@@ -366,32 +379,38 @@ class ReactMotionGenerator:
                     break
 
             if comp_type == "Button":
-                lines.append(f"      <AnimatedComponent preset=\"{preset}\" delay={{{delay}}}>")
-                lines.append(f"        <motion.button className={{styles.button}} whileHover={{{{ scale: 1.05 }}}} whileTap={{{{ scale: 0.95 }}}}>{label}</motion.button>")
+                lines.append(f'      <AnimatedComponent preset="{preset}" delay={{{delay}}}>')
+                lines.append(
+                    f"        <motion.button className={{styles.button}} whileHover={{{{ scale: 1.05 }}}} whileTap={{{{ scale: 0.95 }}}}>{label}</motion.button>"
+                )
                 lines.append("      </AnimatedComponent>")
             elif comp_type == "Input":
-                lines.append(f"      <AnimatedComponent preset=\"{preset}\" delay={{{delay}}}>")
+                lines.append(f'      <AnimatedComponent preset="{preset}" delay={{{delay}}}>')
                 lines.append(f'        <input className={{styles.input}} placeholder="{label}" />')
                 lines.append("      </AnimatedComponent>")
             elif comp_type == "Card":
-                lines.append(f"      <AnimatedComponent preset=\"{preset}\" delay={{{delay}}}>")
-                lines.append(f"        <motion.div className={{styles.card}} whileHover={{{{ y: -4, boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}}}>{label}</motion.div>")
+                lines.append(f'      <AnimatedComponent preset="{preset}" delay={{{delay}}}>')
+                lines.append(
+                    f"        <motion.div className={{styles.card}} whileHover={{{{ y: -4, boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}}}>{label}</motion.div>"
+                )
                 lines.append("      </AnimatedComponent>")
             elif comp_type == "Image":
                 src = comp.get("src", "")
-                lines.append(f"      <AnimatedComponent preset=\"{preset}\" delay={{{delay}}}>")
+                lines.append(f'      <AnimatedComponent preset="{preset}" delay={{{delay}}}>')
                 lines.append(f'        <img className={{styles.image}} src="{src}" alt="{label}" />')
                 lines.append("      </AnimatedComponent>")
             else:
-                lines.append(f"      <AnimatedComponent preset=\"{preset}\" delay={{{delay}}}>")
+                lines.append(f'      <AnimatedComponent preset="{preset}" delay={{{delay}}}>')
                 lines.append(f"        <p>{label}</p>")
                 lines.append("      </AnimatedComponent>")
 
-        lines.extend([
-            "    </motion.div>",
-            "  );",
-            "}",
-        ])
+        lines.extend(
+            [
+                "    </motion.div>",
+                "  );",
+                "}",
+            ]
+        )
         return "\n".join(lines) + "\n"
 
     def _fm_screen_css(self, name: str) -> str:
@@ -424,9 +443,9 @@ class ReactMotionGenerator:
     # GSAP generation
     # ------------------------------------------------------------------
 
-    def _generate_gsap(self, timeline: AnimationTimeline,
-                       components: List[Dict[str, Any]],
-                       screens: Optional[List[Dict[str, Any]]]) -> Dict[str, str]:
+    def _generate_gsap(
+        self, timeline: AnimationTimeline, components: List[Dict[str, Any]], screens: Optional[List[Dict[str, Any]]]
+    ) -> Dict[str, str]:
         files: Dict[str, str] = {}
 
         files["src/animations/gsapTimeline.js"] = self._gsap_timeline(timeline)
@@ -466,7 +485,9 @@ class ReactMotionGenerator:
 
             props_str = ", ".join(f"{k}: {self._js_value(v)}" for k, v in props.items())
             position = f'"-={max(0, clip.duration - 0.1)}"' if clip.delay > 0 else ""
-            lines.append(f"  tl.to('{target}', {{ {props_str}, duration: {clip.duration} }}{', ' + position if position else ''});")
+            lines.append(
+                f"  tl.to('{target}', {{ {props_str}, duration: {clip.duration} }}{', ' + position if position else ''});"
+            )
 
         lines.append("")
         lines.append("  return tl;")
@@ -532,8 +553,7 @@ class ReactMotionGenerator:
             "}\n"
         )
 
-    def _gsap_screen(self, name: str, components: List[Dict[str, Any]],
-                     timeline: AnimationTimeline) -> str:
+    def _gsap_screen(self, name: str, components: List[Dict[str, Any]], timeline: AnimationTimeline) -> str:
         lines = [
             "import React, { useRef, useEffect } from 'react';",
             "import gsap from 'gsap';",
@@ -562,24 +582,28 @@ class ReactMotionGenerator:
             label = comp.get("label", comp.get("text", ""))
             comp_type = comp.get("type", "div")
             if comp_type == "Button":
-                lines.append(f'      <button className="animated-item" style={{{{ padding: "12px 24px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer" }}}}>{label}</button>')
+                lines.append(
+                    f'      <button className="animated-item" style={{{{ padding: "12px 24px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer" }}}}>{label}</button>'
+                )
             else:
                 lines.append(f'      <div className="animated-item">{label}</div>')
 
-        lines.extend([
-            "    </div>",
-            "  );",
-            "}",
-        ])
+        lines.extend(
+            [
+                "    </div>",
+                "  );",
+                "}",
+            ]
+        )
         return "\n".join(lines) + "\n"
 
     # ------------------------------------------------------------------
     # CSS animations (fallback)
     # ------------------------------------------------------------------
 
-    def _generate_css_animations(self, timeline: AnimationTimeline,
-                                  components: List[Dict[str, Any]],
-                                  screens: Optional[List[Dict[str, Any]]]) -> Dict[str, str]:
+    def _generate_css_animations(
+        self, timeline: AnimationTimeline, components: List[Dict[str, Any]], screens: Optional[List[Dict[str, Any]]]
+    ) -> Dict[str, str]:
         files: Dict[str, str] = {}
         files["src/animations/keyframes.css"] = self._css_keyframes(timeline)
         files["src/animations/animations.css"] = self._css_animation_classes()
@@ -638,30 +662,53 @@ class ReactMotionGenerator:
             deps["gsap"] = "^3.12.0"
 
         import json
-        return json.dumps({
-            "name": "eostudio-generated-app",
-            "version": "1.0.0",
-            "private": True,
-            "dependencies": deps,
-            "scripts": {
-                "start": "react-scripts start",
-                "build": "react-scripts build",
+
+        return json.dumps(
+            {
+                "name": "eostudio-generated-app",
+                "version": "1.0.0",
+                "private": True,
+                "dependencies": deps,
+                "scripts": {
+                    "start": "react-scripts start",
+                    "build": "react-scripts build",
+                },
             },
-        }, indent=2)
+            indent=2,
+        )
 
     def _to_motion_prop(self, prop: str) -> str:
-        mapping = {"x": "x", "y": "y", "scale": "scale", "rotation": "rotate",
-                   "opacity": "opacity", "width": "width", "height": "height"}
+        mapping = {
+            "x": "x",
+            "y": "y",
+            "scale": "scale",
+            "rotation": "rotate",
+            "opacity": "opacity",
+            "width": "width",
+            "height": "height",
+        }
         return mapping.get(prop, prop)
 
     def _to_gsap_prop(self, prop: str) -> str:
-        mapping = {"x": "x", "y": "y", "scale": "scale", "rotation": "rotation",
-                   "opacity": "opacity", "width": "width", "height": "height"}
+        mapping = {
+            "x": "x",
+            "y": "y",
+            "scale": "scale",
+            "rotation": "rotation",
+            "opacity": "opacity",
+            "width": "width",
+            "height": "height",
+        }
         return mapping.get(prop, prop)
 
     def _to_css_prop(self, prop: str) -> str:
-        mapping = {"x": "transform", "y": "transform", "scale": "transform",
-                   "rotation": "transform", "opacity": "opacity"}
+        mapping = {
+            "x": "transform",
+            "y": "transform",
+            "scale": "transform",
+            "rotation": "transform",
+            "opacity": "opacity",
+        }
         return mapping.get(prop, prop)
 
     def _js_value(self, val: Any) -> str:

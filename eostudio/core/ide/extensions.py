@@ -10,8 +10,7 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from urllib.error import URLError
-from urllib.request import Request, urlopen
+import requests
 
 
 # ---------------------------------------------------------------------------
@@ -27,6 +26,7 @@ _DEFAULT_REGISTRY_URL = "https://marketplace.eostudio.dev/api/v1"
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def semver_compare(v1: str, v2: str) -> int:
     """Compare two semver strings.  Returns -1, 0, or 1.
@@ -63,6 +63,7 @@ def semver_compare(v1: str, v2: str) -> int:
 # ---------------------------------------------------------------------------
 # Data classes
 # ---------------------------------------------------------------------------
+
 
 class ExtensionState(str, Enum):
     INSTALLED = "installed"
@@ -102,6 +103,7 @@ class Extension:
 # Extension Registry (marketplace client)
 # ---------------------------------------------------------------------------
 
+
 class ExtensionRegistry:
     """HTTP client for the extension marketplace."""
 
@@ -136,13 +138,13 @@ class ExtensionRegistry:
         """Download and extract an extension package into *dest_dir*."""
         url = f"{self._registry_url}/extensions/{ext_id}/{version}/download"
         try:
-            req = Request(url, method="GET")
-            with urlopen(req, timeout=30) as resp:
-                dest_dir.mkdir(parents=True, exist_ok=True)
-                pkg_path = dest_dir / "package.json"
-                pkg_path.write_bytes(resp.read())
+            resp = requests.get(url, timeout=30)
+            resp.raise_for_status()
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            pkg_path = dest_dir / "package.json"
+            pkg_path.write_bytes(resp.content)
             return True
-        except Exception:
+        except requests.RequestException:
             return False
 
     # -- internals -----------------------------------------------------------
@@ -150,11 +152,10 @@ class ExtensionRegistry:
     def _api_get(self, path: str) -> Any:
         url = f"{self._registry_url}{path}"
         try:
-            req = Request(url, method="GET")
-            req.add_header("Accept", "application/json")
-            with urlopen(req, timeout=15) as resp:
-                return json.loads(resp.read().decode("utf-8"))
-        except Exception:
+            resp = requests.get(url, headers={"Accept": "application/json"}, timeout=15)
+            resp.raise_for_status()
+            return resp.json()
+        except requests.RequestException:
             return None
 
     @staticmethod
@@ -167,6 +168,7 @@ class ExtensionRegistry:
 # ---------------------------------------------------------------------------
 # Extension Manager
 # ---------------------------------------------------------------------------
+
 
 class ExtensionManager:
     """Manage the full lifecycle of EoStudio extensions.
@@ -275,9 +277,7 @@ class ExtensionManager:
                     # Load via importlib to avoid polluting sys.modules naming.
                     import importlib.util
 
-                    spec = importlib.util.spec_from_file_location(
-                        f"eostudio.ext.{name}", str(module_file)
-                    )
+                    spec = importlib.util.spec_from_file_location(f"eostudio.ext.{name}", str(module_file))
                     if spec and spec.loader:
                         mod = importlib.util.module_from_spec(spec)
                         spec.loader.exec_module(mod)  # type: ignore[union-attr]

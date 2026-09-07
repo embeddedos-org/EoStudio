@@ -67,60 +67,26 @@ def generate_code(
         "react": lambda: _generate_react(components, screens),
         "openscad": lambda: _generate_openscad(components, screens),
         # Mobile generators
-        "mobile-flutter": lambda: _generate_mobile(
-            "flutter", screens, app_name, package_name
-        ),
-        "mobile-react-native": lambda: _generate_mobile(
-            "react_native", screens, app_name, package_name
-        ),
-        "mobile-kotlin": lambda: _generate_mobile(
-            "kotlin", screens, app_name, package_name
-        ),
-        "mobile-swift": lambda: _generate_mobile(
-            "swift", screens, app_name, package_name
-        ),
+        "mobile-flutter": lambda: _generate_mobile("flutter", screens, app_name, package_name),
+        "mobile-react-native": lambda: _generate_mobile("react_native", screens, app_name, package_name),
+        "mobile-kotlin": lambda: _generate_mobile("kotlin", screens, app_name, package_name),
+        "mobile-swift": lambda: _generate_mobile("swift", screens, app_name, package_name),
         # Desktop generators
-        "desktop-electron": lambda: _generate_desktop(
-            "electron", screens, app_name
-        ),
-        "desktop-tauri": lambda: _generate_desktop(
-            "tauri", screens, app_name
-        ),
-        "desktop-tkinter": lambda: _generate_desktop(
-            "tkinter", screens, app_name
-        ),
-        "desktop-qt": lambda: _generate_desktop(
-            "qt", screens, app_name
-        ),
-        "desktop-compose-desktop": lambda: _generate_desktop(
-            "compose_desktop", screens, app_name
-        ),
+        "desktop-electron": lambda: _generate_desktop("electron", screens, app_name),
+        "desktop-tauri": lambda: _generate_desktop("tauri", screens, app_name),
+        "desktop-tkinter": lambda: _generate_desktop("tkinter", screens, app_name),
+        "desktop-qt": lambda: _generate_desktop("qt", screens, app_name),
+        "desktop-compose-desktop": lambda: _generate_desktop("compose_desktop", screens, app_name),
         # Web-app generators
-        "webapp-react-fastapi": lambda: _generate_webapp(
-            "react", "fastapi", screens, app_name, models
-        ),
-        "webapp-react-flask": lambda: _generate_webapp(
-            "react", "flask", screens, app_name, models
-        ),
-        "webapp-vue-fastapi": lambda: _generate_webapp(
-            "vue", "fastapi", screens, app_name, models
-        ),
-        "webapp-vue-flask": lambda: _generate_webapp(
-            "vue", "flask", screens, app_name, models
-        ),
+        "webapp-react-fastapi": lambda: _generate_webapp("react", "fastapi", screens, app_name, models),
+        "webapp-react-flask": lambda: _generate_webapp("react", "flask", screens, app_name, models),
+        "webapp-vue-fastapi": lambda: _generate_webapp("vue", "fastapi", screens, app_name, models),
+        "webapp-vue-flask": lambda: _generate_webapp("vue", "flask", screens, app_name, models),
         # Database generators
-        "database-sql": lambda: _generate_database(
-            "sql", scene_data, app_name
-        ),
-        "database-sqlalchemy": lambda: _generate_database(
-            "sqlalchemy", scene_data, app_name
-        ),
-        "database-prisma": lambda: _generate_database(
-            "prisma", scene_data, app_name
-        ),
-        "database-django": lambda: _generate_database(
-            "django", scene_data, app_name
-        ),
+        "database-sql": lambda: _generate_database("sql", scene_data, app_name),
+        "database-sqlalchemy": lambda: _generate_database("sqlalchemy", scene_data, app_name),
+        "database-prisma": lambda: _generate_database("prisma", scene_data, app_name),
+        "database-django": lambda: _generate_database("django", scene_data, app_name),
         # .NET generators
         "desktop-maui": lambda: _generate_dotnet("maui", screens, app_name),
         "desktop-wpf": lambda: _generate_dotnet("wpf", screens, app_name),
@@ -142,27 +108,19 @@ def generate_code(
         "firmware-zephyr": lambda: _generate_firmware("zephyr", scene_data, app_name),
         "firmware-linux": lambda: _generate_firmware("linux", scene_data, app_name),
         # React + Animation generators (Phase 6)
-        "react-framer-motion": lambda: _generate_react_motion(
-            "framer-motion", components, screens, scene_data
-        ),
-        "react-gsap": lambda: _generate_react_motion(
-            "gsap", components, screens, scene_data
-        ),
-        "react-css-animations": lambda: _generate_react_motion(
-            "css", components, screens, scene_data
-        ),
+        "react-framer-motion": lambda: _generate_react_motion("framer-motion", components, screens, scene_data),
+        "react-gsap": lambda: _generate_react_motion("gsap", components, screens, scene_data),
+        "react-css-animations": lambda: _generate_react_motion("css", components, screens, scene_data),
     }
 
     gen_fn = generators.get(framework)
     if gen_fn is None:
-        raise ValueError(
-            f"Unknown framework {framework!r}. "
-            f"Supported: {', '.join(sorted(generators))}"
-        )
+        raise ValueError(f"Unknown framework {framework!r}. Supported: {', '.join(sorted(generators))}")
 
     files = gen_fn()
 
     import os
+
     os.makedirs(output_dir, exist_ok=True)
     for fname, content in files.items():
         path = os.path.join(output_dir, fname)
@@ -178,38 +136,33 @@ def generate_code(
 # ------------------------------------------------------------------
 
 
-def _generate_html(
-    components: List[Dict[str, Any]], screens: List[Dict[str, Any]]
-) -> Dict[str, str]:
+def _generate_html(components: List[Dict[str, Any]], screens: List[Dict[str, Any]]) -> Dict[str, str]:
     from eostudio.codegen.html_css import HTMLCSSGenerator
+
     return HTMLCSSGenerator().generate(components, screens)
 
 
-def _generate_flutter(
-    components: List[Dict[str, Any]], screens: List[Dict[str, Any]]
-) -> Dict[str, str]:
+def _generate_flutter(components: List[Dict[str, Any]], screens: List[Dict[str, Any]]) -> Dict[str, str]:
     from eostudio.codegen.flutter import FlutterGenerator
+
     return FlutterGenerator().generate(components, screens)
 
 
-def _generate_compose(
-    components: List[Dict[str, Any]], screens: List[Dict[str, Any]]
-) -> Dict[str, str]:
+def _generate_compose(components: List[Dict[str, Any]], screens: List[Dict[str, Any]]) -> Dict[str, str]:
     from eostudio.codegen.compose import ComposeGenerator
+
     return ComposeGenerator().generate(components, screens)
 
 
-def _generate_react(
-    components: List[Dict[str, Any]], screens: List[Dict[str, Any]]
-) -> Dict[str, str]:
+def _generate_react(components: List[Dict[str, Any]], screens: List[Dict[str, Any]]) -> Dict[str, str]:
     from eostudio.codegen.react import ReactGenerator
+
     return ReactGenerator().generate(components, screens)
 
 
-def _generate_openscad(
-    components: List[Dict[str, Any]], screens: List[Dict[str, Any]]
-) -> Dict[str, str]:
+def _generate_openscad(components: List[Dict[str, Any]], screens: List[Dict[str, Any]]) -> Dict[str, str]:
     from eostudio.codegen.openscad import OpenSCADGenerator
+
     code = OpenSCADGenerator().generate(components)
     return {"model.scad": code}
 
@@ -226,9 +179,8 @@ def _generate_mobile(
     package_name: str,
 ) -> Dict[str, str]:
     from eostudio.codegen.mobile import MobileAppGenerator
-    return MobileAppGenerator(target=target).generate(
-        screens, app_name=app_name, package_name=package_name
-    )
+
+    return MobileAppGenerator(target=target).generate(screens, app_name=app_name, package_name=package_name)
 
 
 def _generate_desktop(
@@ -237,6 +189,7 @@ def _generate_desktop(
     app_name: str,
 ) -> Dict[str, str]:
     from eostudio.codegen.desktop import DesktopAppGenerator
+
     return DesktopAppGenerator(target=target).generate(screens, app_name=app_name)
 
 
@@ -248,9 +201,8 @@ def _generate_webapp(
     models: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, str]:
     from eostudio.codegen.webapp import WebAppGenerator
-    return WebAppGenerator(frontend=frontend, backend=backend).generate(
-        screens, app_name=app_name, models=models
-    )
+
+    return WebAppGenerator(frontend=frontend, backend=backend).generate(screens, app_name=app_name, models=models)
 
 
 def _generate_database(
@@ -270,9 +222,7 @@ def _generate_database(
     if schema_data:
         schema = DatabaseSchema.from_dict(schema_data)
     else:
-        schema = _schema_from_models(
-            scene_data.get("models", []), app_name
-        )
+        schema = _schema_from_models(scene_data.get("models", []), app_name)
 
     dispatch = {
         "sql": lambda s: {"schema.sql": generate_sql(s, dialect="postgresql")},
@@ -288,9 +238,7 @@ def _generate_database(
     return gen(schema)
 
 
-def _schema_from_models(
-    models: List[Dict[str, Any]], app_name: str
-) -> "DatabaseSchema":
+def _schema_from_models(models: List[Dict[str, Any]], app_name: str) -> "DatabaseSchema":
     """Build a DatabaseSchema from a simple models list.
 
     Each model dict is expected to have ``name`` and ``fields``, where
@@ -343,42 +291,63 @@ def _schema_from_models(
 
 
 def _generate_dotnet(
-    target: str, screens: List[Dict[str, Any]], app_name: str,
+    target: str,
+    screens: List[Dict[str, Any]],
+    app_name: str,
 ) -> Dict[str, str]:
     from eostudio.codegen.dotnet import DotNetAppGenerator
+
     return DotNetAppGenerator(target=target).generate(screens, app_name=app_name)
 
 
 def _generate_gtk(
-    target: str, screens: List[Dict[str, Any]], app_name: str,
+    target: str,
+    screens: List[Dict[str, Any]],
+    app_name: str,
 ) -> Dict[str, str]:
     from eostudio.codegen.gtk import GTKAppGenerator
+
     return GTKAppGenerator(target=target).generate(screens, app_name=app_name)
 
 
 def _generate_game_engine(
-    target: str, screens: List[Dict[str, Any]], app_name: str,
+    target: str,
+    screens: List[Dict[str, Any]],
+    app_name: str,
 ) -> Dict[str, str]:
     from eostudio.codegen.game_engine import GameEngineExporter
+
     return GameEngineExporter(target=target).generate(screens, app_name=app_name)
 
 
 def _generate_wasm(
-    target: str, screens: List[Dict[str, Any]], app_name: str,
+    target: str,
+    screens: List[Dict[str, Any]],
+    app_name: str,
 ) -> Dict[str, str]:
     from eostudio.codegen.wasm import WasmGenerator
+
     return WasmGenerator(target=target).generate(screens, app_name=app_name)
 
 
 def _generate_firmware(
-    target_os: str, scene_data: Dict[str, Any], app_name: str,
+    target_os: str,
+    scene_data: Dict[str, Any],
+    app_name: str,
 ) -> Dict[str, str]:
     from eostudio.codegen.hardware import FirmwareGenerator
-    board_config = scene_data.get("board_config", {
-        "name": app_name.lower(), "platform": "stm32f4",
-        "arch": "arm-cortex-m", "clock_mhz": 168,
-        "memory": [], "peripherals": [],
-    })
+
+    board_config = scene_data.get(
+        "board_config",
+        {
+            "name": app_name.lower(),
+            "platform": "stm32f4",
+            "arch": "arm-cortex-m",
+            "clock_mhz": 168,
+            "memory": [],
+            "peripherals": [],
+        },
+    )
     gen = FirmwareGenerator(board_config, target_os=target_os)
     return gen.generate(app_name=app_name)
 

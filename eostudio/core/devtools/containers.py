@@ -1,4 +1,5 @@
 """Container management for Docker and Kubernetes."""
+
 from __future__ import annotations
 
 import json
@@ -10,6 +11,7 @@ from typing import Dict, List, Optional
 
 class ContainerState(Enum):
     """Docker container states."""
+
     CREATED = "created"
     RUNNING = "running"
     PAUSED = "paused"
@@ -21,6 +23,7 @@ class ContainerState(Enum):
 @dataclass
 class Container:
     """Represents a Docker container."""
+
     id: str
     name: str
     image: str
@@ -34,6 +37,7 @@ class Container:
 @dataclass
 class ContainerImage:
     """Represents a Docker image."""
+
     id: str
     tags: List[str] = field(default_factory=list)
     size: int = 0
@@ -44,6 +48,7 @@ class ContainerImage:
 @dataclass
 class ContainerStats:
     """Container resource usage statistics."""
+
     cpu_percent: float = 0.0
     memory_usage: int = 0
     memory_limit: int = 0
@@ -117,16 +122,18 @@ class ContainerManager:
                     if len(kv) == 2:
                         labels[kv[0].strip()] = kv[1].strip()
 
-            containers.append(Container(
-                id=data.get("ID", ""),
-                name=data.get("Names", ""),
-                image=data.get("Image", ""),
-                state=state,
-                ports=ports,
-                created=data.get("CreatedAt", ""),
-                labels=labels,
-                command=data.get("Command", ""),
-            ))
+            containers.append(
+                Container(
+                    id=data.get("ID", ""),
+                    name=data.get("Names", ""),
+                    image=data.get("Image", ""),
+                    state=state,
+                    ports=ports,
+                    created=data.get("CreatedAt", ""),
+                    labels=labels,
+                    command=data.get("Command", ""),
+                )
+            )
         return containers
 
     def start(self, container_id: str) -> bool:
@@ -215,20 +222,27 @@ class ContainerManager:
             except (ValueError, IndexError):
                 size = 0
 
-            images.append(ContainerImage(
-                id=data.get("ID", ""),
-                tags=[tag] if tag else [],
-                size=size,
-                created=data.get("CreatedAt", data.get("CreatedSince", "")),
-            ))
+            images.append(
+                ContainerImage(
+                    id=data.get("ID", ""),
+                    tags=[tag] if tag else [],
+                    size=size,
+                    created=data.get("CreatedAt", data.get("CreatedSince", "")),
+                )
+            )
         return images
 
     def stats(self, container_id: str) -> ContainerStats:
         """Get resource usage statistics for a container."""
-        result = self._run([
-            "stats", container_id, "--no-stream",
-            "--format", "json",
-        ])
+        result = self._run(
+            [
+                "stats",
+                container_id,
+                "--no-stream",
+                "--format",
+                "json",
+            ]
+        )
         if result.returncode != 0:
             return ContainerStats()
 
@@ -395,13 +409,14 @@ class KubernetesManager:
         result = self._run(["delete", resource_type, name, "-n", namespace])
         return result.returncode == 0
 
-    def port_forward(
-        self, pod: str, local_port: int, remote_port: int, namespace: str = "default"
-    ) -> subprocess.Popen:
+    def port_forward(self, pod: str, local_port: int, remote_port: int, namespace: str = "default") -> subprocess.Popen:
         """Start port forwarding to a pod. Returns the background process."""
         cmd = [
-            "kubectl", "port-forward", pod,
+            "kubectl",
+            "port-forward",
+            pod,
             f"{local_port}:{remote_port}",
-            "-n", namespace,
+            "-n",
+            namespace,
         ]
         return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

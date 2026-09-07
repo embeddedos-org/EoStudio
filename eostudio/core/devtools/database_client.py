@@ -1,4 +1,5 @@
 """Multi-database client with schema introspection and query management."""
+
 from __future__ import annotations
 
 import csv
@@ -15,6 +16,7 @@ from typing import Any
 
 class DatabaseType(enum.Enum):
     """Supported database backends."""
+
     SQLITE = "sqlite"
     POSTGRESQL = "postgresql"
     MYSQL = "mysql"
@@ -26,6 +28,7 @@ class DatabaseType(enum.Enum):
 @dataclass
 class DatabaseConfig:
     """Connection configuration for a database."""
+
     db_type: DatabaseType = DatabaseType.SQLITE
     host: str = "localhost"
     port: int = 0
@@ -62,6 +65,7 @@ class DatabaseConfig:
 @dataclass
 class ColumnInfo:
     """Metadata about a table column."""
+
     name: str = ""
     data_type: str = ""
     nullable: bool = True
@@ -83,6 +87,7 @@ class ColumnInfo:
 @dataclass
 class TableInfo:
     """Metadata about a database table."""
+
     name: str = ""
     columns: list[ColumnInfo] = field(default_factory=list)
     row_count: int | None = None
@@ -100,6 +105,7 @@ class TableInfo:
 @dataclass
 class QueryResult:
     """Result of a database query."""
+
     columns: list[str] = field(default_factory=list)
     rows: list[list[Any]] = field(default_factory=list)
     affected_rows: int = 0
@@ -409,8 +415,7 @@ class DatabaseClient:
             return [row[0] for row in res.rows]
         if db == DatabaseType.POSTGRESQL:
             res = self.execute(
-                "SELECT table_name FROM information_schema.tables "
-                "WHERE table_schema = 'public' ORDER BY table_name"
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name"
             )
             return [row[0] for row in res.rows]
         if db == DatabaseType.MYSQL:
@@ -527,10 +532,7 @@ class DatabaseClient:
             lines: list[str] = []
             table = "exported_data"
             for row in result.rows:
-                vals = ", ".join(
-                    f"'{v}'" if isinstance(v, str) else "NULL" if v is None else str(v)
-                    for v in row
-                )
+                vals = ", ".join(f"'{v}'" if isinstance(v, str) else "NULL" if v is None else str(v) for v in row)
                 cols = ", ".join(result.columns)
                 lines.append(f"INSERT INTO {table} ({cols}) VALUES ({vals});")
             return "\n".join(lines)
@@ -619,13 +621,14 @@ class DatabaseClient:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _lazy_import(module_name: str, pip_name: str) -> Any:
     """Import a module, raising a helpful error if it's missing."""
     import importlib
+
     try:
         return importlib.import_module(module_name)
     except ImportError:
         raise ImportError(
-            f"{module_name} is required for this database backend. "
-            f"Install it with: pip install {pip_name}"
+            f"{module_name} is required for this database backend. Install it with: pip install {pip_name}"
         )

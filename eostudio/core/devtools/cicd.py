@@ -1,4 +1,5 @@
 """CI/CD pipeline builder and monitor."""
+
 from __future__ import annotations
 
 import json
@@ -10,6 +11,7 @@ from typing import Dict, List, Optional
 
 class CIProvider(Enum):
     """Supported CI/CD providers."""
+
     GITHUB_ACTIONS = "github_actions"
     GITLAB_CI = "gitlab_ci"
     JENKINS = "jenkins"
@@ -20,6 +22,7 @@ class CIProvider(Enum):
 @dataclass
 class PipelineStep:
     """A single step within a pipeline stage."""
+
     name: str
     command: str
     image: Optional[str] = None
@@ -33,6 +36,7 @@ class PipelineStep:
 @dataclass
 class PipelineStage:
     """A stage containing one or more pipeline steps."""
+
     name: str
     steps: List[PipelineStep] = field(default_factory=list)
     depends_on: List[str] = field(default_factory=list)
@@ -42,6 +46,7 @@ class PipelineStage:
 @dataclass
 class Pipeline:
     """A complete CI/CD pipeline definition."""
+
     name: str
     stages: List[PipelineStage] = field(default_factory=list)
     triggers: Dict[str, object] = field(default_factory=dict)
@@ -52,6 +57,7 @@ class Pipeline:
 @dataclass
 class PipelineTemplate:
     """A reusable pipeline template."""
+
     name: str
     description: str
     provider: CIProvider
@@ -107,14 +113,10 @@ class PipelineBuilder:
                 errors.append(f"Stage '{stage_name}' has no steps")
             for step in stage.steps:
                 if not step.command:
-                    errors.append(
-                        f"Step '{step.name}' in stage '{stage_name}' has no command"
-                    )
+                    errors.append(f"Step '{step.name}' in stage '{stage_name}' has no command")
             for dep in stage.depends_on:
                 if dep not in self._stages:
-                    errors.append(
-                        f"Stage '{stage_name}' depends on unknown stage '{dep}'"
-                    )
+                    errors.append(f"Stage '{stage_name}' depends on unknown stage '{dep}'")
         if not self._triggers:
             errors.append("Pipeline has no triggers defined")
         return errors
@@ -165,10 +167,7 @@ class PipelineBuilder:
             lines.append("    runs-on: ubuntu-latest")
 
             if stage.depends_on:
-                needs = [
-                    d.replace(" ", "-").replace("/", "-").lower()
-                    for d in stage.depends_on
-                ]
+                needs = [d.replace(" ", "-").replace("/", "-").lower() for d in stage.depends_on]
                 needs_str = ", ".join(needs)
                 lines.append(f"    needs: [{needs_str}]")
 
@@ -197,9 +196,7 @@ class PipelineBuilder:
                 lines.append("          path: |")
                 for cp in cache_paths:
                     lines.append(f"            {cp}")
-                lines.append(
-                    "          key: ${{ runner.os }}-cache-${{ hashFiles('**/*') }}"
-                )
+                lines.append("          key: ${{ runner.os }}-cache-${{ hashFiles('**/*') }}")
 
             # Artifacts
             artifact_paths: List[str] = []
@@ -237,12 +234,7 @@ class PipelineBuilder:
         # Jobs
         for stage in pipeline.stages:
             for step in stage.steps:
-                job_name = (
-                    f"{stage.name}:{step.name}"
-                    .replace(" ", "_")
-                    .replace("/", "_")
-                    .lower()
-                )
+                job_name = f"{stage.name}:{step.name}".replace(" ", "_").replace("/", "_").lower()
                 lines.append(f"{job_name}:")
                 lines.append(f"  stage: {stage.name}")
 
@@ -329,22 +321,28 @@ class PipelineBuilder:
         py_builder.set_trigger("push", ["main"])
         py_builder.set_trigger("pull_request", ["main"])
         lint_stage = py_builder.add_stage("lint")
-        lint_stage.steps.append(PipelineStep(
-            name="Lint",
-            command="pip install flake8 && flake8 .",
-        ))
+        lint_stage.steps.append(
+            PipelineStep(
+                name="Lint",
+                command="pip install flake8 && flake8 .",
+            )
+        )
         test_stage = py_builder.add_stage("test")
-        test_stage.steps.append(PipelineStep(
-            name="Test",
-            command="pip install -r requirements.txt && pytest",
-            cache=["~/.cache/pip"],
-        ))
-        templates.append(PipelineTemplate(
-            name="python-ci",
-            description="Python CI with linting and testing",
-            provider=CIProvider.GITHUB_ACTIONS,
-            pipeline=py_builder.build(),
-        ))
+        test_stage.steps.append(
+            PipelineStep(
+                name="Test",
+                command="pip install -r requirements.txt && pytest",
+                cache=["~/.cache/pip"],
+            )
+        )
+        templates.append(
+            PipelineTemplate(
+                name="python-ci",
+                description="Python CI with linting and testing",
+                provider=CIProvider.GITHUB_ACTIONS,
+                pipeline=py_builder.build(),
+            )
+        )
 
         # Node.js CI template
         node_builder = PipelineBuilder(CIProvider.GITHUB_ACTIONS)
@@ -352,39 +350,49 @@ class PipelineBuilder:
         node_builder.set_trigger("push", ["main"])
         node_builder.set_trigger("pull_request", ["main"])
         build_stage = node_builder.add_stage("build")
-        build_stage.steps.append(PipelineStep(
-            name="Install & Build",
-            command="npm ci && npm run build",
-            cache=["node_modules"],
-        ))
+        build_stage.steps.append(
+            PipelineStep(
+                name="Install & Build",
+                command="npm ci && npm run build",
+                cache=["node_modules"],
+            )
+        )
         test_stage_node = node_builder.add_stage("test")
         test_stage_node.depends_on = ["build"]
-        test_stage_node.steps.append(PipelineStep(
-            name="Test",
-            command="npm test",
-        ))
-        templates.append(PipelineTemplate(
-            name="node-ci",
-            description="Node.js CI with build and test",
-            provider=CIProvider.GITHUB_ACTIONS,
-            pipeline=node_builder.build(),
-        ))
+        test_stage_node.steps.append(
+            PipelineStep(
+                name="Test",
+                command="npm test",
+            )
+        )
+        templates.append(
+            PipelineTemplate(
+                name="node-ci",
+                description="Node.js CI with build and test",
+                provider=CIProvider.GITHUB_ACTIONS,
+                pipeline=node_builder.build(),
+            )
+        )
 
         # Docker build & push template
         docker_builder = PipelineBuilder(CIProvider.GITHUB_ACTIONS)
         docker_builder._name = "Docker Build & Push"
         docker_builder.set_trigger("push", ["main"])
         docker_stage = docker_builder.add_stage("docker")
-        docker_stage.steps.append(PipelineStep(
-            name="Build and Push",
-            command="docker build -t $IMAGE_NAME:$GITHUB_SHA . && docker push $IMAGE_NAME:$GITHUB_SHA",
-        ))
-        templates.append(PipelineTemplate(
-            name="docker-build",
-            description="Docker build and push pipeline",
-            provider=CIProvider.GITHUB_ACTIONS,
-            pipeline=docker_builder.build(),
-        ))
+        docker_stage.steps.append(
+            PipelineStep(
+                name="Build and Push",
+                command="docker build -t $IMAGE_NAME:$GITHUB_SHA . && docker push $IMAGE_NAME:$GITHUB_SHA",
+            )
+        )
+        templates.append(
+            PipelineTemplate(
+                name="docker-build",
+                description="Docker build and push pipeline",
+                provider=CIProvider.GITHUB_ACTIONS,
+                pipeline=docker_builder.build(),
+            )
+        )
 
         return templates
 
@@ -476,10 +484,7 @@ class BuildMonitor:
             if isinstance(data, list):
                 log_lines: List[str] = []
                 for job in data:
-                    log_lines.append(
-                        f"--- {job.get('name', 'unknown')} "
-                        f"({job.get('status', '')}) ---"
-                    )
+                    log_lines.append(f"--- {job.get('name', 'unknown')} ({job.get('status', '')}) ---")
                 return "\n".join(log_lines)
             return "No logs available"
         return f"Unsupported provider: {provider.value}"

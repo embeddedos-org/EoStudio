@@ -19,8 +19,7 @@ class GTKAppGenerator:
             raise ValueError(f"Unknown target {target!r}")
         self._target = target
 
-    def generate(self, screens: List[Dict[str, Any]],
-                 app_name: str = "EoStudioApp") -> Dict[str, str]:
+    def generate(self, screens: List[Dict[str, Any]], app_name: str = "EoStudioApp") -> Dict[str, str]:
         if not screens:
             screens = [{"name": "Home", "components": []}]
         if self._target == "gtk-python":
@@ -29,8 +28,7 @@ class GTKAppGenerator:
 
     # -- GTK Python ---------------------------------------------------
 
-    def _gen_python(self, screens: List[Dict[str, Any]],
-                    app_name: str) -> Dict[str, str]:
+    def _gen_python(self, screens: List[Dict[str, Any]], app_name: str) -> Dict[str, str]:
         files: Dict[str, str] = {}
         page_methods: List[str] = []
         stack_adds: List[str] = []
@@ -52,9 +50,9 @@ class GTKAppGenerator:
                 f"{body}"
                 f"        scroll = Gtk.ScrolledWindow()\n"
                 f"        scroll.set_child(box)\n"
-                f"        return scroll\n")
-            stack_adds.append(
-                f"        self.stack.add_titled(self._build_{name}(), '{name}', '{label}')")
+                f"        return scroll\n"
+            )
+            stack_adds.append(f"        self.stack.add_titled(self._build_{name}(), '{name}', '{label}')")
             sidebar_rows.append(f"'{label}'")
 
         files["main.py"] = (
@@ -73,8 +71,7 @@ class GTKAppGenerator:
             "        super().__init__(**kwargs)\n"
             f"        self.set_title('{app_name}')\n"
             "        self.set_default_size(1200, 800)\n\n"
-            "        self.stack = Adw.ViewStack()\n"
-            + "\n".join(stack_adds) + "\n\n"
+            "        self.stack = Adw.ViewStack()\n" + "\n".join(stack_adds) + "\n\n"
             "        switcher = Adw.ViewSwitcherBar()\n"
             "        switcher.set_stack(self.stack)\n\n"
             "        header = Adw.HeaderBar()\n"
@@ -85,15 +82,14 @@ class GTKAppGenerator:
             "        main_box.append(header)\n"
             "        main_box.append(self.stack)\n"
             "        main_box.append(switcher)\n"
-            "        self.set_content(main_box)\n\n"
-            + "\n\n".join(page_methods) + "\n\n"
+            "        self.set_content(main_box)\n\n" + "\n\n".join(page_methods) + "\n\n"
             "if __name__ == '__main__':\n"
             f"    app = {self._pascal(app_name)}()\n"
-            "    app.run(None)\n")
+            "    app.run(None)\n"
+        )
         return files
 
-    def _py_widgets(self, components: List[Dict[str, Any]],
-                    parent: str, indent: int) -> str:
+    def _py_widgets(self, components: List[Dict[str, Any]], parent: str, indent: int) -> str:
         lines: List[str] = []
         pad = "    " * indent
         idx = 0
@@ -136,8 +132,7 @@ class GTKAppGenerator:
 
     # -- GTK C --------------------------------------------------------
 
-    def _gen_c(self, screens: List[Dict[str, Any]],
-               app_name: str) -> Dict[str, str]:
+    def _gen_c(self, screens: List[Dict[str, Any]], app_name: str) -> Dict[str, str]:
         files: Dict[str, str] = {}
         snake = self._snake(app_name)
         page_fns: List[str] = []
@@ -153,26 +148,25 @@ class GTKAppGenerator:
                 f"    gtk_widget_set_margin_start(box, 16);\n"
                 f"    gtk_widget_set_margin_end(box, 16);\n"
                 f"    gtk_widget_set_margin_top(box, 16);\n"
-                f"    GtkWidget *title = gtk_label_new(\"{label}\");\n"
-                f"    gtk_widget_add_css_class(title, \"title-1\");\n"
+                f'    GtkWidget *title = gtk_label_new("{label}");\n'
+                f'    gtk_widget_add_css_class(title, "title-1");\n'
                 f"    gtk_box_append(GTK_BOX(box), title);\n"
                 f"{body}"
                 f"    GtkWidget *scroll = gtk_scrolled_window_new();\n"
                 f"    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), box);\n"
-                f"    return scroll;\n}}\n")
+                f"    return scroll;\n}}\n"
+            )
             stack_adds.append(
-                f'    adw_view_stack_add_titled(ADW_VIEW_STACK(stack), '
-                f'build_{name}_page(), "{name}", "{label}");')
+                f'    adw_view_stack_add_titled(ADW_VIEW_STACK(stack), build_{name}_page(), "{name}", "{label}");'
+            )
 
         files["main.c"] = (
-            "#include <adwaita.h>\n\n"
-            + "\n".join(page_fns) + "\n"
+            "#include <adwaita.h>\n\n" + "\n".join(page_fns) + "\n"
             "static void activate(GtkApplication *app, gpointer data) {\n"
             f"    GtkWidget *win = adw_application_window_new(app);\n"
-            f"    gtk_window_set_title(GTK_WINDOW(win), \"{app_name}\");\n"
+            f'    gtk_window_set_title(GTK_WINDOW(win), "{app_name}");\n'
             "    gtk_window_set_default_size(GTK_WINDOW(win), 1200, 800);\n\n"
-            "    GtkWidget *stack = adw_view_stack_new();\n"
-            + "\n".join(stack_adds) + "\n\n"
+            "    GtkWidget *stack = adw_view_stack_new();\n" + "\n".join(stack_adds) + "\n\n"
             "    GtkWidget *header = adw_header_bar_new();\n"
             "    GtkWidget *switcher = adw_view_switcher_title_new();\n"
             "    adw_view_switcher_title_set_stack(ADW_VIEW_SWITCHER_TITLE(switcher), ADW_VIEW_STACK(stack));\n"
@@ -183,11 +177,12 @@ class GTKAppGenerator:
             "    adw_application_window_set_content(ADW_APPLICATION_WINDOW(win), vbox);\n"
             "    gtk_window_present(GTK_WINDOW(win));\n}\n\n"
             "int main(int argc, char *argv[]) {\n"
-            f"    AdwApplication *app = adw_application_new(\"com.eostudio.{snake}\", G_APPLICATION_DEFAULT_FLAGS);\n"
-            "    g_signal_connect(app, \"activate\", G_CALLBACK(activate), NULL);\n"
+            f'    AdwApplication *app = adw_application_new("com.eostudio.{snake}", G_APPLICATION_DEFAULT_FLAGS);\n'
+            '    g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);\n'
             "    int status = g_application_run(G_APPLICATION(app), argc, argv);\n"
             "    g_object_unref(app);\n"
-            "    return status;\n}\n")
+            "    return status;\n}\n"
+        )
 
         files["meson.build"] = (
             f"project('{snake}', 'c', version: '1.0.0')\n"
@@ -196,11 +191,11 @@ class GTKAppGenerator:
             "  dependency('gtk4'),\n"
             "  dependency('libadwaita-1'),\n"
             "]\n"
-            f"executable('{snake}', 'main.c', dependencies: deps)\n")
+            f"executable('{snake}', 'main.c', dependencies: deps)\n"
+        )
         return files
 
-    def _c_widgets(self, components: List[Dict[str, Any]],
-                   parent: str, indent: int) -> str:
+    def _c_widgets(self, components: List[Dict[str, Any]], parent: str, indent: int) -> str:
         lines: List[str] = []
         pad = "    " * indent
         idx = 0
@@ -212,9 +207,11 @@ class GTKAppGenerator:
             elif ct == "Text":
                 lines.append(f'{pad}gtk_box_append(GTK_BOX({parent}), gtk_label_new("{lb}"));\n')
             elif ct == "Input":
-                lines.append(f'{pad}{{\n{pad}    GtkWidget *e = gtk_entry_new();\n'
-                             f'{pad}    gtk_entry_set_placeholder_text(GTK_ENTRY(e), "{lb}");\n'
-                             f'{pad}    gtk_box_append(GTK_BOX({parent}), e);\n{pad}}}\n')
+                lines.append(
+                    f"{pad}{{\n{pad}    GtkWidget *e = gtk_entry_new();\n"
+                    f'{pad}    gtk_entry_set_placeholder_text(GTK_ENTRY(e), "{lb}");\n'
+                    f"{pad}    gtk_box_append(GTK_BOX({parent}), e);\n{pad}}}\n"
+                )
             else:
                 lines.append(f'{pad}gtk_box_append(GTK_BOX({parent}), gtk_label_new("{lb}"));\n')
             idx += 1

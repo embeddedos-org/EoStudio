@@ -1,4 +1,5 @@
 """Wavefront OBJ format exporter for EoStudio meshes."""
+
 from __future__ import annotations
 
 import os

@@ -1,16 +1,19 @@
 """2D drawing canvas with zoom, pan, grid snap, and shape helpers."""
 
-
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -92,8 +95,10 @@ class Canvas2D(tk.Canvas):
 
     def draw_line(
         self,
-        x0: float, y0: float,
-        x1: float, y1: float,
+        x0: float,
+        y0: float,
+        x1: float,
+        y1: float,
         color: str = "#cdd6f4",
         width: float = 1,
         tag: str = "user",
@@ -104,8 +109,10 @@ class Canvas2D(tk.Canvas):
 
     def draw_rect(
         self,
-        x0: float, y0: float,
-        x1: float, y1: float,
+        x0: float,
+        y0: float,
+        x1: float,
+        y1: float,
         color: str = "#cdd6f4",
         fill: str = "",
         width: float = 1,
@@ -117,7 +124,8 @@ class Canvas2D(tk.Canvas):
 
     def draw_circle(
         self,
-        cx: float, cy: float,
+        cx: float,
+        cy: float,
         radius: float,
         color: str = "#cdd6f4",
         fill: str = "",
@@ -144,7 +152,8 @@ class Canvas2D(tk.Canvas):
 
     def draw_text(
         self,
-        x: float, y: float,
+        x: float,
+        y: float,
         text: str,
         color: str = "#cdd6f4",
         font: Tuple[str, int] = ("Consolas", 10),
@@ -179,14 +188,16 @@ class Canvas2D(tk.Canvas):
         for x in range(0, w, step * 5):
             world_x = x / self._zoom - self._pan_x
             self.create_line(x, 0, x, ruler_h, fill="#585b70", tags=("ruler",))
-            self.create_text(x + 2, 10, text=f"{world_x:.0f}", fill="#585b70",
-                             font=("Consolas", 7), anchor=tk.W, tags=("ruler",))
+            self.create_text(
+                x + 2, 10, text=f"{world_x:.0f}", fill="#585b70", font=("Consolas", 7), anchor=tk.W, tags=("ruler",)
+            )
 
         for y in range(0, h, step * 5):
             world_y = y / self._zoom - self._pan_y
             self.create_line(0, y, ruler_h, y, fill="#585b70", tags=("ruler",))
-            self.create_text(10, y + 2, text=f"{world_y:.0f}", fill="#585b70",
-                             font=("Consolas", 7), anchor=tk.N, tags=("ruler",))
+            self.create_text(
+                10, y + 2, text=f"{world_y:.0f}", fill="#585b70", font=("Consolas", 7), anchor=tk.N, tags=("ruler",)
+            )
 
         self.tag_lower("grid")
 

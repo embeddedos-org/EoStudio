@@ -62,15 +62,38 @@ class AnsiParser:
 
     # SGR (Select Graphic Rendition) color names
     _SGR_COLORS = {
-        0: "reset", 1: "bold", 2: "dim", 3: "italic", 4: "underline",
-        7: "inverse", 8: "hidden", 9: "strikethrough",
-        30: "black", 31: "red", 32: "green", 33: "yellow",
-        34: "blue", 35: "magenta", 36: "cyan", 37: "white",
-        40: "bg_black", 41: "bg_red", 42: "bg_green", 43: "bg_yellow",
-        44: "bg_blue", 45: "bg_magenta", 46: "bg_cyan", 47: "bg_white",
-        90: "bright_black", 91: "bright_red", 92: "bright_green",
-        93: "bright_yellow", 94: "bright_blue", 95: "bright_magenta",
-        96: "bright_cyan", 97: "bright_white",
+        0: "reset",
+        1: "bold",
+        2: "dim",
+        3: "italic",
+        4: "underline",
+        7: "inverse",
+        8: "hidden",
+        9: "strikethrough",
+        30: "black",
+        31: "red",
+        32: "green",
+        33: "yellow",
+        34: "blue",
+        35: "magenta",
+        36: "cyan",
+        37: "white",
+        40: "bg_black",
+        41: "bg_red",
+        42: "bg_green",
+        43: "bg_yellow",
+        44: "bg_blue",
+        45: "bg_magenta",
+        46: "bg_cyan",
+        47: "bg_white",
+        90: "bright_black",
+        91: "bright_red",
+        92: "bright_green",
+        93: "bright_yellow",
+        94: "bright_blue",
+        95: "bright_magenta",
+        96: "bright_cyan",
+        97: "bright_white",
     }
 
     @staticmethod
@@ -91,7 +114,7 @@ class AnsiParser:
         segments: List[Tuple[str, str, List[int]]] = []
         last_end = 0
         for m in _CSI_RE.finditer(text):
-            plain = _ANSI_RE.sub("", text[last_end:m.start()])
+            plain = _ANSI_RE.sub("", text[last_end : m.start()])
             params_str = m.group(1)
             params = [int(p) for p in params_str.split(";") if p] if params_str else [0]
             segments.append((plain, m.group(2), params))
@@ -127,6 +150,7 @@ class AnsiParser:
 # ---------------------------------------------------------------------------
 # Shell detection
 # ---------------------------------------------------------------------------
+
 
 def _detect_shell() -> str:
     """Return the path to the best available shell for the current platform."""
@@ -194,7 +218,7 @@ class CommandHistory:
                 return
             self._entries.append(cmd)
             if len(self._entries) > self._max:
-                self._entries = self._entries[-self._max:]
+                self._entries = self._entries[-self._max :]
             self._save()
 
     def search(self, prefix: str) -> List[str]:
@@ -226,7 +250,7 @@ class CommandHistory:
             if _HISTORY_FILE.is_file():
                 data = json.loads(_HISTORY_FILE.read_text(encoding="utf-8"))
                 if isinstance(data, list):
-                    self._entries = [str(e) for e in data[-self._max:]]
+                    self._entries = [str(e) for e in data[-self._max :]]
         except (json.JSONDecodeError, OSError):
             self._entries = []
 
@@ -244,6 +268,7 @@ class CommandHistory:
 # ---------------------------------------------------------------------------
 # Terminal session
 # ---------------------------------------------------------------------------
+
 
 class TerminalSession:
     """A single terminal session backed by a PTY (Unix) or piped subprocess (Windows).
@@ -314,9 +339,7 @@ class TerminalSession:
         os.close(slave_fd)
 
         self._alive = True
-        self._reader_thread = threading.Thread(
-            target=self._read_unix, daemon=True, name=f"TermReader-{self.id}"
-        )
+        self._reader_thread = threading.Thread(target=self._read_unix, daemon=True, name=f"TermReader-{self.id}")
         self._reader_thread.start()
 
     def _start_windows(self) -> None:
@@ -335,9 +358,7 @@ class TerminalSession:
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
         )
         self._alive = True
-        self._reader_thread = threading.Thread(
-            target=self._read_windows, daemon=True, name=f"TermReader-{self.id}"
-        )
+        self._reader_thread = threading.Thread(target=self._read_windows, daemon=True, name=f"TermReader-{self.id}")
         self._reader_thread.start()
 
     # -- reader threads --
@@ -472,10 +493,7 @@ class TerminalSession:
                     found_cmd = False
                     for line in lines:
                         stripped = AnsiParser.strip(line).strip()
-                        if not found_cmd and (
-                            cmd_stripped in stripped
-                            or stripped.endswith(cmd_stripped)
-                        ):
+                        if not found_cmd and (cmd_stripped in stripped or stripped.endswith(cmd_stripped)):
                             found_cmd = True
                             continue
                         if found_cmd:
@@ -593,6 +611,7 @@ class TerminalSession:
 # Terminal manager
 # ---------------------------------------------------------------------------
 
+
 class TerminalManager:
     """Manages multiple :class:`TerminalSession` instances."""
 
@@ -668,6 +687,7 @@ class TerminalManager:
 # Backward-compatible TerminalEmulator facade
 # ---------------------------------------------------------------------------
 
+
 class TerminalEmulator:
     """High-level terminal emulator -- backward-compatible public API.
 
@@ -685,7 +705,10 @@ class TerminalEmulator:
     ) -> None:
         self._manager = TerminalManager()
         self._default_session = self._manager.create_session(
-            shell=shell, cwd=cwd, rows=rows, cols=cols,
+            shell=shell,
+            cwd=cwd,
+            rows=rows,
+            cols=cols,
         )
 
     # -- session proxies --

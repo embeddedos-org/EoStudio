@@ -25,8 +25,7 @@ class MacOSBackend(TkinterBackend):
         win = self._windows.get(wid)
         if win and self._tk:
             try:
-                self._tk.createcommand("tk::mac::Quit",
-                                       lambda: self.request_quit())
+                self._tk.createcommand("tk::mac::Quit", lambda: self.request_quit())
             except Exception:
                 pass
             try:
@@ -39,6 +38,7 @@ class MacOSBackend(TkinterBackend):
         if not self._tk:
             return
         import tkinter as tk
+
         menubar = tk.Menu(self._tk)
         app_menu = tk.Menu(menubar, name="apple", tearoff=0)
         app_menu.add_command(label=f"About {app_name}")

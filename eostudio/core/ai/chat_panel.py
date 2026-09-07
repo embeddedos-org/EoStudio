@@ -44,9 +44,7 @@ class ChatPanel:
             attachments=attachments or [],
         )
         session.messages.append(user_msg)
-        prompt = "\n".join(
-            f"{m.role}: {m.content}" for m in session.messages
-        )
+        prompt = "\n".join(f"{m.role}: {m.content}" for m in session.messages)
         if session.system_prompt:
             prompt = f"System: {session.system_prompt}\n{prompt}"
         response = self.llm_client.complete(prompt)
@@ -78,10 +76,7 @@ class ChatPanel:
 
     def search_history(self, query: str) -> list[ChatMessage]:
         query_lower = query.lower()
-        return [
-            m for m in self._get_active().messages
-            if query_lower in m.content.lower()
-        ]
+        return [m for m in self._get_active().messages if query_lower in m.content.lower()]
 
     def new_session(self, system_prompt: str | None = None) -> str:
         session_id = str(uuid.uuid4())

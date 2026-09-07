@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 @dataclass
 class DesignToken:
     """Base design token with name, value, and category."""
+
     name: str
     value: Any
     category: str = "general"
@@ -36,6 +37,7 @@ class DesignToken:
 @dataclass
 class ColorToken(DesignToken):
     """Color design token with hex value and opacity."""
+
     category: str = "color"
     opacity: float = 1.0
 
@@ -51,13 +53,13 @@ class ColorToken(DesignToken):
         return (r, g, b, self.opacity)
 
     def with_opacity(self, opacity: float) -> "ColorToken":
-        return ColorToken(name=self.name, value=self.value, opacity=opacity,
-                          description=self.description)
+        return ColorToken(name=self.name, value=self.value, opacity=opacity, description=self.description)
 
 
 @dataclass
 class TypographyToken(DesignToken):
     """Typography design token."""
+
     category: str = "typography"
     font_family: str = "Inter, system-ui, sans-serif"
     font_size: float = 16.0
@@ -66,16 +68,19 @@ class TypographyToken(DesignToken):
     letter_spacing: float = 0.0
 
     def to_css(self) -> str:
-        return (f"font-family: {self.font_family}; "
-                f"font-size: {self.font_size}px; "
-                f"font-weight: {self.font_weight}; "
-                f"line-height: {self.line_height}; "
-                f"letter-spacing: {self.letter_spacing}em;")
+        return (
+            f"font-family: {self.font_family}; "
+            f"font-size: {self.font_size}px; "
+            f"font-weight: {self.font_weight}; "
+            f"line-height: {self.line_height}; "
+            f"letter-spacing: {self.letter_spacing}em;"
+        )
 
 
 @dataclass
 class SpacingToken(DesignToken):
     """Spacing design token (px values)."""
+
     category: str = "spacing"
 
     def to_css(self) -> str:
@@ -85,6 +90,7 @@ class SpacingToken(DesignToken):
 @dataclass
 class ShadowToken(DesignToken):
     """Shadow design token."""
+
     category: str = "shadow"
     offset_x: float = 0.0
     offset_y: float = 2.0
@@ -99,6 +105,7 @@ class ShadowToken(DesignToken):
 @dataclass
 class DesignTokenSet:
     """A collection of design tokens forming a theme/design system."""
+
     name: str = "Default"
     description: str = ""
     tokens: List[DesignToken] = field(default_factory=list)

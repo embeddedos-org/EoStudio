@@ -15,6 +15,7 @@ from eostudio.core.prototyping.state_machine import StateMachine, PrototypeState
 @dataclass
 class PrototypeScreen:
     """A screen in the prototype with components and interactions."""
+
     id: str
     name: str
     components: List[Dict[str, Any]] = field(default_factory=list)
@@ -65,19 +66,20 @@ class PrototypePlayer:
     def add_screen(self, screen: PrototypeScreen) -> None:
         self.screens[screen.id] = screen
         # Add state machine state for this screen
-        self.state_machine.add_state(PrototypeState(
-            name=screen.id,
-            screen_id=screen.id,
-            is_initial=len(self.screens) == 1,
-        ))
+        self.state_machine.add_state(
+            PrototypeState(
+                name=screen.id,
+                screen_id=screen.id,
+                is_initial=len(self.screens) == 1,
+            )
+        )
         if not self._current_screen:
             self._current_screen = screen.id
 
     def add_transition(self, transition: ScreenTransition) -> None:
         self.transitions.append(transition)
 
-    def navigate_to(self, screen_id: str,
-                    transition_type: TransitionType = TransitionType.PUSH) -> bool:
+    def navigate_to(self, screen_id: str, transition_type: TransitionType = TransitionType.PUSH) -> bool:
         """Navigate to a specific screen."""
         if screen_id not in self.screens:
             return False
@@ -89,12 +91,14 @@ class PrototypePlayer:
         self._current_screen = screen_id
 
         if self._is_recording and old_screen:
-            self._recording.append({
-                "type": "navigation",
-                "from": old_screen,
-                "to": screen_id,
-                "transition": transition_type.value,
-            })
+            self._recording.append(
+                {
+                    "type": "navigation",
+                    "from": old_screen,
+                    "to": screen_id,
+                    "transition": transition_type.value,
+                }
+            )
 
         return True
 
@@ -224,8 +228,7 @@ renderScreen(currentScreen);
 </body>
 </html>"""
 
-    def export_gif_frames(self, fps: int = 15,
-                          duration: float = 5.0) -> List[Dict[str, Any]]:
+    def export_gif_frames(self, fps: int = 15, duration: float = 5.0) -> List[Dict[str, Any]]:
         """Generate frame data for GIF/video export of the prototype walkthrough."""
         frames = []
         total_frames = int(fps * duration)
@@ -235,15 +238,17 @@ renderScreen(currentScreen);
         for si, screen_id in enumerate(screens_list):
             screen = self.screens[screen_id]
             for fi in range(frames_per_screen):
-                frames.append({
-                    "frame": si * frames_per_screen + fi,
-                    "screen_id": screen_id,
-                    "screen_name": screen.name,
-                    "components": screen.components,
-                    "background": screen.background,
-                    "is_transition": fi < 5 and si > 0,
-                    "transition_progress": fi / 5 if fi < 5 and si > 0 else 1.0,
-                })
+                frames.append(
+                    {
+                        "frame": si * frames_per_screen + fi,
+                        "screen_id": screen_id,
+                        "screen_name": screen.name,
+                        "components": screen.components,
+                        "background": screen.background,
+                        "is_transition": fi < 5 and si > 0,
+                        "transition_progress": fi / 5 if fi < 5 and si > 0 else 1.0,
+                    }
+                )
         return frames
 
     def to_dict(self) -> Dict[str, Any]:
@@ -259,12 +264,15 @@ renderScreen(currentScreen);
     def from_dict(cls, data: Dict[str, Any]) -> "PrototypePlayer":
         player = cls()
         for s_data in data.get("screens", {}).values():
-            player.add_screen(PrototypeScreen(
-                id=s_data["id"], name=s_data["name"],
-                components=s_data.get("components", []),
-                background=s_data.get("background", "#ffffff"),
-                device_frame=s_data.get("device_frame", "iphone_14"),
-            ))
+            player.add_screen(
+                PrototypeScreen(
+                    id=s_data["id"],
+                    name=s_data["name"],
+                    components=s_data.get("components", []),
+                    background=s_data.get("background", "#ffffff"),
+                    device_frame=s_data.get("device_frame", "iphone_14"),
+                )
+            )
         for t_data in data.get("transitions", []):
             player.add_transition(ScreenTransition.from_dict(t_data))
         if "interactions" in data:

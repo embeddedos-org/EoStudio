@@ -19,6 +19,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class DAPMessage:
     """A Debug Adapter Protocol message (request, response, or event)."""
@@ -132,6 +133,7 @@ class DebugConfig:
 # DAP Transport
 # ---------------------------------------------------------------------------
 
+
 class _DAPTransport:
     """Handles DAP JSON messaging over stdio with Content-Length framing."""
 
@@ -150,8 +152,7 @@ class _DAPTransport:
 
     # -- connection lifecycle ------------------------------------------------
 
-    def start_process(self, cmd: List[str], cwd: Optional[str] = None,
-                      env: Optional[Dict[str, str]] = None) -> None:
+    def start_process(self, cmd: List[str], cwd: Optional[str] = None, env: Optional[Dict[str, str]] = None) -> None:
         merged_env: Optional[Dict[str, str]] = None
         if env:
             merged_env = {**os.environ, **env}
@@ -165,9 +166,7 @@ class _DAPTransport:
             env=merged_env,
         )
         self._running = True
-        self._reader_thread = threading.Thread(
-            target=self._read_loop, daemon=True
-        )
+        self._reader_thread = threading.Thread(target=self._read_loop, daemon=True)
         self._reader_thread.start()
 
     def connect_socket(self, host: str, port: int, timeout: float = 10.0) -> None:
@@ -191,9 +190,7 @@ class _DAPTransport:
         self._socket_rfile = sock.makefile("rb")
         self._socket_wfile = sock.makefile("wb")
         self._running = True
-        self._reader_thread = threading.Thread(
-            target=self._read_loop, daemon=True
-        )
+        self._reader_thread = threading.Thread(target=self._read_loop, daemon=True)
         self._reader_thread.start()
 
     def shutdown(self) -> None:
@@ -231,27 +228,35 @@ class _DAPTransport:
             self._seq += 1
             return self._seq
 
-    def send_request(self, command: str,
-                     arguments: Optional[Dict[str, Any]] = None,
-                     timeout: float = 30.0) -> DAPMessage:
+    def send_request(
+        self, command: str, arguments: Optional[Dict[str, Any]] = None, timeout: float = 30.0
+    ) -> DAPMessage:
         seq = self._next_seq()
-        msg = DAPMessage(
-            seq=seq, type="request", command=command, arguments=arguments
-        )
+        msg = DAPMessage(seq=seq, type="request", command=command, arguments=arguments)
         event = threading.Event()
         self._pending[seq] = event
         self._write(msg.encode())
         if not event.wait(timeout=timeout):
             self._pending.pop(seq, None)
             return DAPMessage(
-                seq=0, type="response", request_seq=seq,
-                success=False, command=command,
+                seq=0,
+                type="response",
+                request_seq=seq,
+                success=False,
+                command=command,
                 message="Request timed out",
             )
-        return self._responses.pop(seq, DAPMessage(
-            seq=0, type="response", request_seq=seq,
-            success=False, command=command, message="No response",
-        ))
+        return self._responses.pop(
+            seq,
+            DAPMessage(
+                seq=0,
+                type="response",
+                request_seq=seq,
+                success=False,
+                command=command,
+                message="No response",
+            ),
+        )
 
     def _write(self, data: bytes) -> None:
         try:
@@ -277,9 +282,7 @@ class _DAPTransport:
                 break
 
     def _read_message(self) -> Optional[DAPMessage]:
-        stream = self._socket_rfile if self._socket_rfile else (
-            self._process.stdout if self._process else None
-        )
+        stream = self._socket_rfile if self._socket_rfile else (self._process.stdout if self._process else None)
         if stream is None:
             return None
 
@@ -345,6 +348,7 @@ class _DAPTransport:
 # Debug adapter auto-detection helpers
 # ---------------------------------------------------------------------------
 
+
 def _find_executable(name: str) -> Optional[str]:
     return shutil.which(name)
 
@@ -383,6 +387,7 @@ def _build_adapter_command(config: DebugConfig) -> Tuple[List[str], Optional[Dic
 # ---------------------------------------------------------------------------
 # Debugger
 # ---------------------------------------------------------------------------
+
 
 class Debugger:
     """Full-featured DAP-based debugger for EoStudio.
@@ -453,30 +458,30 @@ class Debugger:
         if self.on_thread_event:
             self.on_thread_event(msg)
 
-    def _request(self, command: str,
-                 arguments: Optional[Dict[str, Any]] = None,
-                 timeout: float = 30.0) -> DAPMessage:
+    def _request(self, command: str, arguments: Optional[Dict[str, Any]] = None, timeout: float = 30.0) -> DAPMessage:
         if not self._transport:
-            return DAPMessage(seq=0, type="response", success=False,
-                              command=command, message="No active session")
+            return DAPMessage(seq=0, type="response", success=False, command=command, message="No active session")
         return self._transport.send_request(command, arguments, timeout=timeout)
 
     def _initialize(self) -> bool:
-        resp = self._request("initialize", {
-            "clientID": "eostudio",
-            "clientName": "EoStudio",
-            "adapterID": self._config.type if self._config else "python",
-            "pathFormat": "path",
-            "linesStartAt1": True,
-            "columnsStartAt1": True,
-            "supportsVariableType": True,
-            "supportsVariablePaging": False,
-            "supportsRunInTerminalRequest": False,
-            "supportsProgressReporting": False,
-            "supportsInvalidatedEvent": False,
-            "supportsMemoryReferences": False,
-            "locale": "en-US",
-        })
+        resp = self._request(
+            "initialize",
+            {
+                "clientID": "eostudio",
+                "clientName": "EoStudio",
+                "adapterID": self._config.type if self._config else "python",
+                "pathFormat": "path",
+                "linesStartAt1": True,
+                "columnsStartAt1": True,
+                "supportsVariableType": True,
+                "supportsVariablePaging": False,
+                "supportsRunInTerminalRequest": False,
+                "supportsProgressReporting": False,
+                "supportsInvalidatedEvent": False,
+                "supportsMemoryReferences": False,
+                "locale": "en-US",
+            },
+        )
         if not resp.success:
             return False
         self._capabilities = resp.body or {}
@@ -498,10 +503,13 @@ class Debugger:
                 entry["logMessage"] = bp.log_message
             source_bps.append(entry)
 
-        resp = self._request("setBreakpoints", {
-            "source": {"path": file},
-            "breakpoints": source_bps,
-        })
+        resp = self._request(
+            "setBreakpoints",
+            {
+                "source": {"path": file},
+                "breakpoints": source_bps,
+            },
+        )
 
         if resp.success and resp.body:
             returned = resp.body.get("breakpoints", [])
@@ -615,10 +623,13 @@ class Debugger:
             self.stop()
             return False
 
-        resp = self._request("attach", {
-            "type": "debugpy",
-            "request": "attach",
-        })
+        resp = self._request(
+            "attach",
+            {
+                "type": "debugpy",
+                "request": "attach",
+            },
+        )
         if not resp.success:
             self.stop()
             return False
@@ -683,13 +694,12 @@ class Debugger:
         if self._running:
             self._send_breakpoints_for_file(file)
 
-    def set_breakpoint(self, file: str, line: int,
-                       condition: Optional[str] = None,
-                       log_message: Optional[str] = None) -> Breakpoint:
+    def set_breakpoint(
+        self, file: str, line: int, condition: Optional[str] = None, log_message: Optional[str] = None
+    ) -> Breakpoint:
         """Set a breakpoint with optional condition / log message."""
         file = str(Path(file).resolve())
-        bp = Breakpoint(file=file, line=line, condition=condition,
-                        log_message=log_message, enabled=True)
+        bp = Breakpoint(file=file, line=line, condition=condition, log_message=log_message, enabled=True)
         self._breakpoints.setdefault(file, []).append(bp)
         if self._running:
             self._send_breakpoints_for_file(file)
@@ -706,22 +716,27 @@ class Debugger:
 
     def get_stack_trace(self, thread_id: Optional[int] = None) -> List[StackFrame]:
         tid = thread_id or self._stopped_thread_id or 0
-        resp = self._request("stackTrace", {
-            "threadId": tid,
-            "startFrame": 0,
-            "levels": 100,
-        })
+        resp = self._request(
+            "stackTrace",
+            {
+                "threadId": tid,
+                "startFrame": 0,
+                "levels": 100,
+            },
+        )
         frames: List[StackFrame] = []
         if resp.success and resp.body:
             for f in resp.body.get("stackFrames", []):
                 source = f.get("source", {})
-                frames.append(StackFrame(
-                    id=f.get("id", 0),
-                    name=f.get("name", ""),
-                    source_path=source.get("path", ""),
-                    line=f.get("line", 0),
-                    column=f.get("column", 0),
-                ))
+                frames.append(
+                    StackFrame(
+                        id=f.get("id", 0),
+                        name=f.get("name", ""),
+                        source_path=source.get("path", ""),
+                        line=f.get("line", 0),
+                        column=f.get("column", 0),
+                    )
+                )
         return frames
 
     def get_scopes(self, frame_id: int) -> List[Dict[str, Any]]:
@@ -744,20 +759,25 @@ class Debugger:
         return result
 
     def _fetch_variables(self, variables_reference: int) -> List[Variable]:
-        resp = self._request("variables", {
-            "variablesReference": variables_reference,
-        })
+        resp = self._request(
+            "variables",
+            {
+                "variablesReference": variables_reference,
+            },
+        )
         result: List[Variable] = []
         if resp.success and resp.body:
             for v in resp.body.get("variables", []):
                 var_ref = v.get("variablesReference", 0)
-                result.append(Variable(
-                    name=v.get("name", ""),
-                    value=v.get("value", ""),
-                    type=v.get("type", ""),
-                    expandable=var_ref > 0,
-                    variables_reference=var_ref,
-                ))
+                result.append(
+                    Variable(
+                        name=v.get("name", ""),
+                        value=v.get("value", ""),
+                        type=v.get("type", ""),
+                        expandable=var_ref > 0,
+                        variables_reference=var_ref,
+                    )
+                )
         return result
 
     def expand_variable(self, variables_reference: int) -> List[Variable]:
@@ -774,8 +794,7 @@ class Debugger:
 
     # -- evaluation ----------------------------------------------------------
 
-    def evaluate(self, expression: str,
-                 frame_id: Optional[int] = None) -> str:
+    def evaluate(self, expression: str, frame_id: Optional[int] = None) -> str:
         """Evaluate an expression in the debug console."""
         args: Dict[str, Any] = {
             "expression": expression,
@@ -820,25 +839,30 @@ class Debugger:
                 args["frameId"] = frame_id
             resp = self._request("evaluate", args)
             if resp.success and resp.body:
-                results.append({
-                    "expression": expr,
-                    "result": resp.body.get("result", ""),
-                    "type": resp.body.get("type", ""),
-                    "variablesReference": resp.body.get("variablesReference", 0),
-                })
+                results.append(
+                    {
+                        "expression": expr,
+                        "result": resp.body.get("result", ""),
+                        "type": resp.body.get("type", ""),
+                        "variablesReference": resp.body.get("variablesReference", 0),
+                    }
+                )
             else:
-                results.append({
-                    "expression": expr,
-                    "result": resp.message or "<error>",
-                    "type": "",
-                    "variablesReference": 0,
-                })
+                results.append(
+                    {
+                        "expression": expr,
+                        "result": resp.message or "<error>",
+                        "type": "",
+                        "variablesReference": 0,
+                    }
+                )
         return results
 
 
 # ---------------------------------------------------------------------------
 # DebugManager
 # ---------------------------------------------------------------------------
+
 
 class DebugManager:
     """Manages multiple debug sessions for EoStudio."""
@@ -894,15 +918,16 @@ class DebugManager:
     def list_sessions(self) -> List[Dict[str, Any]]:
         result: List[Dict[str, Any]] = []
         for sid, debugger in self._sessions.items():
-            result.append({
-                "id": sid,
-                "running": debugger.is_running(),
-                "active": sid == self._active_id,
-            })
+            result.append(
+                {
+                    "id": sid,
+                    "running": debugger.is_running(),
+                    "active": sid == self._active_id,
+                }
+            )
         return result
 
-    def launch(self, config: DebugConfig,
-               session_id: Optional[str] = None) -> Tuple[str, bool]:
+    def launch(self, config: DebugConfig, session_id: Optional[str] = None) -> Tuple[str, bool]:
         """Create a session and launch with the given config."""
         sid, debugger = self.create_session(session_id)
         ok = debugger.launch(config)
@@ -910,8 +935,7 @@ class DebugManager:
             self.stop_session(sid)
         return sid, ok
 
-    def attach(self, host: str, port: int,
-               session_id: Optional[str] = None) -> Tuple[str, bool]:
+    def attach(self, host: str, port: int, session_id: Optional[str] = None) -> Tuple[str, bool]:
         """Create a session and attach to a running process."""
         sid, debugger = self.create_session(session_id)
         ok = debugger.attach(host, port)

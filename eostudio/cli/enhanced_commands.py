@@ -10,6 +10,7 @@ New commands:
 - plugin: Marketplace plugin management
 - multi-model: Query with model selection
 """
+
 from __future__ import annotations
 
 import json
@@ -24,6 +25,7 @@ import click
 # ---------------------------------------------------------------------------
 # agent command
 # ---------------------------------------------------------------------------
+
 
 @click.command("agent")
 @click.argument("task")
@@ -89,6 +91,7 @@ def agent_cmd(task: str, workspace: str, dry_run: bool, auto_commit: bool, model
 # complete command
 # ---------------------------------------------------------------------------
 
+
 @click.command("complete")
 @click.argument("file")
 @click.option("--line", "-l", default=None, type=int, help="Line number (1-indexed).")
@@ -111,16 +114,22 @@ def complete_cmd(file: str, line: Optional[int], multiline: bool, language: Opti
 
     content = path.read_text(encoding="utf-8")
     ext_lang = {
-        ".py": "python", ".ts": "typescript", ".tsx": "typescript",
-        ".js": "javascript", ".jsx": "javascript", ".rs": "rust",
-        ".go": "go", ".cpp": "cpp", ".c": "c",
+        ".py": "python",
+        ".ts": "typescript",
+        ".tsx": "typescript",
+        ".js": "javascript",
+        ".jsx": "javascript",
+        ".rs": "rust",
+        ".go": "go",
+        ".cpp": "cpp",
+        ".c": "c",
     }
     lang = language or ext_lang.get(path.suffix, "text")
 
     # Determine cursor offset
     if line:
         lines = content.split("\n")
-        cursor_offset = sum(len(l) + 1 for l in lines[:line - 1]) + len(lines[line - 1])
+        cursor_offset = sum(len(l) + 1 for l in lines[: line - 1]) + len(lines[line - 1])
     else:
         cursor_offset = len(content)
 
@@ -142,6 +151,7 @@ def complete_cmd(file: str, line: Optional[int], multiline: bool, language: Opti
 # workspace command
 # ---------------------------------------------------------------------------
 
+
 @click.group("workspace")
 def workspace_group() -> None:
     """Workspace intelligence commands."""
@@ -153,6 +163,7 @@ def workspace_group() -> None:
 def workspace_index(path: str) -> None:
     """Index the workspace for semantic search and analysis."""
     from eostudio.core.ai.workspace_intelligence import WorkspaceIntelligence
+
     wi = WorkspaceIntelligence(path)
     click.echo(f"Indexing {os.path.abspath(path)}...")
     count = wi.index()
@@ -166,6 +177,7 @@ def workspace_index(path: str) -> None:
 def workspace_search(query: str, path: str, kind: Optional[str]) -> None:
     """Search the workspace by symbol name or text."""
     from eostudio.core.ai.workspace_intelligence import WorkspaceIntelligence
+
     wi = WorkspaceIntelligence(path)
     wi.index()
     results = wi.semantic_search(query)
@@ -188,19 +200,25 @@ def workspace_search(query: str, path: str, kind: Optional[str]) -> None:
 def workspace_health(path: str, as_json: bool) -> None:
     """Analyze workspace architecture health."""
     from eostudio.core.ai.workspace_intelligence import WorkspaceIntelligence
+
     wi = WorkspaceIntelligence(path)
     wi.index()
     health = wi.analyze_health()
 
     if as_json:
-        click.echo(json.dumps({
-            "score": health.score,
-            "circular_deps": len(health.circular_deps),
-            "dead_code": len(health.dead_code),
-            "large_files": health.large_files,
-            "missing_tests": health.missing_tests,
-            "suggestions": health.suggestions,
-        }, indent=2))
+        click.echo(
+            json.dumps(
+                {
+                    "score": health.score,
+                    "circular_deps": len(health.circular_deps),
+                    "dead_code": len(health.dead_code),
+                    "large_files": health.large_files,
+                    "missing_tests": health.missing_tests,
+                    "suggestions": health.suggestions,
+                },
+                indent=2,
+            )
+        )
         return
 
     score_icon = "🟢" if health.score >= 80 else "🟡" if health.score >= 60 else "🔴"
@@ -229,6 +247,7 @@ def workspace_docs(file: str, output: Optional[str]) -> None:
     """Generate documentation for a source file."""
     from eostudio.core.ai.workspace_intelligence import WorkspaceIntelligence
     from eostudio.core.ai.multi_model_router import MultiModelRouter
+
     router = MultiModelRouter()
     wi = WorkspaceIntelligence(".", router=router)
     click.echo(f"Generating docs for {file}...")
@@ -244,6 +263,7 @@ def workspace_docs(file: str, output: Optional[str]) -> None:
 # plugin marketplace command
 # ---------------------------------------------------------------------------
 
+
 @click.group("plugin")
 def plugin_group() -> None:
     """Plugin marketplace commands."""
@@ -257,6 +277,7 @@ def plugin_group() -> None:
 def plugin_search(query: str, category: Optional[str], verified: bool) -> None:
     """Search the plugin marketplace."""
     from eostudio.plugins.marketplace import PluginMarketplace, PluginCategory
+
     mp = PluginMarketplace()
     cat = PluginCategory(category) if category else None
     results = mp.search(query=query, category=cat, verified_only=verified)
@@ -279,6 +300,7 @@ def plugin_search(query: str, category: Optional[str], verified: bool) -> None:
 def plugin_install(plugin_id: str) -> None:
     """Install a plugin from the marketplace."""
     from eostudio.plugins.marketplace import PluginMarketplace
+
     mp = PluginMarketplace()
     click.echo(f"Installing {plugin_id}...")
     result = mp.install(plugin_id)
@@ -293,6 +315,7 @@ def plugin_install(plugin_id: str) -> None:
 def plugin_list() -> None:
     """List installed plugins."""
     from eostudio.plugins.marketplace import PluginMarketplace
+
     mp = PluginMarketplace()
     installed = mp.list_installed()
     if not installed:
@@ -308,6 +331,7 @@ def plugin_list() -> None:
 def plugin_update(plugin_id: str) -> None:
     """Update a plugin (or all plugins if no ID given)."""
     from eostudio.plugins.marketplace import PluginMarketplace
+
     mp = PluginMarketplace()
     if plugin_id:
         result = mp.update(plugin_id)
@@ -327,6 +351,7 @@ def plugin_update(plugin_id: str) -> None:
 def plugin_uninstall(plugin_id: str) -> None:
     """Uninstall a plugin."""
     from eostudio.plugins.marketplace import PluginMarketplace
+
     mp = PluginMarketplace()
     if mp.uninstall(plugin_id):
         click.echo(f"✅ Uninstalled {plugin_id}")
@@ -338,6 +363,7 @@ def plugin_uninstall(plugin_id: str) -> None:
 # ---------------------------------------------------------------------------
 # voice command
 # ---------------------------------------------------------------------------
+
 
 @click.command("voice")
 @click.argument("text", required=False)
@@ -354,6 +380,7 @@ def voice_cmd(text: Optional[str], audio: Optional[str], language: str, ai: bool
       EoStudio voice --audio recording.wav --ai
     """
     from eostudio.core.ai.voice_to_code import VoiceToCode
+
     vtc = VoiceToCode(language=language)
 
     if audio:
@@ -383,12 +410,17 @@ def voice_cmd(text: Optional[str], audio: Optional[str], language: str, ai: bool
 # multi-model query command
 # ---------------------------------------------------------------------------
 
+
 @click.command("query")
 @click.argument("prompt")
 @click.option("--model", "-m", default=None, help="Model to use (gpt-4.1, gpt-4.1-mini, gemini-2.5-flash, etc.)")
-@click.option("--task", "-t", default="chat",
-              type=click.Choice(["chat", "code", "review", "design", "agent", "docs"]),
-              help="Task type for model selection.")
+@click.option(
+    "--task",
+    "-t",
+    default="chat",
+    type=click.Choice(["chat", "code", "review", "design", "agent", "docs"]),
+    help="Task type for model selection.",
+)
 @click.option("--stream", "-s", is_flag=True, help="Stream the response.")
 @click.option("--system", default=None, help="System prompt.")
 def query_cmd(prompt: str, model: Optional[str], task: str, stream: bool, system: Optional[str]) -> None:

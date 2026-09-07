@@ -32,11 +32,16 @@ class AISimulator:
         return warnings
 
     def recommend_controller(self, description: str) -> Dict[str, Any]:
-        messages = [{"role": "user", "content": (
-            f"Recommend a controller for this system as JSON with keys: "
-            f"controller_type, gains (dict with Kp, Ki, Kd), reasoning.\n"
-            f"System: {description}"
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"Recommend a controller for this system as JSON with keys: "
+                    f"controller_type, gains (dict with Kp, Ki, Kd), reasoning.\n"
+                    f"System: {description}"
+                ),
+            }
+        ]
         try:
             raw = self._client.chat(messages)
             result = json.loads(raw)
@@ -51,10 +56,15 @@ class AISimulator:
         }
 
     def suggest_parameters(self, model_dict: Dict[str, Any]) -> Dict[str, Any]:
-        messages = [{"role": "user", "content": (
-            f"Suggest simulation parameters as JSON with keys: dt, duration, block_parameters, reasoning.\n"
-            f"Model: {json.dumps(model_dict, indent=2)}"
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"Suggest simulation parameters as JSON with keys: dt, duration, block_parameters, reasoning.\n"
+                    f"Model: {json.dumps(model_dict, indent=2)}"
+                ),
+            }
+        ]
         try:
             raw = self._client.chat(messages)
             result = json.loads(raw)

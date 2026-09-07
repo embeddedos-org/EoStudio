@@ -1,4 +1,5 @@
 """Security analysis tools for EoStudio devtools."""
+
 from __future__ import annotations
 
 import json
@@ -127,20 +128,57 @@ _SECRET_PATTERNS = [
     (re.compile(r"""xoxp-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24}"""), "Slack User Token", Severity.CRITICAL),
     (re.compile(r"""sk-[A-Za-z0-9]{48}"""), "OpenAI API Key", Severity.CRITICAL),
     (re.compile(r"""-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----"""), "Private Key", Severity.CRITICAL),
-    (re.compile(r"""(?:api[_-]?key|apikey)\s*[:=]\s*['"]?[A-Za-z0-9_\-]{20,}""", re.IGNORECASE), "Generic API Key", Severity.HIGH),
-    (re.compile(r"""(?:password|passwd|pwd)\s*[:=]\s*['"]?[^\s'"]{8,}""", re.IGNORECASE), "Hardcoded Password", Severity.HIGH),
+    (
+        re.compile(r"""(?:api[_-]?key|apikey)\s*[:=]\s*['"]?[A-Za-z0-9_\-]{20,}""", re.IGNORECASE),
+        "Generic API Key",
+        Severity.HIGH,
+    ),
+    (
+        re.compile(r"""(?:password|passwd|pwd)\s*[:=]\s*['"]?[^\s'"]{8,}""", re.IGNORECASE),
+        "Hardcoded Password",
+        Severity.HIGH,
+    ),
 ]
 
 _SCANNABLE_EXTENSIONS = {
-    ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".go", ".rs",
-    ".rb", ".php", ".c", ".cpp", ".h", ".hpp", ".cs", ".swift",
-    ".kt", ".scala", ".sh", ".bash", ".yaml", ".yml", ".toml",
-    ".json", ".xml", ".env", ".cfg", ".ini", ".conf",
+    ".py",
+    ".js",
+    ".ts",
+    ".jsx",
+    ".tsx",
+    ".java",
+    ".go",
+    ".rs",
+    ".rb",
+    ".php",
+    ".c",
+    ".cpp",
+    ".h",
+    ".hpp",
+    ".cs",
+    ".swift",
+    ".kt",
+    ".scala",
+    ".sh",
+    ".bash",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".json",
+    ".xml",
+    ".env",
+    ".cfg",
+    ".ini",
+    ".conf",
 }
 
 _INCOMPATIBLE_LICENSES = {
-    "AGPL-3.0-only", "AGPL-3.0-or-later", "GPL-3.0-only",
-    "GPL-3.0-or-later", "SSPL-1.0", "EUPL-1.2",
+    "AGPL-3.0-only",
+    "AGPL-3.0-or-later",
+    "GPL-3.0-only",
+    "GPL-3.0-or-later",
+    "SSPL-1.0",
+    "EUPL-1.2",
 }
 
 
@@ -159,7 +197,8 @@ class SecurityScanner:
         """Yield source files in the workspace."""
         for root, dirs, files in os.walk(self.workspace_path):
             dirs[:] = [
-                d for d in dirs
+                d
+                for d in dirs
                 if d not in {".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build", ".tox"}
             ]
             for fname in files:
@@ -193,18 +232,20 @@ class SecurityScanner:
                 try:
                     data = json.loads(result.stdout)
                     for entry in data.get("vulnerabilities", []):
-                        vulns.append(Vulnerability(
-                            id=self._next_id(),
-                            type=VulnerabilityType.DEPENDENCY,
-                            severity=Severity.HIGH,
-                            title=f"Vulnerable dependency: {entry.get('name', 'unknown')}",
-                            description=entry.get("description", ""),
-                            file="requirements.txt",
-                            line=0,
-                            cwe=entry.get("aliases", [None])[0] if entry.get("aliases") else None,
-                            fix_suggestion=f"Upgrade {entry.get('name')} to {entry.get('fix_versions', ['latest'])[0]}",
-                            references=entry.get("references", []),
-                        ))
+                        vulns.append(
+                            Vulnerability(
+                                id=self._next_id(),
+                                type=VulnerabilityType.DEPENDENCY,
+                                severity=Severity.HIGH,
+                                title=f"Vulnerable dependency: {entry.get('name', 'unknown')}",
+                                description=entry.get("description", ""),
+                                file="requirements.txt",
+                                line=0,
+                                cwe=entry.get("aliases", [None])[0] if entry.get("aliases") else None,
+                                fix_suggestion=f"Upgrade {entry.get('name')} to {entry.get('fix_versions', ['latest'])[0]}",
+                                references=entry.get("references", []),
+                            )
+                        )
                 except (json.JSONDecodeError, KeyError):
                     pass
 
@@ -216,18 +257,25 @@ class SecurityScanner:
                 try:
                     data = json.loads(result.stdout)
                     for name, advisory in data.get("vulnerabilities", {}).items():
-                        severity_map = {"critical": Severity.CRITICAL, "high": Severity.HIGH, "moderate": Severity.MEDIUM, "low": Severity.LOW}
-                        vulns.append(Vulnerability(
-                            id=self._next_id(),
-                            type=VulnerabilityType.DEPENDENCY,
-                            severity=severity_map.get(advisory.get("severity", "high"), Severity.HIGH),
-                            title=f"Vulnerable dependency: {name}",
-                            description=advisory.get("title", ""),
-                            file="package.json",
-                            line=0,
-                            fix_suggestion=advisory.get("fixAvailable", {}).get("name", "Update dependency"),
-                            references=[advisory.get("url", "")],
-                        ))
+                        severity_map = {
+                            "critical": Severity.CRITICAL,
+                            "high": Severity.HIGH,
+                            "moderate": Severity.MEDIUM,
+                            "low": Severity.LOW,
+                        }
+                        vulns.append(
+                            Vulnerability(
+                                id=self._next_id(),
+                                type=VulnerabilityType.DEPENDENCY,
+                                severity=severity_map.get(advisory.get("severity", "high"), Severity.HIGH),
+                                title=f"Vulnerable dependency: {name}",
+                                description=advisory.get("title", ""),
+                                file="package.json",
+                                line=0,
+                                fix_suggestion=advisory.get("fixAvailable", {}).get("name", "Update dependency"),
+                                references=[advisory.get("url", "")],
+                            )
+                        )
                 except (json.JSONDecodeError, KeyError):
                     pass
 
@@ -240,18 +288,20 @@ class SecurityScanner:
                     data = json.loads(result.stdout)
                     for vuln_entry in data.get("vulnerabilities", {}).get("list", []):
                         advisory = vuln_entry.get("advisory", {})
-                        vulns.append(Vulnerability(
-                            id=self._next_id(),
-                            type=VulnerabilityType.DEPENDENCY,
-                            severity=Severity.HIGH,
-                            title=f"Vulnerable crate: {advisory.get('package', 'unknown')}",
-                            description=advisory.get("title", ""),
-                            file="Cargo.toml",
-                            line=0,
-                            cwe=advisory.get("id"),
-                            fix_suggestion=f"Update {advisory.get('package', '')} to a patched version",
-                            references=[advisory.get("url", "")],
-                        ))
+                        vulns.append(
+                            Vulnerability(
+                                id=self._next_id(),
+                                type=VulnerabilityType.DEPENDENCY,
+                                severity=Severity.HIGH,
+                                title=f"Vulnerable crate: {advisory.get('package', 'unknown')}",
+                                description=advisory.get("title", ""),
+                                file="Cargo.toml",
+                                line=0,
+                                cwe=advisory.get("id"),
+                                fix_suggestion=f"Update {advisory.get('package', '')} to a patched version",
+                                references=[advisory.get("url", "")],
+                            )
+                        )
                 except (json.JSONDecodeError, KeyError):
                     pass
 
@@ -270,22 +320,62 @@ class SecurityScanner:
         scanned = 0
 
         patterns_map = [
-            (_SQL_INJECTION_PATTERNS, "SQL Injection", "Potential SQL injection via string formatting",
-             "CWE-89", "Use parameterized queries instead of string formatting"),
-            (_XSS_PATTERNS, "Cross-Site Scripting (XSS)", "Potential XSS via unsafe DOM manipulation",
-             "CWE-79", "Use safe rendering methods; sanitize user input before inserting into DOM"),
-            (_COMMAND_INJECTION_PATTERNS, "Command Injection", "Potential command injection via shell execution",
-             "CWE-78", "Use subprocess with a list of arguments instead of shell=True; avoid os.system"),
-            (_PATH_TRAVERSAL_PATTERNS, "Path Traversal", "Potential path traversal vulnerability",
-             "CWE-22", "Validate and sanitize file paths; use os.path.realpath and check against allowed directories"),
-            (_HARDCODED_CREDS_PATTERNS, "Hardcoded Credentials", "Hardcoded credentials detected in source code",
-             "CWE-798", "Move credentials to environment variables or a secrets manager"),
-            (_INSECURE_DESERIALIZATION_PATTERNS, "Insecure Deserialization", "Unsafe deserialization detected",
-             "CWE-502", "Use safe deserialization methods (e.g., yaml.safe_load, json.loads)"),
-            (_SSRF_PATTERNS, "Server-Side Request Forgery (SSRF)", "Potential SSRF via user-controlled URL",
-             "CWE-918", "Validate and whitelist URLs before making server-side requests"),
-            (_WEAK_CRYPTO_PATTERNS, "Weak Cryptography", "Weak hash algorithm used (MD5/SHA1)",
-             "CWE-327", "Use SHA-256 or stronger hashing; for passwords use bcrypt, scrypt, or argon2"),
+            (
+                _SQL_INJECTION_PATTERNS,
+                "SQL Injection",
+                "Potential SQL injection via string formatting",
+                "CWE-89",
+                "Use parameterized queries instead of string formatting",
+            ),
+            (
+                _XSS_PATTERNS,
+                "Cross-Site Scripting (XSS)",
+                "Potential XSS via unsafe DOM manipulation",
+                "CWE-79",
+                "Use safe rendering methods; sanitize user input before inserting into DOM",
+            ),
+            (
+                _COMMAND_INJECTION_PATTERNS,
+                "Command Injection",
+                "Potential command injection via shell execution",
+                "CWE-78",
+                "Use subprocess with a list of arguments instead of shell=True; avoid os.system",
+            ),
+            (
+                _PATH_TRAVERSAL_PATTERNS,
+                "Path Traversal",
+                "Potential path traversal vulnerability",
+                "CWE-22",
+                "Validate and sanitize file paths; use os.path.realpath and check against allowed directories",
+            ),
+            (
+                _HARDCODED_CREDS_PATTERNS,
+                "Hardcoded Credentials",
+                "Hardcoded credentials detected in source code",
+                "CWE-798",
+                "Move credentials to environment variables or a secrets manager",
+            ),
+            (
+                _INSECURE_DESERIALIZATION_PATTERNS,
+                "Insecure Deserialization",
+                "Unsafe deserialization detected",
+                "CWE-502",
+                "Use safe deserialization methods (e.g., yaml.safe_load, json.loads)",
+            ),
+            (
+                _SSRF_PATTERNS,
+                "Server-Side Request Forgery (SSRF)",
+                "Potential SSRF via user-controlled URL",
+                "CWE-918",
+                "Validate and whitelist URLs before making server-side requests",
+            ),
+            (
+                _WEAK_CRYPTO_PATTERNS,
+                "Weak Cryptography",
+                "Weak hash algorithm used (MD5/SHA1)",
+                "CWE-327",
+                "Use SHA-256 or stronger hashing; for passwords use bcrypt, scrypt, or argon2",
+            ),
         ]
 
         for fpath in self._iter_source_files():
@@ -302,17 +392,21 @@ class SecurityScanner:
                 for regexes, title, desc, cwe, fix in patterns_map:
                     for regex in regexes:
                         if regex.search(line):
-                            vulns.append(Vulnerability(
-                                id=self._next_id(),
-                                type=VulnerabilityType.CODE_PATTERN,
-                                severity=Severity.HIGH if "injection" in title.lower() or "XSS" in title else Severity.MEDIUM,
-                                title=title,
-                                description=desc,
-                                file=rel_path,
-                                line=line_num,
-                                cwe=cwe,
-                                fix_suggestion=fix,
-                            ))
+                            vulns.append(
+                                Vulnerability(
+                                    id=self._next_id(),
+                                    type=VulnerabilityType.CODE_PATTERN,
+                                    severity=Severity.HIGH
+                                    if "injection" in title.lower() or "XSS" in title
+                                    else Severity.MEDIUM,
+                                    title=title,
+                                    description=desc,
+                                    file=rel_path,
+                                    line=line_num,
+                                    cwe=cwe,
+                                    fix_suggestion=fix,
+                                )
+                            )
                             break  # one match per pattern group per line
 
         elapsed = (time.monotonic_ns() - start) // 1_000_000
@@ -342,17 +436,19 @@ class SecurityScanner:
             for line_num, line in enumerate(lines, start=1):
                 for regex, secret_type, severity in _SECRET_PATTERNS:
                     if regex.search(line):
-                        vulns.append(Vulnerability(
-                            id=self._next_id(),
-                            type=VulnerabilityType.SECRET_LEAK,
-                            severity=severity,
-                            title=f"Leaked secret: {secret_type}",
-                            description=f"{secret_type} detected in source code",
-                            file=rel_path,
-                            line=line_num,
-                            cwe="CWE-798",
-                            fix_suggestion="Remove the secret from source code and rotate it immediately. Use environment variables or a secrets manager.",
-                        ))
+                        vulns.append(
+                            Vulnerability(
+                                id=self._next_id(),
+                                type=VulnerabilityType.SECRET_LEAK,
+                                severity=severity,
+                                title=f"Leaked secret: {secret_type}",
+                                description=f"{secret_type} detected in source code",
+                                file=rel_path,
+                                line=line_num,
+                                cwe="CWE-798",
+                                fix_suggestion="Remove the secret from source code and rotate it immediately. Use environment variables or a secrets manager.",
+                            )
+                        )
 
         elapsed = (time.monotonic_ns() - start) // 1_000_000
         return ScanResult(
@@ -381,12 +477,14 @@ class SecurityScanner:
                                 license_name = meta_line.split(":", 1)[1].strip()
                                 break
                         spdx = license_name if license_name else "UNKNOWN"
-                        licenses.append(LicenseInfo(
-                            name=name,
-                            spdx_id=spdx,
-                            compatible=spdx not in _INCOMPATIBLE_LICENSES,
-                            file="requirements.txt",
-                        ))
+                        licenses.append(
+                            LicenseInfo(
+                                name=name,
+                                spdx_id=spdx,
+                                compatible=spdx not in _INCOMPATIBLE_LICENSES,
+                                file="requirements.txt",
+                            )
+                        )
             except (json.JSONDecodeError, KeyError):
                 pass
 
@@ -402,12 +500,16 @@ class SecurityScanner:
                             try:
                                 data = json.loads(pkg_file.read_text(errors="replace"))
                                 spdx = data.get("license", "UNKNOWN")
-                                licenses.append(LicenseInfo(
-                                    name=data.get("name", pkg_dir.name),
-                                    spdx_id=spdx if isinstance(spdx, str) else "UNKNOWN",
-                                    compatible=spdx not in _INCOMPATIBLE_LICENSES if isinstance(spdx, str) else True,
-                                    file=str(pkg_file.relative_to(self.workspace_path)),
-                                ))
+                                licenses.append(
+                                    LicenseInfo(
+                                        name=data.get("name", pkg_dir.name),
+                                        spdx_id=spdx if isinstance(spdx, str) else "UNKNOWN",
+                                        compatible=spdx not in _INCOMPATIBLE_LICENSES
+                                        if isinstance(spdx, str)
+                                        else True,
+                                        file=str(pkg_file.relative_to(self.workspace_path)),
+                                    )
+                                )
                             except (json.JSONDecodeError, OSError):
                                 pass
 
@@ -422,12 +524,14 @@ class SecurityScanner:
         if result.returncode == 0 and result.stdout:
             try:
                 for pkg in json.loads(result.stdout):
-                    components.append({
-                        "type": "library",
-                        "name": pkg.get("name", ""),
-                        "version": pkg.get("version", ""),
-                        "purl": f"pkg:pypi/{pkg.get('name', '')}@{pkg.get('version', '')}",
-                    })
+                    components.append(
+                        {
+                            "type": "library",
+                            "name": pkg.get("name", ""),
+                            "version": pkg.get("version", ""),
+                            "purl": f"pkg:pypi/{pkg.get('name', '')}@{pkg.get('version', '')}",
+                        }
+                    )
             except json.JSONDecodeError:
                 pass
 
@@ -438,12 +542,14 @@ class SecurityScanner:
                 data = json.loads(pkg_json_path.read_text(errors="replace"))
                 for dep, version in {**data.get("dependencies", {}), **data.get("devDependencies", {})}.items():
                     clean_version = version.lstrip("^~>=<")
-                    components.append({
-                        "type": "library",
-                        "name": dep,
-                        "version": clean_version,
-                        "purl": f"pkg:npm/{dep}@{clean_version}",
-                    })
+                    components.append(
+                        {
+                            "type": "library",
+                            "name": dep,
+                            "version": clean_version,
+                            "purl": f"pkg:npm/{dep}@{clean_version}",
+                        }
+                    )
             except (json.JSONDecodeError, OSError):
                 pass
 
@@ -457,24 +563,28 @@ class SecurityScanner:
                     stripped = raw_line.strip()
                     if stripped == "[[package]]":
                         if current_pkg.get("name"):
-                            components.append({
-                                "type": "library",
-                                "name": current_pkg["name"],
-                                "version": current_pkg.get("version", ""),
-                                "purl": f"pkg:cargo/{current_pkg['name']}@{current_pkg.get('version', '')}",
-                            })
+                            components.append(
+                                {
+                                    "type": "library",
+                                    "name": current_pkg["name"],
+                                    "version": current_pkg.get("version", ""),
+                                    "purl": f"pkg:cargo/{current_pkg['name']}@{current_pkg.get('version', '')}",
+                                }
+                            )
                         current_pkg = {}
                     elif stripped.startswith("name = "):
                         current_pkg["name"] = stripped.split('"')[1]
                     elif stripped.startswith("version = "):
                         current_pkg["version"] = stripped.split('"')[1]
                 if current_pkg.get("name"):
-                    components.append({
-                        "type": "library",
-                        "name": current_pkg["name"],
-                        "version": current_pkg.get("version", ""),
-                        "purl": f"pkg:cargo/{current_pkg['name']}@{current_pkg.get('version', '')}",
-                    })
+                    components.append(
+                        {
+                            "type": "library",
+                            "name": current_pkg["name"],
+                            "version": current_pkg.get("version", ""),
+                            "purl": f"pkg:cargo/{current_pkg['name']}@{current_pkg.get('version', '')}",
+                        }
+                    )
             except OSError:
                 pass
 
@@ -562,7 +672,13 @@ class SecurityScanner:
         if format == "html":
             rows = ""
             for v in result.vulnerabilities:
-                color = {"critical": "#dc3545", "high": "#fd7e14", "medium": "#ffc107", "low": "#28a745", "info": "#17a2b8"}
+                color = {
+                    "critical": "#dc3545",
+                    "high": "#fd7e14",
+                    "medium": "#ffc107",
+                    "low": "#28a745",
+                    "info": "#17a2b8",
+                }
                 badge_color = color.get(v.severity.value, "#6c757d")
                 rows += (
                     f"<tr>"
@@ -658,18 +774,22 @@ class SecurityScanner:
             suggestions.extend(fix_map[vuln.cwe])
 
         if vuln.type == VulnerabilityType.SECRET_LEAK:
-            suggestions.extend([
-                "Rotate the compromised secret immediately",
-                "Add the file to .gitignore if it contains secrets",
-                "Use git-filter-branch or BFG to remove secrets from git history",
-                "Set up pre-commit hooks to prevent future secret leaks",
-            ])
+            suggestions.extend(
+                [
+                    "Rotate the compromised secret immediately",
+                    "Add the file to .gitignore if it contains secrets",
+                    "Use git-filter-branch or BFG to remove secrets from git history",
+                    "Set up pre-commit hooks to prevent future secret leaks",
+                ]
+            )
 
         if vuln.type == VulnerabilityType.DEPENDENCY:
-            suggestions.extend([
-                "Run dependency update commands (pip install --upgrade, npm update)",
-                "Pin dependencies to specific versions in your lock file",
-                "Set up automated dependency update tools (Dependabot, Renovate)",
-            ])
+            suggestions.extend(
+                [
+                    "Run dependency update commands (pip install --upgrade, npm update)",
+                    "Pin dependencies to specific versions in your lock file",
+                    "Set up automated dependency update tools (Dependabot, Renovate)",
+                ]
+            )
 
         return suggestions

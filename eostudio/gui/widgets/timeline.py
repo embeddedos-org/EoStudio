@@ -1,6 +1,5 @@
 """Timeline widget — visual keyframe editor with draggable handles and easing preview."""
 
-
 from __future__ import annotations
 
 try:
@@ -24,10 +23,15 @@ class TimelineWidget(tk.Frame):
     MIN_PIXELS_PER_SECOND = 60
     MAX_PIXELS_PER_SECOND = 600
 
-    def __init__(self, master: tk.Widget, bg: str = "#1e1e2e", fg: str = "#cdd6f4",
-                 on_time_change: Optional[Callable[[float], None]] = None,
-                 on_keyframe_change: Optional[Callable[[str, int, float], None]] = None,
-                 **kw: Any) -> None:
+    def __init__(
+        self,
+        master: tk.Widget,
+        bg: str = "#1e1e2e",
+        fg: str = "#cdd6f4",
+        on_time_change: Optional[Callable[[float], None]] = None,
+        on_keyframe_change: Optional[Callable[[str, int, float], None]] = None,
+        **kw: Any,
+    ) -> None:
         super().__init__(master, bg=bg, **kw)
         self._bg = bg
         self._fg = fg
@@ -50,55 +54,105 @@ class TimelineWidget(tk.Frame):
         transport = tk.Frame(self, bg=self._bg)
         transport.pack(fill=tk.X, padx=4, pady=2)
 
-        self._play_btn = tk.Button(transport, text="\u25B6", bg="#313244", fg="#a6e3a1",
-                                   font=("Segoe UI", 10), relief=tk.FLAT, width=3,
-                                   command=self._toggle_play)
+        self._play_btn = tk.Button(
+            transport,
+            text="\u25b6",
+            bg="#313244",
+            fg="#a6e3a1",
+            font=("Segoe UI", 10),
+            relief=tk.FLAT,
+            width=3,
+            command=self._toggle_play,
+        )
         self._play_btn.pack(side=tk.LEFT, padx=2)
 
-        tk.Button(transport, text="\u23F9", bg="#313244", fg="#f38ba8",
-                  font=("Segoe UI", 10), relief=tk.FLAT, width=3,
-                  command=self._stop).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            transport,
+            text="\u23f9",
+            bg="#313244",
+            fg="#f38ba8",
+            font=("Segoe UI", 10),
+            relief=tk.FLAT,
+            width=3,
+            command=self._stop,
+        ).pack(side=tk.LEFT, padx=2)
 
-        tk.Button(transport, text="\u23EE", bg="#313244", fg=self._fg,
-                  font=("Segoe UI", 10), relief=tk.FLAT, width=3,
-                  command=self._go_to_start).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            transport,
+            text="\u23ee",
+            bg="#313244",
+            fg=self._fg,
+            font=("Segoe UI", 10),
+            relief=tk.FLAT,
+            width=3,
+            command=self._go_to_start,
+        ).pack(side=tk.LEFT, padx=2)
 
-        tk.Button(transport, text="\u23ED", bg="#313244", fg=self._fg,
-                  font=("Segoe UI", 10), relief=tk.FLAT, width=3,
-                  command=self._go_to_end).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            transport,
+            text="\u23ed",
+            bg="#313244",
+            fg=self._fg,
+            font=("Segoe UI", 10),
+            relief=tk.FLAT,
+            width=3,
+            command=self._go_to_end,
+        ).pack(side=tk.LEFT, padx=2)
 
-        self._time_label = tk.Label(transport, text="0.000s", bg=self._bg, fg="#f9e2af",
-                                    font=("Consolas", 10))
+        self._time_label = tk.Label(transport, text="0.000s", bg=self._bg, fg="#f9e2af", font=("Consolas", 10))
         self._time_label.pack(side=tk.LEFT, padx=8)
 
-        tk.Button(transport, text="+KF", bg="#89b4fa", fg="#1e1e2e",
-                  font=("Segoe UI", 9), relief=tk.FLAT, padx=6,
-                  command=self._add_keyframe_at_cursor).pack(side=tk.RIGHT, padx=2)
+        tk.Button(
+            transport,
+            text="+KF",
+            bg="#89b4fa",
+            fg="#1e1e2e",
+            font=("Segoe UI", 9),
+            relief=tk.FLAT,
+            padx=6,
+            command=self._add_keyframe_at_cursor,
+        ).pack(side=tk.RIGHT, padx=2)
 
         # Zoom controls
-        tk.Button(transport, text="\u2796", bg="#313244", fg=self._fg,
-                  font=("Segoe UI", 9), relief=tk.FLAT, width=2,
-                  command=self._zoom_out).pack(side=tk.RIGHT, padx=1)
-        tk.Button(transport, text="\u2795", bg="#313244", fg=self._fg,
-                  font=("Segoe UI", 9), relief=tk.FLAT, width=2,
-                  command=self._zoom_in).pack(side=tk.RIGHT, padx=1)
+        tk.Button(
+            transport,
+            text="\u2796",
+            bg="#313244",
+            fg=self._fg,
+            font=("Segoe UI", 9),
+            relief=tk.FLAT,
+            width=2,
+            command=self._zoom_out,
+        ).pack(side=tk.RIGHT, padx=1)
+        tk.Button(
+            transport,
+            text="\u2795",
+            bg="#313244",
+            fg=self._fg,
+            font=("Segoe UI", 9),
+            relief=tk.FLAT,
+            width=2,
+            command=self._zoom_in,
+        ).pack(side=tk.RIGHT, padx=1)
 
         # Easing selector
         self._easing_var = tk.StringVar(value="ease_in_out")
-        easing_combo = ttk.Combobox(transport, textvariable=self._easing_var,
-                                    values=[e.value for e in EasingFunction if e != EasingFunction.CUBIC_BEZIER],
-                                    width=16, state="readonly")
+        easing_combo = ttk.Combobox(
+            transport,
+            textvariable=self._easing_var,
+            values=[e.value for e in EasingFunction if e != EasingFunction.CUBIC_BEZIER],
+            width=16,
+            state="readonly",
+        )
         easing_combo.pack(side=tk.RIGHT, padx=4)
-        tk.Label(transport, text="Easing:", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 9)).pack(side=tk.RIGHT)
+        tk.Label(transport, text="Easing:", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(side=tk.RIGHT)
 
         # Main timeline area
         main = tk.Frame(self, bg=self._bg)
         main.pack(fill=tk.BOTH, expand=True)
 
         # Track headers
-        self._header_canvas = tk.Canvas(main, bg="#181825", width=self.HEADER_WIDTH,
-                                        highlightthickness=0)
+        self._header_canvas = tk.Canvas(main, bg="#181825", width=self.HEADER_WIDTH, highlightthickness=0)
         self._header_canvas.pack(side=tk.LEFT, fill=tk.Y)
 
         # Timeline canvas
@@ -129,13 +183,13 @@ class TimelineWidget(tk.Frame):
 
     def _toggle_play(self) -> None:
         self._playing = not self._playing
-        self._play_btn.config(text="\u23F8" if self._playing else "\u25B6")
+        self._play_btn.config(text="\u23f8" if self._playing else "\u25b6")
         if self._playing:
             self._animate_step()
 
     def _stop(self) -> None:
         self._playing = False
-        self._play_btn.config(text="\u25B6")
+        self._play_btn.config(text="\u25b6")
         self._current_time = 0.0
         self._time_label.config(text="0.000s")
         self._redraw()
@@ -193,8 +247,7 @@ class TimelineWidget(tk.Frame):
         self._header_canvas.delete("all")
 
         if not self._timeline:
-            self._canvas.create_text(200, 40, text="No timeline loaded",
-                                     fill="#585b70", font=("Segoe UI", 11))
+            self._canvas.create_text(200, 40, text="No timeline loaded", fill="#585b70", font=("Segoe UI", 11))
             return
 
         canvas_w = self._canvas.winfo_width() or 600
@@ -213,11 +266,10 @@ class TimelineWidget(tk.Frame):
         # Draw playhead
         playhead_x = self._time_to_x(self._current_time)
         if 0 <= playhead_x <= canvas_w:
-            self._canvas.create_line(playhead_x, 0, playhead_x, canvas_h,
-                                     fill="#f38ba8", width=2, tags="playhead")
+            self._canvas.create_line(playhead_x, 0, playhead_x, canvas_h, fill="#f38ba8", width=2, tags="playhead")
             self._canvas.create_polygon(
-                playhead_x - 5, 0, playhead_x + 5, 0, playhead_x, 8,
-                fill="#f38ba8", tags="playhead")
+                playhead_x - 5, 0, playhead_x + 5, 0, playhead_x, 8, fill="#f38ba8", tags="playhead"
+            )
 
     def _draw_ruler(self, width: float) -> None:
         step = max(0.1, 1.0 / (self._pixels_per_second / 60))
@@ -229,41 +281,43 @@ class TimelineWidget(tk.Frame):
                 is_major = abs(t - round(t)) < 0.01
                 h = self.RULER_HEIGHT if is_major else self.RULER_HEIGHT * 0.5
                 color = "#585b70" if is_major else "#45475a"
-                self._canvas.create_line(x, self.RULER_HEIGHT - h, x, self.RULER_HEIGHT,
-                                         fill=color, width=1)
+                self._canvas.create_line(x, self.RULER_HEIGHT - h, x, self.RULER_HEIGHT, fill=color, width=1)
                 if is_major:
-                    self._canvas.create_text(x, 4, text=f"{t:.1f}s", anchor=tk.N,
-                                             fill="#6c7086", font=("Consolas", 8))
+                    self._canvas.create_text(x, 4, text=f"{t:.1f}s", anchor=tk.N, fill="#6c7086", font=("Consolas", 8))
             t += step
 
-        self._canvas.create_line(0, self.RULER_HEIGHT, width, self.RULER_HEIGHT,
-                                 fill="#45475a", width=1)
+        self._canvas.create_line(0, self.RULER_HEIGHT, width, self.RULER_HEIGHT, fill="#45475a", width=1)
 
-    def _draw_track(self, clip: AnimationClip, ci: int, track: KeyframeTrack,
-                    ti: int, y: float, width: float) -> None:
+    def _draw_track(self, clip: AnimationClip, ci: int, track: KeyframeTrack, ti: int, y: float, width: float) -> None:
         # Track background
         bg_color = "#1e1e2e" if (ci + ti) % 2 == 0 else "#181825"
-        self._canvas.create_rectangle(0, y, width, y + self.TRACK_HEIGHT,
-                                      fill=bg_color, outline="#313244", width=1)
+        self._canvas.create_rectangle(0, y, width, y + self.TRACK_HEIGHT, fill=bg_color, outline="#313244", width=1)
 
         # Header
-        self._header_canvas.create_rectangle(0, y, self.HEADER_WIDTH, y + self.TRACK_HEIGHT,
-                                             fill=bg_color, outline="#313244", width=1)
+        self._header_canvas.create_rectangle(
+            0, y, self.HEADER_WIDTH, y + self.TRACK_HEIGHT, fill=bg_color, outline="#313244", width=1
+        )
         label = f"{clip.target_id[:10]}.{track.property_name}"
-        self._header_canvas.create_text(8, y + self.TRACK_HEIGHT / 2, text=label,
-                                        anchor=tk.W, fill=self._fg, font=("Segoe UI", 8))
+        self._header_canvas.create_text(
+            8, y + self.TRACK_HEIGHT / 2, text=label, anchor=tk.W, fill=self._fg, font=("Segoe UI", 8)
+        )
 
         # Clip duration bar
         start_x = self._time_to_x(clip.delay)
         end_x = self._time_to_x(clip.delay + clip.duration)
         bar_y = y + 8
         bar_h = self.TRACK_HEIGHT - 16
-        self._canvas.create_rectangle(start_x, bar_y, end_x, bar_y + bar_h,
-                                      fill="#313244", outline="#45475a", width=1)
+        self._canvas.create_rectangle(start_x, bar_y, end_x, bar_y + bar_h, fill="#313244", outline="#45475a", width=1)
 
         # Keyframes
-        colors = {"entrance": "#a6e3a1", "exit": "#f38ba8", "attention": "#f9e2af",
-                  "scroll": "#89b4fa", "transition": "#cba6f7", "layout": "#fab387"}
+        colors = {
+            "entrance": "#a6e3a1",
+            "exit": "#f38ba8",
+            "attention": "#f9e2af",
+            "scroll": "#89b4fa",
+            "transition": "#cba6f7",
+            "layout": "#fab387",
+        }
         kf_color = colors.get(clip.label, "#89b4fa")
 
         for ki, kf in enumerate(track.keyframes):
@@ -272,10 +326,16 @@ class TimelineWidget(tk.Frame):
             is_selected = self._selected_kf == (ci, ti, ki)
             r = self.KEYFRAME_RADIUS + 1 if is_selected else self.KEYFRAME_RADIUS
             outline = "#f9e2af" if is_selected else kf_color
-            self._canvas.create_oval(kx - r, ky - r, kx + r, ky + r,
-                                     fill=kf_color, outline=outline,
-                                     width=2 if is_selected else 1,
-                                     tags=f"kf_{ci}_{ti}_{ki}")
+            self._canvas.create_oval(
+                kx - r,
+                ky - r,
+                kx + r,
+                ky + r,
+                fill=kf_color,
+                outline=outline,
+                width=2 if is_selected else 1,
+                tags=f"kf_{ci}_{ti}_{ki}",
+            )
 
     # --- Interaction ---
 

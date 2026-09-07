@@ -14,6 +14,7 @@ from eostudio.core.ui_flow.responsive import ResponsiveConfig, BREAKPOINTS
 @dataclass
 class DesignSystem:
     """Complete design system combining tokens, variants, and responsive config."""
+
     name: str = "EoStudio Design System"
     version: str = "1.0.0"
     description: str = ""
@@ -92,8 +93,7 @@ class DesignSystem:
 
     def export_tailwind_config(self) -> Dict[str, Any]:
         """Export tokens as Tailwind CSS config extend section."""
-        config: Dict[str, Any] = {"colors": {}, "spacing": {}, "fontSize": {},
-                                   "borderRadius": {}, "boxShadow": {}}
+        config: Dict[str, Any] = {"colors": {}, "spacing": {}, "fontSize": {}, "borderRadius": {}, "boxShadow": {}}
         for token in self.current_theme.tokens:
             if token.category == "color":
                 key = token.name.replace("color.", "").replace(".", "-")
@@ -129,8 +129,11 @@ class DesignSystem:
     def load_json(cls, path: str) -> "DesignSystem":
         with open(path) as f:
             data = json.load(f)
-        ds = cls(name=data.get("name", ""), version=data.get("version", "1.0.0"),
-                 description=data.get("description", ""),
-                 active_theme=data.get("active_theme", "light"))
+        ds = cls(
+            name=data.get("name", ""),
+            version=data.get("version", "1.0.0"),
+            description=data.get("description", ""),
+            active_theme=data.get("active_theme", "light"),
+        )
         # Tokens would be loaded from dicts — simplified here
         return ds

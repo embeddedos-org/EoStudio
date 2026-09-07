@@ -21,6 +21,7 @@ class DeployTarget(Enum):
 @dataclass
 class DeployConfig:
     """Deployment configuration."""
+
     target: DeployTarget = DeployTarget.DOCKER
     project_name: str = "my-app"
     framework: str = "react"  # react, next, vue, fastapi
@@ -37,14 +38,19 @@ class DeployConfig:
 @dataclass
 class DeployResult:
     """Result of deployment config generation."""
+
     target: str
     files_generated: Dict[str, str] = field(default_factory=dict)
     commands: List[str] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"target": self.target, "files": list(self.files_generated.keys()),
-                "commands": self.commands, "notes": self.notes}
+        return {
+            "target": self.target,
+            "files": list(self.files_generated.keys()),
+            "commands": self.commands,
+            "notes": self.notes,
+        }
 
 
 class Deployer:
@@ -153,12 +159,15 @@ class Deployer:
         )
 
     def _vercel(self, config: DeployConfig) -> DeployResult:
-        vercel_json = json.dumps({
-            "framework": "vite" if config.framework == "react" else config.framework,
-            "buildCommand": config.build_command,
-            "outputDirectory": config.output_dir,
-            "rewrites": [{"source": "/(.*)", "destination": "/index.html"}],
-        }, indent=2)
+        vercel_json = json.dumps(
+            {
+                "framework": "vite" if config.framework == "react" else config.framework,
+                "buildCommand": config.build_command,
+                "outputDirectory": config.output_dir,
+                "rewrites": [{"source": "/(.*)", "destination": "/index.html"}],
+            },
+            indent=2,
+        )
 
         return DeployResult(
             target="vercel",
@@ -168,8 +177,7 @@ class Deployer:
                 "vercel login",
                 "vercel --prod",
             ],
-            notes=["Vercel auto-detects Vite/React projects",
-                   "Set env vars in Vercel dashboard"],
+            notes=["Vercel auto-detects Vite/React projects", "Set env vars in Vercel dashboard"],
         )
 
     def _netlify(self, config: DeployConfig) -> DeployResult:
@@ -228,7 +236,7 @@ class Deployer:
             f"  internal_port = {config.port}\n"
             "  force_https = true\n"
             '  auto_stop_machines = "stop"\n'
-            '  auto_start_machines = true\n'
+            "  auto_start_machines = true\n"
         )
 
         return DeployResult(
@@ -238,10 +246,13 @@ class Deployer:
         )
 
     def _railway(self, config: DeployConfig) -> DeployResult:
-        railway_json = json.dumps({
-            "build": {"builder": "NIXPACKS"},
-            "deploy": {"startCommand": config.start_command},
-        }, indent=2)
+        railway_json = json.dumps(
+            {
+                "build": {"builder": "NIXPACKS"},
+                "deploy": {"startCommand": config.start_command},
+            },
+            indent=2,
+        )
 
         return DeployResult(
             target="railway",
@@ -261,37 +272,35 @@ class Deployer:
             # Backend health check
             if config.framework == "fastapi":
                 files["api/health.py"] = (
-                    'from fastapi import APIRouter\n'
-                    'from datetime import datetime\n\n'
-                    'router = APIRouter()\n\n\n'
+                    "from fastapi import APIRouter\n"
+                    "from datetime import datetime\n\n"
+                    "router = APIRouter()\n\n\n"
                     '@router.get("/healthz")\n'
-                    'async def healthz():\n'
+                    "async def healthz():\n"
                     '    """Liveness probe — is the process running?"""\n'
                     '    return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}\n\n\n'
                     '@router.get("/readyz")\n'
-                    'async def readyz():\n'
+                    "async def readyz():\n"
                     '    """Readiness probe — can the service handle traffic?"""\n'
-                    '    # TODO: add database/cache connectivity checks\n'
+                    "    # TODO: add database/cache connectivity checks\n"
                     '    return {"status": "ready", "timestamp": datetime.utcnow().isoformat()}\n'
                 )
             else:
                 files["api/health.js"] = (
                     'const express = require("express");\n'
-                    'const router = express.Router();\n\n'
+                    "const router = express.Router();\n\n"
                     'router.get("/healthz", (req, res) => {\n'
                     '  res.json({ status: "ok", timestamp: new Date().toISOString() });\n'
-                    '});\n\n'
+                    "});\n\n"
                     'router.get("/readyz", (req, res) => {\n'
-                    '  // TODO: add database/cache connectivity checks\n'
+                    "  // TODO: add database/cache connectivity checks\n"
                     '  res.json({ status: "ready", timestamp: new Date().toISOString() });\n'
-                    '});\n\n'
-                    'module.exports = router;\n'
+                    "});\n\n"
+                    "module.exports = router;\n"
                 )
         else:
             # Frontend-only: add a static health page
-            files["public/healthz.json"] = json.dumps(
-                {"status": "ok", "version": "1.0.0"}, indent=2
-            )
+            files["public/healthz.json"] = json.dumps({"status": "ok", "version": "1.0.0"}, indent=2)
 
         return files
 
@@ -305,7 +314,7 @@ class Deployer:
             "",
             "# --- Application ---",
             f"PORT={config.port}",
-            'NODE_ENV=development',
+            "NODE_ENV=development",
             "",
             "# --- Database ---",
             "DATABASE_URL=postgresql://user:password@localhost:5432/dbname",
@@ -327,8 +336,7 @@ class Deployer:
         return {".env.example": "\n".join(lines) + "\n"}
 
     @staticmethod
-    def validate_env(env_file: str = ".env",
-                     example_file: str = ".env.example") -> Dict[str, Any]:
+    def validate_env(env_file: str = ".env", example_file: str = ".env.example") -> Dict[str, Any]:
         """Check that all required env vars from .env.example are set."""
         required: List[str] = []
         missing: List[str] = []
@@ -369,27 +377,27 @@ class Deployer:
         # Structured logging config
         if config.framework == "fastapi":
             files["api/logging_config.py"] = (
-                'import logging\n'
-                'import json\n'
-                'from datetime import datetime\n\n\n'
-                'class JSONFormatter(logging.Formatter):\n'
+                "import logging\n"
+                "import json\n"
+                "from datetime import datetime\n\n\n"
+                "class JSONFormatter(logging.Formatter):\n"
                 '    """Structured JSON log formatter for production."""\n\n'
-                '    def format(self, record: logging.LogRecord) -> str:\n'
-                '        log_data = {\n'
+                "    def format(self, record: logging.LogRecord) -> str:\n"
+                "        log_data = {\n"
                 '            "timestamp": datetime.utcnow().isoformat(),\n'
                 '            "level": record.levelname,\n'
                 '            "message": record.getMessage(),\n'
                 '            "module": record.module,\n'
                 '            "function": record.funcName,\n'
-                '        }\n'
-                '        if record.exc_info:\n'
+                "        }\n"
+                "        if record.exc_info:\n"
                 '            log_data["exception"] = self.formatException(record.exc_info)\n'
-                '        return json.dumps(log_data)\n\n\n'
+                "        return json.dumps(log_data)\n\n\n"
                 'def setup_logging(level: str = "INFO") -> None:\n'
-                '    handler = logging.StreamHandler()\n'
-                '    handler.setFormatter(JSONFormatter())\n'
-                '    logging.root.handlers = [handler]\n'
-                '    logging.root.setLevel(getattr(logging, level))\n'
+                "    handler = logging.StreamHandler()\n"
+                "    handler.setFormatter(JSONFormatter())\n"
+                "    logging.root.handlers = [handler]\n"
+                "    logging.root.setLevel(getattr(logging, level))\n"
             )
 
         # Prometheus metrics endpoint stub
@@ -421,8 +429,7 @@ class Deployer:
                 f"          docker push ${{{{ secrets.REGISTRY }}}}/{config.project_name}:${{{{ github.sha }}}}\n"
             ),
             "vercel": (
-                "      - name: Deploy to Vercel\n"
-                "        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}\n"
+                "      - name: Deploy to Vercel\n        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}\n"
             ),
             "netlify": (
                 "      - name: Deploy to Netlify\n"

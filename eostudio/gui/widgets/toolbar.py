@@ -1,16 +1,19 @@
 """Configurable toolbar with icon buttons, grouping, active tool indicator, and tooltips."""
 
-
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -66,8 +69,9 @@ class ToolBar(tk.Frame):
             group_frame.pack(side=side, padx=2, pady=2)
 
             if group_name:
-                lbl = tk.Label(group_frame, text=group_name, bg=self._bg, fg="#6c7086",
-                               font=("Segoe UI", 7), anchor=tk.W)
+                lbl = tk.Label(
+                    group_frame, text=group_name, bg=self._bg, fg="#6c7086", font=("Segoe UI", 7), anchor=tk.W
+                )
                 lbl.pack(side=side, padx=2, pady=(4, 1))
 
             for tool_id, icon_text in tools:
@@ -81,7 +85,8 @@ class ToolBar(tk.Frame):
                     activeforeground="#f9e2af",
                     relief=tk.FLAT,
                     font=("Segoe UI", 10),
-                    padx=4, pady=2,
+                    padx=4,
+                    pady=2,
                     command=self._make_tool_cmd(tool_id),
                 )
                 btn.pack(side=side, padx=1, pady=1)
@@ -89,11 +94,13 @@ class ToolBar(tk.Frame):
                 btn.bind("<Leave>", self._make_leave_handler())
                 self._buttons[tool_id] = btn
 
-            sep = tk.Frame(self._container, bg="#45475a",
-                           width=2 if self._orientation == "vertical" else 1,
-                           height=1 if self._orientation == "vertical" else 20)
-            sep.pack(side=side, padx=2, pady=4,
-                     fill=tk.X if self._orientation == "vertical" else tk.Y)
+            sep = tk.Frame(
+                self._container,
+                bg="#45475a",
+                width=2 if self._orientation == "vertical" else 1,
+                height=1 if self._orientation == "vertical" else 20,
+            )
+            sep.pack(side=side, padx=2, pady=4, fill=tk.X if self._orientation == "vertical" else tk.Y)
 
     def select_tool(self, tool_id: str) -> None:
         self._select_tool(tool_id)
@@ -104,19 +111,23 @@ class ToolBar(tk.Frame):
     def _make_tool_cmd(self, tool_id: str) -> Callable[[], None]:
         def cmd() -> None:
             self._select_tool(tool_id)
+
         return cmd
 
     def _make_enter_handler(self, tool_id: str) -> Callable[[tk.Event], None]:
         def handler(event: tk.Event) -> None:
             self._show_tooltip(event, tool_id)
+
         return handler
 
     def _make_leave_handler(self) -> Callable[[tk.Event], None]:
         def handler(event: tk.Event) -> None:
             self._hide_tooltip()
+
         return handler
 
         # ------------------------------------------------------------------
+
     # Internal
     # ------------------------------------------------------------------
 
@@ -138,9 +149,17 @@ class ToolBar(tk.Frame):
         self._tooltip_win = tw = tk.Toplevel(self)
         tw.wm_overrideredirect(True)
         tw.wm_geometry(f"+{x}+{y}")
-        label = tk.Label(tw, text=tool_id.replace("_", " ").title(),
-                         bg="#313244", fg=self._fg, font=("Segoe UI", 8),
-                         padx=6, pady=2, relief=tk.SOLID, bd=1)
+        label = tk.Label(
+            tw,
+            text=tool_id.replace("_", " ").title(),
+            bg="#313244",
+            fg=self._fg,
+            font=("Segoe UI", 8),
+            padx=6,
+            pady=2,
+            relief=tk.SOLID,
+            bd=1,
+        )
         label.pack()
 
     def _hide_tooltip(self) -> None:

@@ -90,10 +90,7 @@ class MobileAppGenerator:
 
     def __init__(self, target: str = "flutter") -> None:
         if target not in self.SUPPORTED_TARGETS:
-            raise ValueError(
-                f"Unsupported target {target!r}. "
-                f"Supported: {', '.join(self.SUPPORTED_TARGETS)}"
-            )
+            raise ValueError(f"Unsupported target {target!r}. Supported: {', '.join(self.SUPPORTED_TARGETS)}")
         self.target = target
 
     def generate(
@@ -147,9 +144,7 @@ class MobileAppGenerator:
         for screen in screens:
             sname = self._pascal(screen.get("name", "Home"))
             fname = self._snake(screen.get("name", "home"))
-            import_lines.append(
-                f"import 'screens/{fname}_screen.dart';"
-            )
+            import_lines.append(f"import 'screens/{fname}_screen.dart';")
             path = "/" if screen is screens[0] else f"/{fname}"
             route_entries.append(
                 f"      GoRoute(\n"
@@ -198,9 +193,7 @@ class MobileAppGenerator:
             "version: 1.0.0\n\n"
             "environment:\n"
             "  sdk: '>=3.2.0 <4.0.0'\n\n"
-            "dependencies:\n"
-            + "".join(deps)
-            + "\ndev_dependencies:\n"
+            "dependencies:\n" + "".join(deps) + "\ndev_dependencies:\n"
             "  flutter_test:\n    sdk: flutter\n"
             "  flutter_lints: ^4.0.0\n\n"
             "flutter:\n  uses-material-design: true\n"
@@ -235,9 +228,7 @@ class MobileAppGenerator:
 
         return files
 
-    def _flutter_widgets(
-        self, components: List[Dict[str, Any]], indent: int
-    ) -> str:
+    def _flutter_widgets(self, components: List[Dict[str, Any]], indent: int) -> str:
         lines: List[str] = []
         pad = " " * indent
         for comp in components:
@@ -247,16 +238,10 @@ class MobileAppGenerator:
 
             if ctype == "Button":
                 lines.append(
-                    f"{pad}ElevatedButton(\n"
-                    f"{pad}  onPressed: () {{}},\n"
-                    f"{pad}  child: Text('{label}'),\n"
-                    f"{pad}),\n"
+                    f"{pad}ElevatedButton(\n{pad}  onPressed: () {{}},\n{pad}  child: Text('{label}'),\n{pad}),\n"
                 )
             elif ctype == "Heading":
-                lines.append(
-                    f"{pad}Text('{label}', "
-                    f"style: Theme.of(context).textTheme.headlineMedium),\n"
-                )
+                lines.append(f"{pad}Text('{label}', style: Theme.of(context).textTheme.headlineMedium),\n")
             elif ctype == "Text":
                 lines.append(f"{pad}Text('{label}'),\n")
             elif ctype == "Input":
@@ -283,11 +268,7 @@ class MobileAppGenerator:
                 src = comp.get("src", "https://via.placeholder.com/150")
                 lines.append(f"{pad}Image.network('{src}'),\n")
             elif ctype == "Card":
-                child_body = (
-                    self._flutter_widgets(children, indent + 4)
-                    if children
-                    else f"{pad}    Text('{label}'),\n"
-                )
+                child_body = self._flutter_widgets(children, indent + 4) if children else f"{pad}    Text('{label}'),\n"
                 lines.append(
                     f"{pad}Card(\n"
                     f"{pad}  child: Padding(\n"
@@ -302,17 +283,9 @@ class MobileAppGenerator:
                 direction = comp.get("direction", "column")
                 widget = "Row" if direction == "row" else "Column"
                 child_body = self._flutter_widgets(children, indent + 2)
-                lines.append(
-                    f"{pad}{widget}(\n"
-                    f"{pad}  children: [\n"
-                    f"{child_body}"
-                    f"{pad}  ],\n"
-                    f"{pad}),\n"
-                )
+                lines.append(f"{pad}{widget}(\n{pad}  children: [\n{child_body}{pad}  ],\n{pad}),\n")
             elif ctype == "Switch":
-                lines.append(
-                    f"{pad}Switch(value: false, onChanged: (v) {{}}),\n"
-                )
+                lines.append(f"{pad}Switch(value: false, onChanged: (v) {{}}),\n")
             else:
                 lines.append(f"{pad}Text('{label}'),\n")
 
@@ -335,21 +308,14 @@ class MobileAppGenerator:
         stack_screens: List[str] = []
         for screen in screens:
             sname = self._pascal(screen.get("name", "Home"))
-            screen_imports.append(
-                f"import {{ {sname}Screen }} from './screens/{sname}Screen';"
-            )
-            stack_screens.append(
-                f'        <Stack.Screen name="{sname}" '
-                f'component={{{sname}Screen}} />'
-            )
+            screen_imports.append(f"import {{ {sname}Screen }} from './screens/{sname}Screen';")
+            stack_screens.append(f'        <Stack.Screen name="{sname}" component={{{sname}Screen}} />')
 
         files["App.tsx"] = (
             "import React from 'react';\n"
             "import { NavigationContainer } from '@react-navigation/native';\n"
             "import { createNativeStackNavigator } from "
-            "'@react-navigation/native-stack';\n"
-            + "\n".join(screen_imports)
-            + "\n\n"
+            "'@react-navigation/native-stack';\n" + "\n".join(screen_imports) + "\n\n"
             "const Stack = createNativeStackNavigator();\n\n"
             f"export default function App() {{\n"
             "  return (\n"
@@ -392,9 +358,7 @@ class MobileAppGenerator:
             sname = self._pascal(screen.get("name", "Home"))
             comps = screen.get("components", [])
             body = self._rn_components(comps, indent=8)
-            other_screens = [
-                s for s in screens if s.get("name") != screen.get("name")
-            ]
+            other_screens = [s for s in screens if s.get("name") != screen.get("name")]
             nav_buttons = ""
             for other in other_screens:
                 oname = self._pascal(other.get("name", ""))
@@ -469,9 +433,7 @@ class MobileAppGenerator:
 
         return files
 
-    def _rn_components(
-        self, components: List[Dict[str, Any]], indent: int
-    ) -> str:
+    def _rn_components(self, components: List[Dict[str, Any]], indent: int) -> str:
         lines: List[str] = []
         pad = " " * indent
         for comp in components:
@@ -487,52 +449,26 @@ class MobileAppGenerator:
                     f"{pad}</TouchableOpacity>\n"
                 )
             elif ctype == "Heading":
-                lines.append(
-                    f"{pad}<Text style={{styles.heading}}>{label}</Text>\n"
-                )
+                lines.append(f"{pad}<Text style={{styles.heading}}>{label}</Text>\n")
             elif ctype == "Text":
-                lines.append(
-                    f"{pad}<Text style={{styles.text}}>{label}</Text>\n"
-                )
+                lines.append(f"{pad}<Text style={{styles.text}}>{label}</Text>\n")
             elif ctype in ("Input", "TextArea"):
                 ph = comp.get("placeholder", label)
-                multi = (
-                    " multiline numberOfLines={5}" if ctype == "TextArea" else ""
-                )
-                lines.append(
-                    f'{pad}<TextInput style={{styles.input}} '
-                    f'placeholder="{ph}"{multi} />\n'
-                )
+                multi = " multiline numberOfLines={5}" if ctype == "TextArea" else ""
+                lines.append(f'{pad}<TextInput style={{styles.input}} placeholder="{ph}"{multi} />\n')
             elif ctype == "Image":
                 src = comp.get("src", "https://via.placeholder.com/150")
-                lines.append(
-                    f"{pad}<Image style={{styles.image}} "
-                    f"source={{{{ uri: '{src}' }}}} />\n"
-                )
+                lines.append(f"{pad}<Image style={{styles.image}} source={{{{ uri: '{src}' }}}} />\n")
             elif ctype == "Card":
-                child_body = (
-                    self._rn_components(children, indent + 2)
-                    if children
-                    else f"{pad}  <Text>{label}</Text>\n"
-                )
-                lines.append(
-                    f"{pad}<View style={{styles.card}}>\n"
-                    f"{child_body}"
-                    f"{pad}</View>\n"
-                )
+                child_body = self._rn_components(children, indent + 2) if children else f"{pad}  <Text>{label}</Text>\n"
+                lines.append(f"{pad}<View style={{styles.card}}>\n{child_body}{pad}</View>\n")
             elif ctype == "Switch":
-                lines.append(
-                    f"{pad}<Switch value={{false}} onValueChange={{() => {{}}}} />\n"
-                )
+                lines.append(f"{pad}<Switch value={{false}} onValueChange={{() => {{}}}} />\n")
             elif ctype == "Container" and children:
                 child_body = self._rn_components(children, indent + 2)
-                lines.append(
-                    f"{pad}<View>\n{child_body}{pad}</View>\n"
-                )
+                lines.append(f"{pad}<View>\n{child_body}{pad}</View>\n")
             else:
-                lines.append(
-                    f"{pad}<Text style={{styles.text}}>{label}</Text>\n"
-                )
+                lines.append(f"{pad}<Text style={{styles.text}}>{label}</Text>\n")
         return "".join(lines)
 
     # ------------------------------------------------------------------
@@ -650,7 +586,7 @@ class MobileAppGenerator:
                 "import androidx.lifecycle.ViewModel\n\n"
                 f"class {sname}ViewModel : ViewModel() {{\n\n"
                 f"    data class UiState(\n"
-                f"        val title: String = \"{sname}\",\n"
+                f'        val title: String = "{sname}",\n'
                 f"        val isLoading: Boolean = false,\n"
                 f"    )\n\n"
                 f"    private val _state = MutableLiveData(UiState())\n"
@@ -663,9 +599,7 @@ class MobileAppGenerator:
 
         return files
 
-    def _kotlin_xml_widgets(
-        self, components: List[Dict[str, Any]], indent: int
-    ) -> str:
+    def _kotlin_xml_widgets(self, components: List[Dict[str, Any]], indent: int) -> str:
         lines: List[str] = []
         pad = " " * indent
         for comp in components:
@@ -675,7 +609,7 @@ class MobileAppGenerator:
 
             if ctype == "Button":
                 lines.append(
-                    f'{pad}<Button\n'
+                    f"{pad}<Button\n"
                     f'{pad}    android:layout_width="match_parent"\n'
                     f'{pad}    android:layout_height="wrap_content"\n'
                     f'{pad}    android:text="{label}"\n'
@@ -683,7 +617,7 @@ class MobileAppGenerator:
                 )
             elif ctype == "Heading":
                 lines.append(
-                    f'{pad}<TextView\n'
+                    f"{pad}<TextView\n"
                     f'{pad}    android:layout_width="match_parent"\n'
                     f'{pad}    android:layout_height="wrap_content"\n'
                     f'{pad}    android:text="{label}"\n'
@@ -693,7 +627,7 @@ class MobileAppGenerator:
                 )
             elif ctype == "Text":
                 lines.append(
-                    f'{pad}<TextView\n'
+                    f"{pad}<TextView\n"
                     f'{pad}    android:layout_width="match_parent"\n'
                     f'{pad}    android:layout_height="wrap_content"\n'
                     f'{pad}    android:text="{label}"\n'
@@ -701,22 +635,21 @@ class MobileAppGenerator:
                 )
             elif ctype in ("Input", "TextArea"):
                 input_type = (
-                    'android:inputType="textMultiLine"\n'
-                    f'{pad}    android:minLines="5"'
+                    f'android:inputType="textMultiLine"\n{pad}    android:minLines="5"'
                     if ctype == "TextArea"
                     else 'android:inputType="text"'
                 )
                 lines.append(
-                    f'{pad}<EditText\n'
+                    f"{pad}<EditText\n"
                     f'{pad}    android:layout_width="match_parent"\n'
                     f'{pad}    android:layout_height="wrap_content"\n'
                     f'{pad}    android:hint="{label}"\n'
-                    f'{pad}    {input_type}\n'
+                    f"{pad}    {input_type}\n"
                     f'{pad}    android:layout_marginBottom="12dp" />\n\n'
                 )
             elif ctype == "Image":
                 lines.append(
-                    f'{pad}<ImageView\n'
+                    f"{pad}<ImageView\n"
                     f'{pad}    android:layout_width="match_parent"\n'
                     f'{pad}    android:layout_height="200dp"\n'
                     f'{pad}    android:scaleType="centerCrop"\n'
@@ -725,18 +658,18 @@ class MobileAppGenerator:
             elif ctype == "Card" or (ctype == "Container" and children):
                 child_body = self._kotlin_xml_widgets(children, indent + 4)
                 lines.append(
-                    f'{pad}<LinearLayout\n'
+                    f"{pad}<LinearLayout\n"
                     f'{pad}    android:layout_width="match_parent"\n'
                     f'{pad}    android:layout_height="wrap_content"\n'
                     f'{pad}    android:orientation="vertical"\n'
                     f'{pad}    android:padding="12dp"\n'
                     f'{pad}    android:layout_marginBottom="12dp">\n\n'
-                    f'{child_body}'
-                    f'{pad}</LinearLayout>\n\n'
+                    f"{child_body}"
+                    f"{pad}</LinearLayout>\n\n"
                 )
             else:
                 lines.append(
-                    f'{pad}<TextView\n'
+                    f"{pad}<TextView\n"
                     f'{pad}    android:layout_width="match_parent"\n'
                     f'{pad}    android:layout_height="wrap_content"\n'
                     f'{pad}    android:text="{label}"\n'
@@ -761,9 +694,7 @@ class MobileAppGenerator:
         for screen in screens[1:]:
             sname = self._pascal(screen.get("name", "Home"))
             nav_links.append(
-                f'                NavigationLink("{sname}") {{\n'
-                f"                    {sname}View()\n"
-                f"                }}"
+                f'                NavigationLink("{sname}") {{\n                    {sname}View()\n                }}'
             )
         nav_str = "\n".join(nav_links)
         first = self._pascal(screens[0].get("name", "Home"))
@@ -798,16 +729,12 @@ class MobileAppGenerator:
             sname = self._pascal(screen.get("name", "Home"))
             comps = screen.get("components", [])
             body = self._swift_views(comps, indent=12)
-            other_screens = [
-                s for s in screens if s.get("name") != screen.get("name")
-            ]
+            other_screens = [s for s in screens if s.get("name") != screen.get("name")]
             nav_links_inner = ""
             for other in other_screens:
                 oname = self._pascal(other.get("name", ""))
                 nav_links_inner += (
-                    f'            NavigationLink("{oname}") {{\n'
-                    f"                {oname}View()\n"
-                    f"            }}\n"
+                    f'            NavigationLink("{oname}") {{\n                {oname}View()\n            }}\n'
                 )
 
             files[f"Views/{sname}View.swift"] = (
@@ -848,9 +775,7 @@ class MobileAppGenerator:
 
         return files
 
-    def _swift_views(
-        self, components: List[Dict[str, Any]], indent: int
-    ) -> str:
+    def _swift_views(self, components: List[Dict[str, Any]], indent: int) -> str:
         lines: List[str] = []
         pad = " " * indent
         for comp in components:
@@ -860,25 +785,15 @@ class MobileAppGenerator:
 
             if ctype == "Button":
                 lines.append(
-                    f'{pad}Button("{label}") {{\n'
-                    f"{pad}    // action\n"
-                    f"{pad}}}\n"
-                    f"{pad}.buttonStyle(.borderedProminent)\n"
+                    f'{pad}Button("{label}") {{\n{pad}    // action\n{pad}}}\n{pad}.buttonStyle(.borderedProminent)\n'
                 )
             elif ctype == "Heading":
-                lines.append(
-                    f'{pad}Text("{label}")\n'
-                    f"{pad}    .font(.title)\n"
-                    f"{pad}    .bold()\n"
-                )
+                lines.append(f'{pad}Text("{label}")\n{pad}    .font(.title)\n{pad}    .bold()\n')
             elif ctype == "Text":
                 lines.append(f'{pad}Text("{label}")\n')
             elif ctype == "Input":
                 ph = comp.get("placeholder", label)
-                lines.append(
-                    f'{pad}TextField("{ph}", text: .constant(""))\n'
-                    f"{pad}    .textFieldStyle(.roundedBorder)\n"
-                )
+                lines.append(f'{pad}TextField("{ph}", text: .constant(""))\n{pad}    .textFieldStyle(.roundedBorder)\n')
             elif ctype == "TextArea":
                 lines.append(
                     f'{pad}TextEditor(text: .constant(""))\n'
@@ -895,29 +810,15 @@ class MobileAppGenerator:
                     f"{pad}}}\n"
                 )
             elif ctype == "Card":
-                child_body = (
-                    self._swift_views(children, indent + 4)
-                    if children
-                    else f'{pad}    Text("{label}")\n'
-                )
-                lines.append(
-                    f"{pad}GroupBox {{\n"
-                    f"{child_body}"
-                    f"{pad}}}\n"
-                )
+                child_body = self._swift_views(children, indent + 4) if children else f'{pad}    Text("{label}")\n'
+                lines.append(f"{pad}GroupBox {{\n{child_body}{pad}}}\n")
             elif ctype == "Switch":
-                lines.append(
-                    f'{pad}Toggle("{label}", isOn: .constant(false))\n'
-                )
+                lines.append(f'{pad}Toggle("{label}", isOn: .constant(false))\n')
             elif ctype == "Container" and children:
                 direction = comp.get("direction", "column")
                 stack = "HStack" if direction == "row" else "VStack"
                 child_body = self._swift_views(children, indent + 4)
-                lines.append(
-                    f"{pad}{stack} {{\n"
-                    f"{child_body}"
-                    f"{pad}}}\n"
-                )
+                lines.append(f"{pad}{stack} {{\n{child_body}{pad}}}\n")
             else:
                 lines.append(f'{pad}Text("{label}")\n')
         return "".join(lines)
@@ -928,10 +829,7 @@ class MobileAppGenerator:
 
     @staticmethod
     def _pascal(name: str) -> str:
-        return "".join(
-            w.capitalize()
-            for w in name.replace("-", " ").replace("_", " ").split()
-        )
+        return "".join(w.capitalize() for w in name.replace("-", " ").replace("_", " ").split())
 
     @staticmethod
     def _snake(name: str) -> str:

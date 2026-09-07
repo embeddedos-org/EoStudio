@@ -52,13 +52,11 @@ class WebAppGenerator:
         """
         if frontend not in self.SUPPORTED_FRONTENDS:
             raise ValueError(
-                f"Unsupported frontend {frontend!r}. "
-                f"Choose from: {', '.join(sorted(self.SUPPORTED_FRONTENDS))}"
+                f"Unsupported frontend {frontend!r}. Choose from: {', '.join(sorted(self.SUPPORTED_FRONTENDS))}"
             )
         if backend not in self.SUPPORTED_BACKENDS:
             raise ValueError(
-                f"Unsupported backend {backend!r}. "
-                f"Choose from: {', '.join(sorted(self.SUPPORTED_BACKENDS))}"
+                f"Unsupported backend {backend!r}. Choose from: {', '.join(sorted(self.SUPPORTED_BACKENDS))}"
             )
         self.frontend = frontend
         self.backend = backend
@@ -157,32 +155,23 @@ class WebAppGenerator:
             cname = self._pascal(screen.get("name", "Home"))
             screen_name = cname + "Screen"
             path = "/" if i == 0 else f"/{self._kebab(screen.get('name', 'home'))}"
-            imports.append(
-                f"import {screen_name} from './screens/{screen_name}';"
-            )
-            routes.append(
-                f'          <Route path="{path}" element={{<{screen_name} />}} />'
-            )
-            nav_links.append(
-                f'          <Link to="{path}">{screen.get("name", "Home")}</Link>'
-            )
+            imports.append(f"import {screen_name} from './screens/{screen_name}';")
+            routes.append(f'          <Route path="{path}" element={{<{screen_name} />}} />')
+            nav_links.append(f'          <Link to="{path}">{screen.get("name", "Home")}</Link>')
 
         files["frontend/src/App.tsx"] = (
             "import React from 'react';\n"
-            "import { Routes, Route, Link } from 'react-router-dom';\n"
-            + "\n".join(imports) + "\n\n"
+            "import { Routes, Route, Link } from 'react-router-dom';\n" + "\n".join(imports) + "\n\n"
             "const App: React.FC = () => {\n"
             "  return (\n"
-            "    <div className=\"app\">\n"
-            "      <nav className=\"app-nav\">\n"
-            "        <span className=\"app-title\">" + app_name + "</span>\n"
-            "        <div className=\"nav-links\">\n"
-            + "\n".join(nav_links) + "\n"
+            '    <div className="app">\n'
+            '      <nav className="app-nav">\n'
+            '        <span className="app-title">' + app_name + "</span>\n"
+            '        <div className="nav-links">\n' + "\n".join(nav_links) + "\n"
             "        </div>\n"
             "      </nav>\n"
-            "      <main className=\"app-main\">\n"
-            "        <Routes>\n"
-            + "\n".join(routes) + "\n"
+            '      <main className="app-main">\n'
+            "        <Routes>\n" + "\n".join(routes) + "\n"
             "        </Routes>\n"
             "      </main>\n"
             "    </div>\n"
@@ -239,13 +228,9 @@ class WebAppGenerator:
             body = self._render_react_jsx(comps, indent=3)
             files[f"frontend/src/screens/{screen_name}.tsx"] = (
                 "import React, { useState } from 'react';\n\n"
-                f"const {screen_name}: React.FC = () => {{\n"
-                + self._collect_react_hooks(comps)
-                + "  return (\n"
-                f"    <div className=\"screen\">\n"
-                f"      <h1>{screen.get('name', 'Home')}</h1>\n"
-                + body
-                + "    </div>\n"
+                f"const {screen_name}: React.FC = () => {{\n" + self._collect_react_hooks(comps) + "  return (\n"
+                f'    <div className="screen">\n'
+                f"      <h1>{screen.get('name', 'Home')}</h1>\n" + body + "    </div>\n"
                 "  );\n"
                 "};\n\n"
                 f"export default {screen_name};\n"
@@ -350,9 +335,7 @@ class WebAppGenerator:
 
         return files
 
-    def _render_react_jsx(
-        self, components: List[Dict[str, Any]], indent: int
-    ) -> str:
+    def _render_react_jsx(self, components: List[Dict[str, Any]], indent: int) -> str:
         """Render a list of EoStudio components as React JSX."""
         lines: List[str] = []
         pad = "  " * indent
@@ -378,73 +361,33 @@ class WebAppGenerator:
                     f"{pad}/>\n"
                 )
             elif ctype == "Card":
-                child_body = (
-                    self._render_react_jsx(children, indent + 1)
-                    if children
-                    else f"{pad}  <p>{label}</p>\n"
-                )
-                lines.append(
-                    f'{pad}<div className="card">\n'
-                    f"{child_body}"
-                    f"{pad}</div>\n"
-                )
+                child_body = self._render_react_jsx(children, indent + 1) if children else f"{pad}  <p>{label}</p>\n"
+                lines.append(f'{pad}<div className="card">\n{child_body}{pad}</div>\n')
             elif ctype == "List":
                 items = comp.get("items", [])
-                li_lines = "".join(
-                    f"{pad}    <li>{item}</li>\n" for item in items
-                )
+                li_lines = "".join(f"{pad}    <li>{item}</li>\n" for item in items)
                 if not li_lines:
                     li_lines = f"{pad}    <li>{label}</li>\n"
-                lines.append(
-                    f"{pad}<ul>\n"
-                    f"{li_lines}"
-                    f"{pad}</ul>\n"
-                )
+                lines.append(f"{pad}<ul>\n{li_lines}{pad}</ul>\n")
             elif ctype == "Grid":
-                child_body = (
-                    self._render_react_jsx(children, indent + 1)
-                    if children
-                    else f"{pad}  <p>{label}</p>\n"
-                )
-                lines.append(
-                    f'{pad}<div className="grid">\n'
-                    f"{child_body}"
-                    f"{pad}</div>\n"
-                )
+                child_body = self._render_react_jsx(children, indent + 1) if children else f"{pad}  <p>{label}</p>\n"
+                lines.append(f'{pad}<div className="grid">\n{child_body}{pad}</div>\n')
             elif ctype == "Image":
                 src = comp.get("src", "https://via.placeholder.com/400x300")
                 alt = comp.get("alt", label)
                 lines.append(f'{pad}<img src="{src}" alt="{alt}" />\n')
             elif ctype == "Dialog":
-                child_body = (
-                    self._render_react_jsx(children, indent + 1)
-                    if children
-                    else f"{pad}  <p>{label}</p>\n"
-                )
-                lines.append(
-                    f"{pad}<dialog>\n"
-                    f"{child_body}"
-                    f"{pad}</dialog>\n"
-                )
+                child_body = self._render_react_jsx(children, indent + 1) if children else f"{pad}  <p>{label}</p>\n"
+                lines.append(f"{pad}<dialog>\n{child_body}{pad}</dialog>\n")
             elif ctype == "AppBar":
                 title = comp.get("title", label)
-                lines.append(
-                    f'{pad}<header className="app-bar">\n'
-                    f"{pad}  <h1>{title}</h1>\n"
-                    f"{pad}</header>\n"
-                )
+                lines.append(f'{pad}<header className="app-bar">\n{pad}  <h1>{title}</h1>\n{pad}</header>\n')
             elif ctype == "BottomNav":
                 nav_items = comp.get("items", [])
-                item_lines = "".join(
-                    f"{pad}  <a href=\"#\">{item}</a>\n" for item in nav_items
-                )
+                item_lines = "".join(f'{pad}  <a href="#">{item}</a>\n' for item in nav_items)
                 if not item_lines:
-                    item_lines = f"{pad}  <a href=\"#\">{label}</a>\n"
-                lines.append(
-                    f'{pad}<nav className="bottom-nav">\n'
-                    f"{item_lines}"
-                    f"{pad}</nav>\n"
-                )
+                    item_lines = f'{pad}  <a href="#">{label}</a>\n'
+                lines.append(f'{pad}<nav className="bottom-nav">\n{item_lines}{pad}</nav>\n')
             elif ctype == "TabBar":
                 tabs = comp.get("tabs", comp.get("items", []))
                 tab_lines = ""
@@ -452,23 +395,11 @@ class WebAppGenerator:
                     active = ' className="active"' if j == 0 else ""
                     tab_lines += f"{pad}  <span{active}>{tab}</span>\n"
                 if not tab_lines:
-                    tab_lines = f"{pad}  <span className=\"active\">{label}</span>\n"
-                lines.append(
-                    f'{pad}<div className="tabs">\n'
-                    f"{tab_lines}"
-                    f"{pad}</div>\n"
-                )
+                    tab_lines = f'{pad}  <span className="active">{label}</span>\n'
+                lines.append(f'{pad}<div className="tabs">\n{tab_lines}{pad}</div>\n')
             elif ctype == "Container":
-                child_body = (
-                    self._render_react_jsx(children, indent + 1)
-                    if children
-                    else f"{pad}  <p>{label}</p>\n"
-                )
-                lines.append(
-                    f"{pad}<div>\n"
-                    f"{child_body}"
-                    f"{pad}</div>\n"
-                )
+                child_body = self._render_react_jsx(children, indent + 1) if children else f"{pad}  <p>{label}</p>\n"
+                lines.append(f"{pad}<div>\n{child_body}{pad}</div>\n")
             else:
                 lines.append(f"{pad}<p>{label}</p>\n")
 
@@ -520,24 +451,21 @@ class WebAppGenerator:
         for i, screen in enumerate(screens):
             path = "/" if i == 0 else f"/{self._kebab(screen.get('name', 'home'))}"
             label = screen.get("name", "Home")
-            nav_items.append(
-                f'      <router-link to="{path}">{label}</router-link>'
-            )
+            nav_items.append(f'      <router-link to="{path}">{label}</router-link>')
         nav_str = "\n".join(nav_items)
 
         files["frontend/src/App.vue"] = (
             "<template>\n"
-            "  <div id=\"app\">\n"
-            "    <nav class=\"app-nav\">\n"
-            f"      <span class=\"app-title\">{app_name}</span>\n"
-            + nav_str + "\n"
+            '  <div id="app">\n'
+            '    <nav class="app-nav">\n'
+            f'      <span class="app-title">{app_name}</span>\n' + nav_str + "\n"
             "    </nav>\n"
-            "    <main class=\"app-main\">\n"
+            '    <main class="app-main">\n'
             "      <router-view />\n"
             "    </main>\n"
             "  </div>\n"
             "</template>\n\n"
-            "<script setup lang=\"ts\">\n"
+            '<script setup lang="ts">\n'
             "</script>\n\n"
             "<style>\n"
             ".app-nav {\n"
@@ -558,18 +486,12 @@ class WebAppGenerator:
             cname = self._pascal(screen.get("name", "Home"))
             screen_name = cname + "Screen"
             path = "/" if i == 0 else f"/{self._kebab(screen.get('name', 'home'))}"
-            route_imports.append(
-                f"import {screen_name} from '../screens/{screen_name}.vue';"
-            )
-            route_defs.append(
-                f"  {{ path: '{path}', component: {screen_name} }},"
-            )
+            route_imports.append(f"import {screen_name} from '../screens/{screen_name}.vue';")
+            route_defs.append(f"  {{ path: '{path}', component: {screen_name} }},")
 
         files["frontend/src/router/index.ts"] = (
-            "import { createRouter, createWebHistory } from 'vue-router';\n"
-            + "\n".join(route_imports) + "\n\n"
-            "const routes = [\n"
-            + "\n".join(route_defs) + "\n"
+            "import { createRouter, createWebHistory } from 'vue-router';\n" + "\n".join(route_imports) + "\n\n"
+            "const routes = [\n" + "\n".join(route_defs) + "\n"
             "];\n\n"
             "const router = createRouter({\n"
             "  history: createWebHistory(),\n"
@@ -588,15 +510,11 @@ class WebAppGenerator:
 
             files[f"frontend/src/screens/{screen_name}.vue"] = (
                 "<template>\n"
-                "  <div class=\"screen\">\n"
-                f"    <h1>{screen.get('name', 'Home')}</h1>\n"
-                + template_body
-                + "  </div>\n"
+                '  <div class="screen">\n'
+                f"    <h1>{screen.get('name', 'Home')}</h1>\n" + template_body + "  </div>\n"
                 "</template>\n\n"
-                "<script setup lang=\"ts\">\n"
-                "import { ref } from 'vue';\n"
-                + ref_decls
-                + "</script>\n\n"
+                '<script setup lang="ts">\n'
+                "import { ref } from 'vue';\n" + ref_decls + "</script>\n\n"
                 "<style scoped>\n"
                 ".screen { display: flex; flex-direction: column; gap: 16px; }\n"
                 ".card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }\n"
@@ -634,9 +552,7 @@ class WebAppGenerator:
 
         return files
 
-    def _render_vue_template(
-        self, components: List[Dict[str, Any]], indent: int
-    ) -> str:
+    def _render_vue_template(self, components: List[Dict[str, Any]], indent: int) -> str:
         """Render EoStudio components as Vue template HTML."""
         lines: List[str] = []
         pad = "  " * indent
@@ -653,67 +569,35 @@ class WebAppGenerator:
             elif ctype == "Input":
                 var = self._camel(label or "field")
                 placeholder = comp.get("placeholder", label)
-                lines.append(
-                    f'{pad}<input v-model="{var}" placeholder="{placeholder}" />\n'
-                )
+                lines.append(f'{pad}<input v-model="{var}" placeholder="{placeholder}" />\n')
             elif ctype == "Card":
-                child_body = (
-                    self._render_vue_template(children, indent + 1)
-                    if children
-                    else f"{pad}  <p>{label}</p>\n"
-                )
-                lines.append(
-                    f'{pad}<div class="card">\n'
-                    f"{child_body}"
-                    f"{pad}</div>\n"
-                )
+                child_body = self._render_vue_template(children, indent + 1) if children else f"{pad}  <p>{label}</p>\n"
+                lines.append(f'{pad}<div class="card">\n{child_body}{pad}</div>\n')
             elif ctype == "List":
                 items = comp.get("items", [])
-                li_lines = "".join(
-                    f"{pad}    <li>{item}</li>\n" for item in items
-                )
+                li_lines = "".join(f"{pad}    <li>{item}</li>\n" for item in items)
                 if not li_lines:
                     li_lines = f"{pad}    <li>{label}</li>\n"
                 lines.append(f"{pad}<ul>\n{li_lines}{pad}</ul>\n")
             elif ctype == "Grid":
-                child_body = (
-                    self._render_vue_template(children, indent + 1)
-                    if children
-                    else f"{pad}  <p>{label}</p>\n"
-                )
-                lines.append(
-                    f'{pad}<div class="grid">\n{child_body}{pad}</div>\n'
-                )
+                child_body = self._render_vue_template(children, indent + 1) if children else f"{pad}  <p>{label}</p>\n"
+                lines.append(f'{pad}<div class="grid">\n{child_body}{pad}</div>\n')
             elif ctype == "Image":
                 src = comp.get("src", "https://via.placeholder.com/400x300")
                 alt = comp.get("alt", label)
                 lines.append(f'{pad}<img src="{src}" alt="{alt}" />\n')
             elif ctype == "Dialog":
-                child_body = (
-                    self._render_vue_template(children, indent + 1)
-                    if children
-                    else f"{pad}  <p>{label}</p>\n"
-                )
-                lines.append(
-                    f"{pad}<dialog>\n{child_body}{pad}</dialog>\n"
-                )
+                child_body = self._render_vue_template(children, indent + 1) if children else f"{pad}  <p>{label}</p>\n"
+                lines.append(f"{pad}<dialog>\n{child_body}{pad}</dialog>\n")
             elif ctype == "AppBar":
                 title = comp.get("title", label)
-                lines.append(
-                    f'{pad}<header class="app-bar">\n'
-                    f"{pad}  <h1>{title}</h1>\n"
-                    f"{pad}</header>\n"
-                )
+                lines.append(f'{pad}<header class="app-bar">\n{pad}  <h1>{title}</h1>\n{pad}</header>\n')
             elif ctype == "BottomNav":
                 nav_items = comp.get("items", [])
-                item_lines = "".join(
-                    f'{pad}  <a href="#">{item}</a>\n' for item in nav_items
-                )
+                item_lines = "".join(f'{pad}  <a href="#">{item}</a>\n' for item in nav_items)
                 if not item_lines:
                     item_lines = f'{pad}  <a href="#">{label}</a>\n'
-                lines.append(
-                    f'{pad}<nav class="bottom-nav">\n{item_lines}{pad}</nav>\n'
-                )
+                lines.append(f'{pad}<nav class="bottom-nav">\n{item_lines}{pad}</nav>\n')
             elif ctype == "TabBar":
                 tabs = comp.get("tabs", comp.get("items", []))
                 tab_lines = ""
@@ -722,15 +606,9 @@ class WebAppGenerator:
                     tab_lines += f"{pad}  <span{active}>{tab}</span>\n"
                 if not tab_lines:
                     tab_lines = f'{pad}  <span class="active">{label}</span>\n'
-                lines.append(
-                    f'{pad}<div class="tabs">\n{tab_lines}{pad}</div>\n'
-                )
+                lines.append(f'{pad}<div class="tabs">\n{tab_lines}{pad}</div>\n')
             elif ctype == "Container":
-                child_body = (
-                    self._render_vue_template(children, indent + 1)
-                    if children
-                    else f"{pad}  <p>{label}</p>\n"
-                )
+                child_body = self._render_vue_template(children, indent + 1) if children else f"{pad}  <p>{label}</p>\n"
                 lines.append(f"{pad}<div>\n{child_body}{pad}</div>\n")
             else:
                 lines.append(f"{pad}<p>{label}</p>\n")
@@ -767,9 +645,7 @@ class WebAppGenerator:
         for i, screen in enumerate(screens):
             cname = self._pascal(screen.get("name", "Home"))
             path = "" if i == 0 else self._kebab(screen.get("name", "home"))
-            route_entries.append(
-                f"  {{ path: '{path}', component: {cname}Component }},"
-            )
+            route_entries.append(f"  {{ path: '{path}', component: {cname}Component }},")
 
         imports = "\n".join(
             f"import {{ {self._pascal(s.get('name', 'Home'))}Component }} from './screens/{self._kebab(s.get('name', 'home'))}.component';"
@@ -777,10 +653,8 @@ class WebAppGenerator:
         )
 
         files["frontend/src/app/app.routes.ts"] = (
-            "import { Routes } from '@angular/router';\n"
-            + imports + "\n\n"
-            "export const routes: Routes = [\n"
-            + "\n".join(route_entries) + "\n"
+            "import { Routes } from '@angular/router';\n" + imports + "\n\n"
+            "export const routes: Routes = [\n" + "\n".join(route_entries) + "\n"
             "];\n"
         )
 
@@ -798,10 +672,8 @@ class WebAppGenerator:
                 "  imports: [CommonModule, FormsModule],\n"
                 f"  selector: 'app-{kebab}',\n"
                 "  template: `\n"
-                "    <div class=\"screen\">\n"
-                f"      <h1>{screen.get('name', 'Home')}</h1>\n"
-                + template_body
-                + "    </div>\n"
+                '    <div class="screen">\n'
+                f"      <h1>{screen.get('name', 'Home')}</h1>\n" + template_body + "    </div>\n"
                 "  `,\n"
                 "})\n"
                 f"export class {cname}Component {{}}\n"
@@ -844,11 +716,10 @@ class WebAppGenerator:
             "<script>\n"
             "  import '../app.css';\n"
             "</script>\n\n"
-            "<nav class=\"app-nav\">\n"
-            f"  <span class=\"app-title\">{app_name}</span>\n"
-            + "\n".join(nav_items) + "\n"
+            '<nav class="app-nav">\n'
+            f'  <span class="app-title">{app_name}</span>\n' + "\n".join(nav_items) + "\n"
             "</nav>\n"
-            "<main class=\"app-main\">\n"
+            '<main class="app-main">\n'
             "  <slot />\n"
             "</main>\n"
         )
@@ -857,13 +728,10 @@ class WebAppGenerator:
             route_dir = "" if i == 0 else self._kebab(screen.get("name", "home"))
             comps = screen.get("components", [])
             body = self._render_react_jsx(comps, indent=1)
-            route_path = f"frontend/src/routes/{route_dir}/+page.svelte" if route_dir else "frontend/src/routes/+page.svelte"
-            files[route_path] = (
-                "<div class=\"screen\">\n"
-                f"  <h1>{screen.get('name', 'Home')}</h1>\n"
-                + body
-                + "</div>\n"
+            route_path = (
+                f"frontend/src/routes/{route_dir}/+page.svelte" if route_dir else "frontend/src/routes/+page.svelte"
             )
+            files[route_path] = f'<div class="screen">\n  <h1>{screen.get("name", "Home")}</h1>\n' + body + "</div>\n"
 
         pkg = {
             "name": self._kebab(app_name),
@@ -896,9 +764,7 @@ class WebAppGenerator:
         nav_items: List[str] = []
         for i, screen in enumerate(screens):
             path = "/" if i == 0 else f"/{self._kebab(screen.get('name', 'home'))}"
-            nav_items.append(
-                f'        <Link href="{path}">{screen.get("name", "Home")}</Link>'
-            )
+            nav_items.append(f'        <Link href="{path}">{screen.get("name", "Home")}</Link>')
 
         files["frontend/src/app/layout.tsx"] = (
             "import React from 'react';\n"
@@ -909,13 +775,12 @@ class WebAppGenerator:
             "};\n\n"
             "export default function RootLayout({ children }: { children: React.ReactNode }) {\n"
             "  return (\n"
-            "    <html lang=\"en\">\n"
+            '    <html lang="en">\n'
             "      <body>\n"
-            "        <nav className=\"app-nav\">\n"
-            f"          <span className=\"app-title\">{app_name}</span>\n"
-            + "\n".join(nav_items) + "\n"
+            '        <nav className="app-nav">\n'
+            f'          <span className="app-title">{app_name}</span>\n' + "\n".join(nav_items) + "\n"
             "        </nav>\n"
-            "        <main className=\"app-main\">{children}</main>\n"
+            '        <main className="app-main">{children}</main>\n'
             "      </body>\n"
             "    </html>\n"
             "  );\n"
@@ -936,10 +801,8 @@ class WebAppGenerator:
                 "import React from 'react';\n\n"
                 f"export default function {self._pascal(screen.get('name', 'Home'))}Page() {{\n"
                 "  return (\n"
-                "    <div className=\"screen\">\n"
-                f"      <h1>{screen.get('name', 'Home')}</h1>\n"
-                + body
-                + "    </div>\n"
+                '    <div className="screen">\n'
+                f"      <h1>{screen.get('name', 'Home')}</h1>\n" + body + "    </div>\n"
                 "  );\n"
                 "}\n"
             )
@@ -992,19 +855,17 @@ class WebAppGenerator:
             "from fastapi.middleware.cors import CORSMiddleware\n"
             + ("from app.routes import router\n" if models else "")
             + "\n"
-            f"app = FastAPI(title=\"{app_name} API\", version=\"0.1.0\")\n\n"
+            f'app = FastAPI(title="{app_name} API", version="0.1.0")\n\n'
             "app.add_middleware(\n"
             "    CORSMiddleware,\n"
-            "    allow_origins=[\"http://localhost:3000\", \"http://localhost:5173\"],\n"
+            '    allow_origins=["http://localhost:3000", "http://localhost:5173"],\n'
             "    allow_credentials=True,\n"
-            "    allow_methods=[\"*\"],\n"
-            "    allow_headers=[\"*\"],\n"
-            ")\n\n"
-            + ("app.include_router(router, prefix=\"/api\")\n\n" if models else "")
-            + "\n"
-            "@app.get(\"/health\")\n"
+            '    allow_methods=["*"],\n'
+            '    allow_headers=["*"],\n'
+            ")\n\n" + ('app.include_router(router, prefix="/api")\n\n' if models else "") + "\n"
+            '@app.get("/health")\n'
             "async def health_check():\n"
-            "    return {\"status\": \"ok\"}\n"
+            '    return {"status": "ok"}\n'
         )
 
         # -- app/routes.py ----------------------------------------------
@@ -1014,26 +875,24 @@ class WebAppGenerator:
             snake = self._snake(mname)
             pascal = self._pascal(mname)
             route_blocks.append(
-                f"\n\n@router.get(\"/{snake}s\", response_model=list[{pascal}])\n"
+                f'\n\n@router.get("/{snake}s", response_model=list[{pascal}])\n'
                 f"async def list_{snake}s():\n"
                 f"    return []\n\n\n"
-                f"@router.get(\"/{snake}s/{{item_id}}\", response_model={pascal})\n"
+                f'@router.get("/{snake}s/{{item_id}}", response_model={pascal})\n'
                 f"async def get_{snake}(item_id: int):\n"
                 '    return {"id": "item_id"}\n\n\n'
-                f"@router.post(\"/{snake}s\", response_model={pascal}, status_code=201)\n"
+                f'@router.post("/{snake}s", response_model={pascal}, status_code=201)\n'
                 f"async def create_{snake}(item: {pascal}):\n"
                 f"    return item\n\n\n"
-                f"@router.put(\"/{snake}s/{{item_id}}\", response_model={pascal})\n"
+                f'@router.put("/{snake}s/{{item_id}}", response_model={pascal})\n'
                 f"async def update_{snake}(item_id: int, item: {pascal}):\n"
                 f"    return item\n\n\n"
-                f"@router.delete(\"/{snake}s/{{item_id}}\", status_code=204)\n"
+                f'@router.delete("/{snake}s/{{item_id}}", status_code=204)\n'
                 f"async def delete_{snake}(item_id: int):\n"
                 f"    return None\n"
             )
 
-        model_imports = ", ".join(
-            self._pascal(m.get("name", "Item")) for m in models
-        )
+        model_imports = ", ".join(self._pascal(m.get("name", "Item")) for m in models)
         files["backend/app/routes.py"] = (
             "from fastapi import APIRouter\n"
             + (f"from app.models import {model_imports}\n" if models else "")
@@ -1052,9 +911,7 @@ class WebAppGenerator:
                 ftype = field.get("type", "str")
                 field_lines.append(f"    {fname}: {ftype}")
             body = "\n".join(field_lines) if field_lines else "    pass"
-            model_classes.append(
-                f"\n\nclass {mname}(BaseModel):\n{body}\n"
-            )
+            model_classes.append(f"\n\nclass {mname}(BaseModel):\n{body}\n")
 
         files["backend/app/models.py"] = (
             "from pydantic import BaseModel\n"
@@ -1069,8 +926,8 @@ class WebAppGenerator:
             "from sqlalchemy.ext.declarative import declarative_base\n"
             "from sqlalchemy.orm import sessionmaker\n\n"
             "DATABASE_URL = os.getenv(\n"
-            "    \"DATABASE_URL\",\n"
-            "    \"postgresql://postgres:postgres@localhost:5432/" + self._snake(app_name) + "\",\n"
+            '    "DATABASE_URL",\n'
+            '    "postgresql://postgres:postgres@localhost:5432/' + self._snake(app_name) + '",\n'
             ")\n\n"
             "engine = create_engine(DATABASE_URL)\n"
             "SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)\n"
@@ -1090,23 +947,23 @@ class WebAppGenerator:
             "from typing import Optional\n\n"
             "from fastapi import Depends, HTTPException, status\n"
             "from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer\n\n"
-            "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"change-me-in-production\")\n"
-            "ALGORITHM = \"HS256\"\n"
+            'SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")\n'
+            'ALGORITHM = "HS256"\n'
             "ACCESS_TOKEN_EXPIRE_MINUTES = 30\n\n"
             "security = HTTPBearer()\n\n\n"
             "def create_access_token(\n"
             "    data: dict, expires_delta: Optional[timedelta] = None\n"
             ") -> str:\n"
-            "    \"\"\"Create a JWT access token.\"\"\"\n"
+            '    """Create a JWT access token."""\n'
             "    import jwt\n\n"
             "    to_encode = data.copy()\n"
             "    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))\n"
-            "    to_encode.update({\"exp\": expire})\n"
+            '    to_encode.update({"exp": expire})\n'
             "    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)\n\n\n"
             "def verify_token(\n"
             "    credentials: HTTPAuthorizationCredentials = Depends(security),\n"
             ") -> dict:\n"
-            "    \"\"\"Verify a JWT token from the Authorization header.\"\"\"\n"
+            '    """Verify a JWT token from the Authorization header."""\n'
             "    import jwt\n\n"
             "    try:\n"
             "        payload = jwt.decode(\n"
@@ -1116,7 +973,7 @@ class WebAppGenerator:
             "    except jwt.PyJWTError:\n"
             "        raise HTTPException(\n"
             "            status_code=status.HTTP_401_UNAUTHORIZED,\n"
-            "            detail=\"Invalid authentication credentials\",\n"
+            '            detail="Invalid authentication credentials",\n'
             "        )\n"
         )
 
@@ -1156,13 +1013,13 @@ class WebAppGenerator:
             "def create_app():\n"
             f"    app = Flask(__name__)\n"
             f"    app.config.from_object('config.Config')\n"
-            "    CORS(app, origins=[\"http://localhost:3000\", \"http://localhost:5173\"])\n"
-            "    app.register_blueprint(routes_bp, url_prefix=\"/api\")\n\n"
-            "    @app.route(\"/health\")\n"
+            '    CORS(app, origins=["http://localhost:3000", "http://localhost:5173"])\n'
+            '    app.register_blueprint(routes_bp, url_prefix="/api")\n\n'
+            '    @app.route("/health")\n'
             "    def health_check():\n"
-            "        return {\"status\": \"ok\"}\n\n"
+            '        return {"status": "ok"}\n\n'
             "    return app\n\n\n"
-            "if __name__ == \"__main__\":\n"
+            'if __name__ == "__main__":\n'
             "    app = create_app()\n"
             "    app.run(debug=True, port=8000)\n"
         )
@@ -1173,29 +1030,27 @@ class WebAppGenerator:
             mname = model.get("name", "Item")
             snake = self._snake(mname)
             route_blocks.append(
-                f"\n\n@bp.route(\"/{snake}s\", methods=[\"GET\"])\n"
+                f'\n\n@bp.route("/{snake}s", methods=["GET"])\n'
                 f"def list_{snake}s():\n"
                 f"    return jsonify([])\n\n\n"
-                f"@bp.route(\"/{snake}s/<int:item_id>\", methods=[\"GET\"])\n"
+                f'@bp.route("/{snake}s/<int:item_id>", methods=["GET"])\n'
                 f"def get_{snake}(item_id):\n"
-                f"    return jsonify({{\"id\": item_id}})\n\n\n"
-                f"@bp.route(\"/{snake}s\", methods=[\"POST\"])\n"
+                f'    return jsonify({{"id": item_id}})\n\n\n'
+                f'@bp.route("/{snake}s", methods=["POST"])\n'
                 f"def create_{snake}():\n"
                 f"    data = request.get_json()\n"
                 f"    return jsonify(data), 201\n\n\n"
-                f"@bp.route(\"/{snake}s/<int:item_id>\", methods=[\"PUT\"])\n"
+                f'@bp.route("/{snake}s/<int:item_id>", methods=["PUT"])\n'
                 f"def update_{snake}(item_id):\n"
                 f"    data = request.get_json()\n"
                 f"    return jsonify(data)\n\n\n"
-                f"@bp.route(\"/{snake}s/<int:item_id>\", methods=[\"DELETE\"])\n"
+                f'@bp.route("/{snake}s/<int:item_id>", methods=["DELETE"])\n'
                 f"def delete_{snake}(item_id):\n"
-                f"    return \"\", 204\n"
+                f'    return "", 204\n'
             )
 
         files["backend/routes.py"] = (
-            "from flask import Blueprint, jsonify, request\n\n"
-            "bp = Blueprint(\"api\", __name__)\n"
-            + "".join(route_blocks)
+            'from flask import Blueprint, jsonify, request\n\nbp = Blueprint("api", __name__)\n' + "".join(route_blocks)
         )
 
         # -- models.py --------------------------------------------------
@@ -1218,25 +1073,23 @@ class WebAppGenerator:
             body = "\n".join(col_lines) if col_lines else "    pass"
             model_classes.append(
                 f"\n\nclass {mname}(db.Model):\n"
-                f"    __tablename__ = \"{self._snake(mname)}s\"\n"
+                f'    __tablename__ = "{self._snake(mname)}s"\n'
                 f"    id = db.Column(db.Integer, primary_key=True)\n"
                 f"{body}\n"
             )
 
-        files["backend/models.py"] = (
-            "from flask_sqlalchemy import SQLAlchemy\n\n"
-            "db = SQLAlchemy()\n"
-            + "".join(model_classes)
+        files["backend/models.py"] = "from flask_sqlalchemy import SQLAlchemy\n\ndb = SQLAlchemy()\n" + "".join(
+            model_classes
         )
 
         # -- config.py --------------------------------------------------
         files["backend/config.py"] = (
             "import os\n\n\n"
             "class Config:\n"
-            f"    SECRET_KEY = os.getenv(\"SECRET_KEY\", \"change-me-in-production\")\n"
+            f'    SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")\n'
             f"    SQLALCHEMY_DATABASE_URI = os.getenv(\n"
-            f"        \"DATABASE_URL\",\n"
-            f"        \"postgresql://postgres:postgres@localhost:5432/{self._snake(app_name)}\",\n"
+            f'        "DATABASE_URL",\n'
+            f'        "postgresql://postgres:postgres@localhost:5432/{self._snake(app_name)}",\n'
             f"    )\n"
             f"    SQLALCHEMY_TRACK_MODIFICATIONS = False\n"
         )
@@ -1284,9 +1137,7 @@ class WebAppGenerator:
             "const PORT = process.env.PORT || 8000;\n\n"
             "app.use(cors({ origin: ['http://localhost:3000', 'http://localhost:5173'] }));\n"
             "app.use(express.json());\n\n"
-            "const router = express.Router();\n"
-            + "".join(route_blocks)
-            + "\napp.use('/api', router);\n\n"
+            "const router = express.Router();\n" + "".join(route_blocks) + "\napp.use('/api', router);\n\n"
             "app.get('/health', (_req, res) => res.json({ status: 'ok' }));\n\n"
             "app.listen(PORT, () => {\n"
             f"  console.log(`{app_name} API running on port ${{PORT}}`);\n"
@@ -1343,25 +1194,20 @@ class WebAppGenerator:
                 field_lines.append(f"    {fname} = {dj_type}")
             body = "\n".join(field_lines) if field_lines else "    pass"
             model_classes.append(
-                f"\n\nclass {mname}(models.Model):\n{body}\n\n"
-                f"    def __str__(self):\n"
-                f"        return str(self.pk)\n"
+                f"\n\nclass {mname}(models.Model):\n{body}\n\n    def __str__(self):\n        return str(self.pk)\n"
             )
 
-        files[f"backend/{project_snake}/models.py"] = (
-            "from django.db import models\n"
-            + "".join(model_classes)
-        )
+        files[f"backend/{project_snake}/models.py"] = "from django.db import models\n" + "".join(model_classes)
 
         files[f"backend/{project_snake}/urls.py"] = (
             "from django.contrib import admin\n"
             "from django.urls import path\n"
             "from django.http import JsonResponse\n\n\n"
             "def health_check(request):\n"
-            "    return JsonResponse({\"status\": \"ok\"})\n\n\n"
+            '    return JsonResponse({"status": "ok"})\n\n\n'
             "urlpatterns = [\n"
-            "    path(\"admin/\", admin.site.urls),\n"
-            "    path(\"health\", health_check),\n"
+            '    path("admin/", admin.site.urls),\n'
+            '    path("health", health_check),\n'
             "]\n"
         )
 
@@ -1403,10 +1249,7 @@ class WebAppGenerator:
         )
 
         files["backend/requirements.txt"] = (
-            "django>=5.0.0\n"
-            "djangorestframework>=3.14.0\n"
-            "django-cors-headers>=4.3.0\n"
-            "psycopg2-binary>=2.9.0\n"
+            "django>=5.0.0\ndjangorestframework>=3.14.0\ndjango-cors-headers>=4.3.0\npsycopg2-binary>=2.9.0\n"
         )
 
         files["backend/manage.py"] = (
@@ -1488,10 +1331,7 @@ class WebAppGenerator:
         >>> WebAppGenerator._pascal("user profile")
         'UserProfile'
         """
-        return "".join(
-            w.capitalize()
-            for w in name.replace("-", " ").replace("_", " ").split()
-        )
+        return "".join(w.capitalize() for w in name.replace("-", " ").replace("_", " ").split())
 
     @staticmethod
     def _snake(name: str) -> str:

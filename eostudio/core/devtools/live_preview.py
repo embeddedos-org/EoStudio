@@ -10,6 +10,7 @@ Features:
 - Screenshot capture for design comparison
 - Performance metrics overlay (FPS, memory, render time)
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -92,8 +93,19 @@ class FileWatcher:
     DEBOUNCE_MS = 200
     IGNORED_DIRS = {".git", "node_modules", "__pycache__", ".next", "dist", "build"}
     WATCHED_EXTENSIONS = {
-        ".py", ".ts", ".tsx", ".js", ".jsx", ".html", ".css", ".scss",
-        ".dart", ".json", ".yaml", ".yml", ".toml",
+        ".py",
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".html",
+        ".css",
+        ".scss",
+        ".dart",
+        ".json",
+        ".yaml",
+        ".yml",
+        ".toml",
     }
 
     def __init__(self, workspace: str, on_change: Callable[[List[str]], None]) -> None:
@@ -182,8 +194,11 @@ class LivePreviewEngine:
         pid = proc.pid if proc else -1
         url = f"http://{config.host}:{config.port}"
         session = PreviewSession(
-            session_id=session_id, config=config,
-            url=url, pid=pid, started_at=time.time(),
+            session_id=session_id,
+            config=config,
+            url=url,
+            pid=pid,
+            started_at=time.time(),
         )
         self._sessions[session_id] = session
         watcher = FileWatcher(
@@ -223,13 +238,10 @@ class LivePreviewEngine:
         cmd_map: Dict[PreviewFramework, List[str]] = {
             PreviewFramework.REACT: ["npx", "vite", "--port", str(config.port), "--host"],
             PreviewFramework.NEXT_JS: ["npx", "next", "dev", "-p", str(config.port)],
-            PreviewFramework.FLUTTER: ["flutter", "run", "-d", "web-server",
-                                       "--web-port", str(config.port)],
+            PreviewFramework.FLUTTER: ["flutter", "run", "-d", "web-server", "--web-port", str(config.port)],
             PreviewFramework.HTML: ["python3", "-m", "http.server", str(config.port)],
             PreviewFramework.FLASK: ["flask", "run", "--port", str(config.port), "--reload"],
-            PreviewFramework.FASTAPI: [
-                "uvicorn", "main:app", "--port", str(config.port), "--reload"
-            ],
+            PreviewFramework.FASTAPI: ["uvicorn", "main:app", "--port", str(config.port), "--reload"],
         }
         cmd = cmd_map.get(config.framework)
         if not cmd:
@@ -237,8 +249,11 @@ class LivePreviewEngine:
         env = {**os.environ, **config.env}
         try:
             proc = subprocess.Popen(
-                cmd, cwd=config.workspace, env=env,
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                cmd,
+                cwd=config.workspace,
+                env=env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
             return proc
         except FileNotFoundError:
@@ -270,10 +285,12 @@ class LivePreviewEngine:
 
     def _check_python_syntax(self, file_path: str) -> Optional[PreviewError]:
         import re
+
         try:
             result = subprocess.run(
                 ["python3", "-m", "py_compile", file_path],
-                capture_output=True, text=True,
+                capture_output=True,
+                text=True,
             )
             if result.returncode != 0:
                 msg = result.stderr.strip()
@@ -290,6 +307,7 @@ class LivePreviewEngine:
         try:
             content = Path(error.file).read_text(encoding="utf-8")
             from eostudio.core.ai.multi_model_router import TaskType
+
             prompt = (
                 f"Fix this Python error in {error.file}:\n"
                 f"Error: {error.message}\n\nCode:\n{content[:800]}\n\n"

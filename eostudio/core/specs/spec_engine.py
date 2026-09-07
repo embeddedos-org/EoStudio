@@ -95,6 +95,7 @@ SPEC_TEMPLATES: Dict[str, Dict[str, Any]] = {
 @dataclass
 class SpecValidationResult:
     """Result of spec validation with gaps identified."""
+
     is_valid: bool = True
     missing_acceptance_criteria: List[str] = field(default_factory=list)
     requirements_without_tasks: List[str] = field(default_factory=list)
@@ -105,7 +106,8 @@ class SpecValidationResult:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "is_valid": self.is_valid, "score": self.score,
+            "is_valid": self.is_valid,
+            "score": self.score,
             "missing_acceptance_criteria": self.missing_acceptance_criteria,
             "requirements_without_tasks": self.requirements_without_tasks,
             "components_without_tests": self.components_without_tests,
@@ -135,13 +137,13 @@ class SpecEngine:
     Supports multi-pass refinement: generate → validate → refine → finalize.
     """
 
-    def __init__(self, llm_client: Optional[LLMClient] = None,
-                 max_refinement_passes: int = 2) -> None:
+    def __init__(self, llm_client: Optional[LLMClient] = None, max_refinement_passes: int = 2) -> None:
         self._client = llm_client or LLMClient(LLMConfig())
         self.max_refinement_passes = max_refinement_passes
 
-    def generate_full_spec(self, prompt: str, framework: str = "react",
-                           project_type: Optional[str] = None) -> Dict[str, Any]:
+    def generate_full_spec(
+        self, prompt: str, framework: str = "react", project_type: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Generate complete spec pipeline with multi-pass refinement.
 
         Pipeline: generate → validate → refine → finalize.
@@ -171,8 +173,7 @@ class SpecEngine:
         spec_data["validation"] = self.validate_spec(spec_data).to_dict()
         return spec_data
 
-    def generate_requirements(self, prompt: str,
-                              template: Optional[Dict[str, Any]] = None) -> List[Requirement]:
+    def generate_requirements(self, prompt: str, template: Optional[Dict[str, Any]] = None) -> List[Requirement]:
         """Generate requirements/user stories from a project description."""
         template_hint = ""
         if template:
@@ -180,18 +181,22 @@ class SpecEngine:
             if defaults:
                 template_hint = (
                     f"\n\nCommon requirements for this type of project "
-                    f"(include these if relevant):\n"
-                    + "\n".join(f"- {r}" for r in defaults)
+                    f"(include these if relevant):\n" + "\n".join(f"- {r}" for r in defaults)
                 )
 
-        messages = [{"role": "user", "content": (
-            f"Generate requirements as JSON array for this project:\n{prompt}\n\n"
-            f"Each requirement: {{id, title, description, type (functional/user_story), "
-            f"priority (must/should/could), acceptance_criteria: [{{description, test_method}}], "
-            f"estimated_effort (S/M/L/XL)}}\n\n"
-            f"IMPORTANT: Every requirement MUST have at least 2 acceptance criteria "
-            f"with concrete, testable conditions.{template_hint}"
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"Generate requirements as JSON array for this project:\n{prompt}\n\n"
+                    f"Each requirement: {{id, title, description, type (functional/user_story), "
+                    f"priority (must/should/could), acceptance_criteria: [{{description, test_method}}], "
+                    f"estimated_effort (S/M/L/XL)}}\n\n"
+                    f"IMPORTANT: Every requirement MUST have at least 2 acceptance criteria "
+                    f"with concrete, testable conditions.{template_hint}"
+                ),
+            }
+        ]
         raw = self._client.chat(messages)
         try:
             data = json.loads(raw)
@@ -201,23 +206,28 @@ class SpecEngine:
             pass
         return self._fallback_requirements(prompt)
 
-    def generate_design_spec(self, prompt: str, requirements: List[Requirement],
-                             template: Optional[Dict[str, Any]] = None) -> DesignSpec:
+    def generate_design_spec(
+        self, prompt: str, requirements: List[Requirement], template: Optional[Dict[str, Any]] = None
+    ) -> DesignSpec:
         """Generate design spec from requirements."""
         req_summary = "\n".join(f"- {r.title}" for r in requirements)
         section_hint = ""
         if template:
             sections = template.get("required_sections", [])
             if sections:
-                section_hint = (
-                    f"\n\nRequired design sections (include all of these):\n"
-                    + "\n".join(f"- {s}" for s in sections)
+                section_hint = f"\n\nRequired design sections (include all of these):\n" + "\n".join(
+                    f"- {s}" for s in sections
                 )
-        messages = [{"role": "user", "content": (
-            f"Generate a design spec as JSON for:\n{prompt}\n\nRequirements:\n{req_summary}\n\n"
-            f"Return: {{project_name, overview, goals:[], non_goals:[], target_users:[], "
-            f"sections:[{{title, content}}], open_questions:[], risks:[{{risk, mitigation}}]}}{section_hint}"
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"Generate a design spec as JSON for:\n{prompt}\n\nRequirements:\n{req_summary}\n\n"
+                    f"Return: {{project_name, overview, goals:[], non_goals:[], target_users:[], "
+                    f"sections:[{{title, content}}], open_questions:[], risks:[{{risk, mitigation}}]}}{section_hint}"
+                ),
+            }
+        ]
         raw = self._client.chat(messages)
         try:
             data = json.loads(raw)
@@ -227,19 +237,25 @@ class SpecEngine:
             pass
         return self._fallback_design_spec(prompt)
 
-    def generate_tech_spec(self, design: DesignSpec, framework: str = "react",
-                           template: Optional[Dict[str, Any]] = None) -> TechSpec:
+    def generate_tech_spec(
+        self, design: DesignSpec, framework: str = "react", template: Optional[Dict[str, Any]] = None
+    ) -> TechSpec:
         """Generate tech spec from design spec."""
-        messages = [{"role": "user", "content": (
-            f"Generate a tech spec as JSON for: {design.project_name}\n"
-            f"Overview: {design.overview}\nFramework: {framework}\n\n"
-            f"Return: {{project_name, architecture_overview, "
-            f"tech_stack:{{frontend:[], backend:[], database:[], infra:[]}}, "
-            f"components:[{{name, description, tech_stack:[], responsibilities:[], "
-            f"file_structure:[]}}], "
-            f"security:[], performance_targets:{{}}, testing_strategy:{{}}, "
-            f"deployment:{{}}}}"
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"Generate a tech spec as JSON for: {design.project_name}\n"
+                    f"Overview: {design.overview}\nFramework: {framework}\n\n"
+                    f"Return: {{project_name, architecture_overview, "
+                    f"tech_stack:{{frontend:[], backend:[], database:[], infra:[]}}, "
+                    f"components:[{{name, description, tech_stack:[], responsibilities:[], "
+                    f"file_structure:[]}}], "
+                    f"security:[], performance_targets:{{}}, testing_strategy:{{}}, "
+                    f"deployment:{{}}}}"
+                ),
+            }
+        ]
         raw = self._client.chat(messages)
         try:
             data = json.loads(raw)
@@ -314,8 +330,7 @@ class SpecEngine:
                 penalty += 4.0
 
         # 5. Design spec should have key sections
-        sections = [s.get("title", "").lower()
-                    for s in spec_data.get("design_spec", {}).get("sections", [])]
+        sections = [s.get("title", "").lower() for s in spec_data.get("design_spec", {}).get("sections", [])]
         for expected in ["architecture", "data model", "user flow"]:
             if not any(expected in s for s in sections):
                 result.missing_sections.append(expected)
@@ -325,24 +340,28 @@ class SpecEngine:
         result.is_valid = result.score >= 70.0
         return result
 
-    def refine_spec(self, spec_data: Dict[str, Any],
-                    validation: SpecValidationResult) -> Dict[str, Any]:
+    def refine_spec(self, spec_data: Dict[str, Any], validation: SpecValidationResult) -> Dict[str, Any]:
         """Ask AI to fill gaps identified by validation."""
         gap_text = validation.gap_summary
         if not gap_text or gap_text == "No gaps found":
             return spec_data
 
-        messages = [{"role": "user", "content": (
-            f"The following spec has validation gaps:\n{gap_text}\n\n"
-            f"Current spec (abbreviated):\n"
-            f"Requirements: {json.dumps(spec_data.get('requirements', [])[:5], indent=1)[:1500]}\n"
-            f"Design sections: {json.dumps([s.get('title') for s in spec_data.get('design_spec', {}).get('sections', [])])}\n\n"
-            f"Fix the gaps:\n"
-            f"1. Add missing acceptance criteria (at least 2 per requirement)\n"
-            f"2. Add missing design sections\n"
-            f"3. Ensure user stories follow INVEST (Independent, Negotiable, Valuable, Estimable, Small, Testable)\n\n"
-            f"Return JSON with keys: requirements (array), extra_sections (array of {{title, content}})"
-        )}]
+        messages = [
+            {
+                "role": "user",
+                "content": (
+                    f"The following spec has validation gaps:\n{gap_text}\n\n"
+                    f"Current spec (abbreviated):\n"
+                    f"Requirements: {json.dumps(spec_data.get('requirements', [])[:5], indent=1)[:1500]}\n"
+                    f"Design sections: {json.dumps([s.get('title') for s in spec_data.get('design_spec', {}).get('sections', [])])}\n\n"
+                    f"Fix the gaps:\n"
+                    f"1. Add missing acceptance criteria (at least 2 per requirement)\n"
+                    f"2. Add missing design sections\n"
+                    f"3. Ensure user stories follow INVEST (Independent, Negotiable, Valuable, Estimable, Small, Testable)\n\n"
+                    f"Return JSON with keys: requirements (array), extra_sections (array of {{title, content}})"
+                ),
+            }
+        ]
 
         raw = self._client.chat(messages)
         try:
@@ -365,8 +384,7 @@ class SpecEngine:
 
         # Merge extra design sections
         if isinstance(fixes.get("extra_sections"), list):
-            existing_titles = {s.get("title", "").lower()
-                             for s in spec_data.get("design_spec", {}).get("sections", [])}
+            existing_titles = {s.get("title", "").lower() for s in spec_data.get("design_spec", {}).get("sections", [])}
             for section in fixes["extra_sections"]:
                 if section.get("title", "").lower() not in existing_titles:
                     spec_data.setdefault("design_spec", {}).setdefault("sections", []).append(section)
@@ -436,22 +454,38 @@ class SpecEngine:
         words = prompt.split()
         name = " ".join(words[:3]) if len(words) >= 3 else prompt
         reqs = [
-            Requirement(id="REQ-001", title=f"Core {name} functionality",
-                       description=f"Implement the main features described: {prompt}",
-                       req_type=RequirementType.FUNCTIONAL, priority=RequirementPriority.MUST,
-                       estimated_effort="L"),
-            Requirement(id="REQ-002", title="User authentication",
-                       description="User login, signup, and session management",
-                       req_type=RequirementType.FUNCTIONAL, priority=RequirementPriority.MUST,
-                       estimated_effort="M"),
-            Requirement(id="REQ-003", title="Responsive UI",
-                       description="Mobile-first responsive design",
-                       req_type=RequirementType.NON_FUNCTIONAL, priority=RequirementPriority.SHOULD,
-                       estimated_effort="M"),
-            Requirement(id="REQ-004", title="API endpoints",
-                       description="REST API for all CRUD operations",
-                       req_type=RequirementType.FUNCTIONAL, priority=RequirementPriority.MUST,
-                       estimated_effort="L"),
+            Requirement(
+                id="REQ-001",
+                title=f"Core {name} functionality",
+                description=f"Implement the main features described: {prompt}",
+                req_type=RequirementType.FUNCTIONAL,
+                priority=RequirementPriority.MUST,
+                estimated_effort="L",
+            ),
+            Requirement(
+                id="REQ-002",
+                title="User authentication",
+                description="User login, signup, and session management",
+                req_type=RequirementType.FUNCTIONAL,
+                priority=RequirementPriority.MUST,
+                estimated_effort="M",
+            ),
+            Requirement(
+                id="REQ-003",
+                title="Responsive UI",
+                description="Mobile-first responsive design",
+                req_type=RequirementType.NON_FUNCTIONAL,
+                priority=RequirementPriority.SHOULD,
+                estimated_effort="M",
+            ),
+            Requirement(
+                id="REQ-004",
+                title="API endpoints",
+                description="REST API for all CRUD operations",
+                req_type=RequirementType.FUNCTIONAL,
+                priority=RequirementPriority.MUST,
+                estimated_effort="L",
+            ),
         ]
         for r in reqs:
             r.add_criteria(f"{r.title} works as expected", "integration")
@@ -468,22 +502,30 @@ class SpecEngine:
         return spec
 
     def _fallback_tech_spec(self, design: DesignSpec, framework: str) -> TechSpec:
-        spec = TechSpec(project_name=design.project_name,
-                       architecture_overview="Modern web application with component-based frontend and REST API backend.")
+        spec = TechSpec(
+            project_name=design.project_name,
+            architecture_overview="Modern web application with component-based frontend and REST API backend.",
+        )
         spec.tech_stack = {
             "frontend": [framework, "TypeScript", "Tailwind CSS", "Framer Motion"],
             "backend": ["FastAPI", "Python 3.10+", "SQLAlchemy"],
             "database": ["PostgreSQL", "Redis"],
             "infra": ["Docker", "Vercel/Netlify"],
         }
-        frontend = spec.add_component("Frontend", description="React SPA with routing and state management",
-                                       tech_stack=[framework, "TypeScript"],
-                                       responsibilities=["UI rendering", "Client-side routing", "API calls"],
-                                       file_structure=["src/App.tsx", "src/pages/", "src/components/", "src/hooks/"])
-        backend = spec.add_component("Backend", description="REST API server",
-                                      tech_stack=["FastAPI", "Python"],
-                                      responsibilities=["Business logic", "Authentication", "Database access"],
-                                      file_structure=["api/main.py", "api/routes/", "api/models/", "api/services/"])
+        frontend = spec.add_component(
+            "Frontend",
+            description="React SPA with routing and state management",
+            tech_stack=[framework, "TypeScript"],
+            responsibilities=["UI rendering", "Client-side routing", "API calls"],
+            file_structure=["src/App.tsx", "src/pages/", "src/components/", "src/hooks/"],
+        )
+        backend = spec.add_component(
+            "Backend",
+            description="REST API server",
+            tech_stack=["FastAPI", "Python"],
+            responsibilities=["Business logic", "Authentication", "Database access"],
+            file_structure=["api/main.py", "api/routes/", "api/models/", "api/services/"],
+        )
         spec.security = ["JWT authentication", "CORS configuration", "Input validation", "SQL injection prevention"]
         spec.testing_strategy = {"unit": "pytest + jest", "integration": "API tests", "e2e": "Playwright"}
         spec.deployment = {"platform": "Docker + Vercel", "ci": "GitHub Actions"}

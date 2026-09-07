@@ -1,15 +1,19 @@
 """Simulation Editor — MATLAB/Simulink-style block diagram simulation."""
 
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -51,6 +55,7 @@ _CAT_ORDER = ["Source", "Math", "Logic", "Limit", "Sink", "Misc"]
 
 class SimulationEditor(tk.Frame):
     """MATLAB/Simulink-style block-diagram simulation editor."""
+
     def __init__(self, master: tk.Widget, bg: str = "#1e1e2e", fg: str = "#cdd6f4", **kw: Any):
         super().__init__(master, bg=bg, **kw)
         self._bg, self._fg = bg, fg
@@ -73,30 +78,41 @@ class SimulationEditor(tk.Frame):
         left = tk.Frame(self, bg=self._bg, width=160)
         left.pack(side=tk.LEFT, fill=tk.Y)
         left.pack_propagate(False)
-        tk.Label(left, text="Blocks", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 10, "bold"), anchor=tk.W).pack(fill=tk.X, padx=8, pady=(8, 2))
+        tk.Label(left, text="Blocks", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold"), anchor=tk.W).pack(
+            fill=tk.X, padx=8, pady=(8, 2)
+        )
         sf = tk.Frame(left, bg=self._bg)
         sf.pack(fill=tk.BOTH, expand=True)
         cur_cat = ""
         for bid, label, cat, clr, _ in BLOCK_CATALOG:
             if cat != cur_cat:
                 cur_cat = cat
-                tk.Label(sf, text=cat, bg=self._bg, fg="#6c7086",
-                         font=("Segoe UI", 8, "bold"), anchor=tk.W).pack(fill=tk.X, padx=8, pady=(6, 1))
-            b = tk.Button(sf, text=label, bg="#313244", fg=clr, relief=tk.FLAT,
-                          font=("Segoe UI", 8), anchor=tk.W, padx=6, pady=1)
+                tk.Label(sf, text=cat, bg=self._bg, fg="#6c7086", font=("Segoe UI", 8, "bold"), anchor=tk.W).pack(
+                    fill=tk.X, padx=8, pady=(6, 1)
+                )
+            b = tk.Button(
+                sf, text=label, bg="#313244", fg=clr, relief=tk.FLAT, font=("Segoe UI", 8), anchor=tk.W, padx=6, pady=1
+            )
             b.pack(fill=tk.X, padx=4, pady=0)
             b.bind("<ButtonPress-1>", lambda e, t=bid: self._set_tool(t))
         ttk.Separator(left, orient=tk.HORIZONTAL).pack(fill=tk.X, padx=4, pady=4)
-        tk.Button(left, text="Connect Mode", bg="#f9e2af", fg="#1e1e2e", relief=tk.FLAT,
-                  font=("Segoe UI", 8), command=lambda: self._set_tool("__connect__")).pack(fill=tk.X, padx=8, pady=2)
+        tk.Button(
+            left,
+            text="Connect Mode",
+            bg="#f9e2af",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 8),
+            command=lambda: self._set_tool("__connect__"),
+        ).pack(fill=tk.X, padx=8, pady=2)
 
         # right props
         right = tk.Frame(self, bg=self._bg, width=210)
         right.pack(side=tk.RIGHT, fill=tk.Y)
         right.pack_propagate(False)
-        tk.Label(right, text="Properties", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 11, "bold"), anchor=tk.W).pack(fill=tk.X, padx=8, pady=(8, 4))
+        tk.Label(right, text="Properties", bg=self._bg, fg=self._fg, font=("Segoe UI", 11, "bold"), anchor=tk.W).pack(
+            fill=tk.X, padx=8, pady=(8, 4)
+        )
         self._pf = tk.Frame(right, bg=self._bg)
         self._pf.pack(fill=tk.BOTH, expand=True, padx=4)
         self._nsl = tk.Label(self._pf, text="No block selected", bg=self._bg, fg="#6c7086", font=("Segoe UI", 9))
@@ -109,18 +125,40 @@ class SimulationEditor(tk.Frame):
         # sim controls toolbar
         ctrl = tk.Frame(center, bg="#181825")
         ctrl.pack(fill=tk.X)
-        for txt, cmd in [("▶ Run", self._run), ("⏸ Pause", self._pause),
-                         ("⏹ Stop", self._stop), ("⏭ Step", self._step), ("↺ Reset", self._reset)]:
-            tk.Button(ctrl, text=txt, bg="#313244", fg=self._fg, relief=tk.FLAT,
-                      font=("Segoe UI", 8), padx=6, command=cmd).pack(side=tk.LEFT, padx=2, pady=2)
+        for txt, cmd in [
+            ("▶ Run", self._run),
+            ("⏸ Pause", self._pause),
+            ("⏹ Stop", self._stop),
+            ("⏭ Step", self._step),
+            ("↺ Reset", self._reset),
+        ]:
+            tk.Button(
+                ctrl, text=txt, bg="#313244", fg=self._fg, relief=tk.FLAT, font=("Segoe UI", 8), padx=6, command=cmd
+            ).pack(side=tk.LEFT, padx=2, pady=2)
         tk.Label(ctrl, text="dt:", bg="#181825", fg=self._fg, font=("Segoe UI", 8)).pack(side=tk.LEFT, padx=(8, 2))
         self._dt_var = tk.StringVar(value=str(self._sim_dt))
-        tk.Entry(ctrl, textvariable=self._dt_var, width=6, bg="#313244", fg=self._fg,
-                 font=("Consolas", 8), relief=tk.FLAT, insertbackground=self._fg).pack(side=tk.LEFT)
+        tk.Entry(
+            ctrl,
+            textvariable=self._dt_var,
+            width=6,
+            bg="#313244",
+            fg=self._fg,
+            font=("Consolas", 8),
+            relief=tk.FLAT,
+            insertbackground=self._fg,
+        ).pack(side=tk.LEFT)
         tk.Label(ctrl, text="dur:", bg="#181825", fg=self._fg, font=("Segoe UI", 8)).pack(side=tk.LEFT, padx=(8, 2))
         self._dur_var = tk.StringVar(value=str(self._sim_dur))
-        tk.Entry(ctrl, textvariable=self._dur_var, width=6, bg="#313244", fg=self._fg,
-                 font=("Consolas", 8), relief=tk.FLAT, insertbackground=self._fg).pack(side=tk.LEFT)
+        tk.Entry(
+            ctrl,
+            textvariable=self._dur_var,
+            width=6,
+            bg="#313244",
+            fg=self._fg,
+            font=("Consolas", 8),
+            relief=tk.FLAT,
+            insertbackground=self._fg,
+        ).pack(side=tk.LEFT)
 
         # paned: canvas top, scope+console bottom
         pw = tk.PanedWindow(center, orient=tk.VERTICAL, bg=self._bg, sashwidth=4)
@@ -141,15 +179,21 @@ class SimulationEditor(tk.Frame):
         self._scope_cv.pack(fill=tk.BOTH, expand=True)
         console_frame = tk.Frame(bnb, bg=self._bg)
         bnb.add(console_frame, text="Math Console")
-        self._console = tk.Text(console_frame, height=6, bg="#181825", fg=self._fg,
-                                font=("Consolas", 9), relief=tk.FLAT, insertbackground=self._fg)
+        self._console = tk.Text(
+            console_frame,
+            height=6,
+            bg="#181825",
+            fg=self._fg,
+            font=("Consolas", 9),
+            relief=tk.FLAT,
+            insertbackground=self._fg,
+        )
         self._console.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
         self._console.insert("1.0", ">> ")
         self._console.bind("<Return>", self._eval_console)
 
         # status bar
-        self._status = tk.Label(self, text="", bg="#181825", fg="#6c7086",
-                                font=("Consolas", 9), anchor=tk.W, padx=8)
+        self._status = tk.Label(self, text="", bg="#181825", fg="#6c7086", font=("Consolas", 9), anchor=tk.W, padx=8)
         self._status.pack(side=tk.BOTTOM, fill=tk.X)
         self._update_status()
 
@@ -173,9 +217,18 @@ class SimulationEditor(tk.Frame):
         if self._tool:
             cat = self._cat_lookup(self._tool)
             if cat:
-                self._blocks.append({"type": cat[0], "label": cat[1], "x": ev.x, "y": ev.y,
-                                     "w": 80, "h": 40, "color": cat[3],
-                                     "params": dict(cat[4])})
+                self._blocks.append(
+                    {
+                        "type": cat[0],
+                        "label": cat[1],
+                        "x": ev.x,
+                        "y": ev.y,
+                        "w": 80,
+                        "h": 40,
+                        "color": cat[3],
+                        "params": dict(cat[4]),
+                    }
+                )
                 self._sel = len(self._blocks) - 1
                 self._tool = None
                 self._sim_data[self._sel] = []
@@ -230,15 +283,26 @@ class SimulationEditor(tk.Frame):
             sel = i == self._sel
             ol = "#f9e2af" if sel else b["color"]
             lw = 2 if sel else 1
-            c.create_rectangle(b["x"], b["y"], b["x"] + b["w"], b["y"] + b["h"],
-                               outline=ol, fill="#313244", width=lw)
-            c.create_text(b["x"] + b["w"] // 2, b["y"] + b["h"] // 2,
-                          text=b["label"], fill=b["color"], font=("Segoe UI", 8, "bold"))
+            c.create_rectangle(b["x"], b["y"], b["x"] + b["w"], b["y"] + b["h"], outline=ol, fill="#313244", width=lw)
+            c.create_text(
+                b["x"] + b["w"] // 2,
+                b["y"] + b["h"] // 2,
+                text=b["label"],
+                fill=b["color"],
+                font=("Segoe UI", 8, "bold"),
+            )
             # ports
-            c.create_oval(b["x"] - 4, b["y"] + b["h"] // 2 - 4,
-                          b["x"] + 4, b["y"] + b["h"] // 2 + 4, fill="#585b70", outline=ol)
-            c.create_oval(b["x"] + b["w"] - 4, b["y"] + b["h"] // 2 - 4,
-                          b["x"] + b["w"] + 4, b["y"] + b["h"] // 2 + 4, fill="#585b70", outline=ol)
+            c.create_oval(
+                b["x"] - 4, b["y"] + b["h"] // 2 - 4, b["x"] + 4, b["y"] + b["h"] // 2 + 4, fill="#585b70", outline=ol
+            )
+            c.create_oval(
+                b["x"] + b["w"] - 4,
+                b["y"] + b["h"] // 2 - 4,
+                b["x"] + b["w"] + 4,
+                b["y"] + b["h"] // 2 + 4,
+                fill="#585b70",
+                outline=ol,
+            )
 
     # -- properties --
     def _clr_props(self) -> None:
@@ -254,23 +318,45 @@ class SimulationEditor(tk.Frame):
             self._nsl.pack(pady=20)
             return
         b = self._blocks[self._sel]
-        rows = [("Type", b["type"], True), ("Label", b["label"], False),
-                ("X", str(b["x"]), False), ("Y", str(b["y"]), False)]
+        rows = [
+            ("Type", b["type"], True),
+            ("Label", b["label"], False),
+            ("X", str(b["x"]), False),
+            ("Y", str(b["y"]), False),
+        ]
         for pk, pv in b["params"].items():
             rows.append((pk.title(), str(pv), False))
         for lbl, val, ro in rows:
             row = tk.Frame(self._pf, bg=self._bg)
             row.pack(fill=tk.X, padx=4, pady=1)
             self._pw.append(row)
-            tk.Label(row, text=lbl, bg=self._bg, fg=self._fg, font=("Segoe UI", 8), width=10, anchor=tk.W).pack(side=tk.LEFT)
+            tk.Label(row, text=lbl, bg=self._bg, fg=self._fg, font=("Segoe UI", 8), width=10, anchor=tk.W).pack(
+                side=tk.LEFT
+            )
             var = tk.StringVar(value=val)
-            ent = tk.Entry(row, textvariable=var, width=12, bg="#313244", fg=self._fg, font=("Consolas", 8),
-                           relief=tk.FLAT, insertbackground=self._fg, state=tk.DISABLED if ro else tk.NORMAL)
+            ent = tk.Entry(
+                row,
+                textvariable=var,
+                width=12,
+                bg="#313244",
+                fg=self._fg,
+                font=("Consolas", 8),
+                relief=tk.FLAT,
+                insertbackground=self._fg,
+                state=tk.DISABLED if ro else tk.NORMAL,
+            )
             ent.pack(side=tk.LEFT, fill=tk.X, expand=True)
             if not ro:
                 ent.bind("<Return>", lambda e, k=lbl.lower(), v=var: self._pchg(k, v.get()))
-        db = tk.Button(self._pf, text="Delete Block", bg="#f38ba8", fg="#1e1e2e", relief=tk.FLAT,
-                       font=("Segoe UI", 9), command=self._del_block)
+        db = tk.Button(
+            self._pf,
+            text="Delete Block",
+            bg="#f38ba8",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 9),
+            command=self._del_block,
+        )
         db.pack(padx=4, pady=8)
         self._pw.append(db)
 
@@ -316,9 +402,13 @@ class SimulationEditor(tk.Frame):
         bt = b["type"]
         p = b["params"]
         if bt == "sine":
-            return float(p.get("amp", 1.0)) * math.sin(2 * math.pi * float(p.get("freq", 1.0)) * t + float(p.get("phase", 0.0)))
+            return float(p.get("amp", 1.0)) * math.sin(
+                2 * math.pi * float(p.get("freq", 1.0)) * t + float(p.get("phase", 0.0))
+            )
         if bt == "square":
-            return float(p.get("amp", 1.0)) * (1.0 if (t * float(p.get("freq", 1.0))) % 1.0 < float(p.get("duty", 0.5)) else -1.0)
+            return float(p.get("amp", 1.0)) * (
+                1.0 if (t * float(p.get("freq", 1.0))) % 1.0 < float(p.get("duty", 0.5)) else -1.0
+            )
         if bt == "step":
             return float(p.get("amp", 1.0)) if t >= float(p.get("time", 1.0)) else 0.0
         if bt == "noise":
@@ -422,8 +512,9 @@ class SimulationEditor(tk.Frame):
                 pts.extend([px, py])
             if len(pts) >= 4:
                 c.create_line(*pts, fill=clr, width=1)
-            c.create_text(cw - 8, 14 + idx * 12, text=self._blocks[idx]["label"],
-                          fill=clr, font=("Consolas", 7), anchor=tk.E)
+            c.create_text(
+                cw - 8, 14 + idx * 12, text=self._blocks[idx]["label"], fill=clr, font=("Consolas", 7), anchor=tk.E
+            )
 
     # -- console --
     def _eval_console(self, _ev: tk.Event) -> str:
@@ -444,10 +535,31 @@ class SimulationEditor(tk.Frame):
             elif line.startswith("solve_ode"):
                 result = "[solve_ode requires scipy — not available in pure tkinter mode]"
             else:
-                result = str(eval(line, {"__builtins__": {"abs": abs, "round": round, "min": min,
-                                                          "max": max, "sum": sum, "len": len, "range": range, "list": list,
-                                                          "math": math, "sin": math.sin, "cos": math.cos, "sqrt": math.sqrt,
-                                                          "pi": math.pi, "e": math.e, "log": math.log, "exp": math.exp}}))
+                result = str(
+                    eval(
+                        line,
+                        {
+                            "__builtins__": {
+                                "abs": abs,
+                                "round": round,
+                                "min": min,
+                                "max": max,
+                                "sum": sum,
+                                "len": len,
+                                "range": range,
+                                "list": list,
+                                "math": math,
+                                "sin": math.sin,
+                                "cos": math.cos,
+                                "sqrt": math.sqrt,
+                                "pi": math.pi,
+                                "e": math.e,
+                                "log": math.log,
+                                "exp": math.exp,
+                            }
+                        },
+                    )
+                )
         except Exception as exc:
             result = f"Error: {exc}"
         self._console.insert(tk.END, f"\n{result}\n>> ")
@@ -455,4 +567,6 @@ class SimulationEditor(tk.Frame):
         return "break"
 
     def _update_status(self) -> None:
-        self._status.config(text=f"Time: {self._sim_t:.3f}s  |  dt: {self._sim_dt}  |  State: {self._sim_state}  |  Blocks: {len(self._blocks)}")
+        self._status.config(
+            text=f"Time: {self._sim_t:.3f}s  |  dt: {self._sim_dt}  |  State: {self._sim_state}  |  Blocks: {len(self._blocks)}"
+        )

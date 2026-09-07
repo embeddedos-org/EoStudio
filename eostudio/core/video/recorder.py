@@ -18,6 +18,7 @@ class RecordingState(Enum):
 @dataclass
 class RecordingConfig:
     """Configuration for screen recording."""
+
     fps: int = 30
     width: int = 1920
     height: int = 1080
@@ -28,19 +29,22 @@ class RecordingConfig:
     device_frame: str = "iphone_14"
     background_color: str = "#1a1a2e"
 
-    DEVICE_SIZES: Dict[str, Tuple[int, int]] = field(default_factory=lambda: {
-        "iphone_14": (390, 844),
-        "iphone_15_pro": (393, 852),
-        "pixel_8": (412, 915),
-        "ipad_pro": (1024, 1366),
-        "desktop": (1440, 900),
-        "custom": (0, 0),
-    })
+    DEVICE_SIZES: Dict[str, Tuple[int, int]] = field(
+        default_factory=lambda: {
+            "iphone_14": (390, 844),
+            "iphone_15_pro": (393, 852),
+            "pixel_8": (412, 915),
+            "ipad_pro": (1024, 1366),
+            "desktop": (1440, 900),
+            "custom": (0, 0),
+        }
+    )
 
 
 @dataclass
 class RecordedFrame:
     """A single recorded frame with metadata."""
+
     index: int
     timestamp: float
     screen_data: Dict[str, Any] = field(default_factory=dict)
@@ -92,9 +96,12 @@ class ScreenRecorder:
         self._state = RecordingState.STOPPED
         return list(self._frames)
 
-    def capture_frame(self, screen_data: Dict[str, Any],
-                      cursor: Optional[Tuple[int, int]] = None,
-                      click: Optional[Tuple[int, int]] = None) -> Optional[RecordedFrame]:
+    def capture_frame(
+        self,
+        screen_data: Dict[str, Any],
+        cursor: Optional[Tuple[int, int]] = None,
+        click: Optional[Tuple[int, int]] = None,
+    ) -> Optional[RecordedFrame]:
         """Capture a single frame during recording."""
         if self._state != RecordingState.RECORDING:
             return None
@@ -119,22 +126,22 @@ class ScreenRecorder:
 
         return frame
 
-    def add_annotation(self, text: str, position: Tuple[int, int],
-                       duration: float = 2.0) -> None:
+    def add_annotation(self, text: str, position: Tuple[int, int], duration: float = 2.0) -> None:
         """Add a text annotation at the current frame."""
         if self._frames:
-            self._frames[-1].annotations.append({
-                "text": text,
-                "position": list(position),
-                "duration": duration,
-                "style": {"color": "#ffffff", "font_size": 16, "bg": "rgba(0,0,0,0.7)"},
-            })
+            self._frames[-1].annotations.append(
+                {
+                    "text": text,
+                    "position": list(position),
+                    "duration": duration,
+                    "style": {"color": "#ffffff", "font_size": 16, "bg": "rgba(0,0,0,0.7)"},
+                }
+            )
 
     def on_frame(self, callback: Callable[[RecordedFrame], None]) -> None:
         self._on_frame = callback
 
-    def get_frames(self, start: float = 0.0,
-                   end: Optional[float] = None) -> List[RecordedFrame]:
+    def get_frames(self, start: float = 0.0, end: Optional[float] = None) -> List[RecordedFrame]:
         """Get frames within a time range."""
         frames = self._frames
         if start > 0:

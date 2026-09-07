@@ -7,7 +7,10 @@ import time
 from typing import Any, Callable, Dict, List, Tuple
 
 from eostudio.platform.display_backend import (
-    DisplayBackend, EventType, InputEvent, WindowConfig,
+    DisplayBackend,
+    EventType,
+    InputEvent,
+    WindowConfig,
 )
 
 
@@ -48,23 +51,24 @@ class WebBackend(DisplayBackend):
         async def _serve():
             try:
                 import websockets
-                self._ws_server = await websockets.serve(
-                    _handler, self._host, self._port)
+
+                self._ws_server = await websockets.serve(_handler, self._host, self._port)
                 await self._ws_server.wait_closed()
             except ImportError:
                 pass  # websockets not installed; queue-only mode
 
         self._server_thread = threading.Thread(
             target=lambda: self._loop.run_until_complete(_serve()),
-            daemon=True, name="ws-backend",
+            daemon=True,
+            name="ws-backend",
         )
         self._server_thread.start()
 
     def shutdown(self) -> None:
         self._draw_queue.clear()
-        if hasattr(self, '_ws_server') and self._ws_server:
+        if hasattr(self, "_ws_server") and self._ws_server:
             self._ws_server.close()
-        if hasattr(self, '_loop') and self._loop and self._loop.is_running():
+        if hasattr(self, "_loop") and self._loop and self._loop.is_running():
             self._loop.call_soon_threadsafe(self._loop.stop)
 
     def is_available(self) -> bool:
@@ -74,9 +78,9 @@ class WebBackend(DisplayBackend):
         wid = len(self._window_configs) + 1
         self._window_configs[wid] = config
         self._windows[wid] = config
-        self._send({"type": "create_window", "id": wid,
-                    "title": config.title,
-                "width": config.width, "height": config.height})
+        self._send(
+            {"type": "create_window", "id": wid, "title": config.title, "width": config.width, "height": config.height}
+        )
         return wid
 
     def destroy_window(self, window_id: int) -> None:
@@ -103,9 +107,10 @@ class WebBackend(DisplayBackend):
 
     def _send(self, cmd: Dict[str, Any]) -> None:
         self._draw_queue.append(cmd)
-        if hasattr(self, '_clients') and self._clients and hasattr(self, '_loop'):
+        if hasattr(self, "_clients") and self._clients and hasattr(self, "_loop"):
             import json
             import asyncio
+
             msg = json.dumps(cmd)
             for ws in list(self._clients):
                 asyncio.run_coroutine_threadsafe(ws.send(msg), self._loop)
@@ -114,36 +119,82 @@ class WebBackend(DisplayBackend):
     def _css(color: int) -> str:
         return f"#{(color & 0xFFFFFF):06X}"
 
-    def draw_rect(self, window_id: int, x: int, y: int, w: int, h: int,
-                   color: int, filled: bool = True) -> None:
-        self._send({"type": "rect", "wid": window_id, "x": x, "y": y,
-                    "w": w, "h": h, "color": self._css(color), "filled": filled})
+    def draw_rect(self, window_id: int, x: int, y: int, w: int, h: int, color: int, filled: bool = True) -> None:
+        self._send(
+            {
+                "type": "rect",
+                "wid": window_id,
+                "x": x,
+                "y": y,
+                "w": w,
+                "h": h,
+                "color": self._css(color),
+                "filled": filled,
+            }
+        )
 
-    def draw_line(self, window_id: int, x1: int, y1: int,
-                  x2: int, y2: int, color: int, width: int = 1) -> None:
-        self._send({"type": "line", "wid": window_id,
-                    "x1": x1, "y1": y1, "x2": x2, "y2": y2,
-                "color": self._css(color), "width": width})
+    def draw_line(self, window_id: int, x1: int, y1: int, x2: int, y2: int, color: int, width: int = 1) -> None:
+        self._send(
+            {
+                "type": "line",
+                "wid": window_id,
+                "x1": x1,
+                "y1": y1,
+                "x2": x2,
+                "y2": y2,
+                "color": self._css(color),
+                "width": width,
+            }
+        )
 
-    def draw_circle(self, window_id: int, cx: int, cy: int, radius: int,
-                    color: int, filled: bool = True) -> None:
-        self._send({"type": "circle", "wid": window_id,
-                    "cx": cx, "cy": cy, "r": radius,
-                "color": self._css(color), "filled": filled})
+    def draw_circle(self, window_id: int, cx: int, cy: int, radius: int, color: int, filled: bool = True) -> None:
+        self._send(
+            {
+                "type": "circle",
+                "wid": window_id,
+                "cx": cx,
+                "cy": cy,
+                "r": radius,
+                "color": self._css(color),
+                "filled": filled,
+            }
+        )
 
-    def draw_text(self, window_id: int, x: int, y: int, text: str,
-                  color: int = 0x000000, font_size: int = 14,
-                  font_family: str = "") -> None:
-        self._send({"type": "text", "wid": window_id, "x": x, "y": y,
-                    "text": text, "color": self._css(color),
-                    "fontSize": font_size,
-                "fontFamily": font_family or "sans-serif"})
+    def draw_text(
+        self,
+        window_id: int,
+        x: int,
+        y: int,
+        text: str,
+        color: int = 0x000000,
+        font_size: int = 14,
+        font_family: str = "",
+    ) -> None:
+        self._send(
+            {
+                "type": "text",
+                "wid": window_id,
+                "x": x,
+                "y": y,
+                "text": text,
+                "color": self._css(color),
+                "fontSize": font_size,
+                "fontFamily": font_family or "sans-serif",
+            }
+        )
 
-    def draw_image(self, window_id: int, x: int, y: int,
-                   image_data: bytes, width: int, height: int) -> None:
-        self._send({"type": "image", "wid": window_id, "x": x, "y": y,
-                    "width": width, "height": height,
-                "data": base64.b64encode(image_data).decode("ascii")})
+    def draw_image(self, window_id: int, x: int, y: int, image_data: bytes, width: int, height: int) -> None:
+        self._send(
+            {
+                "type": "image",
+                "wid": window_id,
+                "x": x,
+                "y": y,
+                "width": width,
+                "height": height,
+                "data": base64.b64encode(image_data).decode("ascii"),
+            }
+        )
 
     def clear(self, window_id: int, color: int = 0xFFFFFF) -> None:
         self._send({"type": "clear", "wid": window_id, "color": self._css(color)})
@@ -158,17 +209,28 @@ class WebBackend(DisplayBackend):
 
     def inject_event(self, event_dict: Dict[str, Any]) -> None:
         etype_map = {
-            "mousedown": EventType.MOUSE_DOWN, "mouseup": EventType.MOUSE_UP,
-            "mousemove": EventType.MOUSE_MOVE, "wheel": EventType.MOUSE_SCROLL,
-            "keydown": EventType.KEY_DOWN, "keyup": EventType.KEY_UP,
+            "mousedown": EventType.MOUSE_DOWN,
+            "mouseup": EventType.MOUSE_UP,
+            "mousemove": EventType.MOUSE_MOVE,
+            "wheel": EventType.MOUSE_SCROLL,
+            "keydown": EventType.KEY_DOWN,
+            "keyup": EventType.KEY_UP,
             "resize": EventType.RESIZE,
         }
         etype = etype_map.get(event_dict.get("type", ""), EventType.MOUSE_MOVE)
-        self._pending_events.append(InputEvent(
-            type=etype, x=event_dict.get("x", 0), y=event_dict.get("y", 0),
-            button=event_dict.get("button", 0), key=event_dict.get("key", ""),
-            delta=event_dict.get("delta", 0), width=event_dict.get("width", 0),
-            height=event_dict.get("height", 0), timestamp=time.time()))
+        self._pending_events.append(
+            InputEvent(
+                type=etype,
+                x=event_dict.get("x", 0),
+                y=event_dict.get("y", 0),
+                button=event_dict.get("button", 0),
+                key=event_dict.get("key", ""),
+                delta=event_dict.get("delta", 0),
+                width=event_dict.get("width", 0),
+                height=event_dict.get("height", 0),
+                timestamp=time.time(),
+            )
+        )
 
     def get_clipboard_text(self) -> str:
         return ""
@@ -179,12 +241,10 @@ class WebBackend(DisplayBackend):
     def set_cursor(self, cursor_type: str) -> None:
         self._send({"type": "cursor", "cursor": cursor_type})
 
-    def schedule_timer(self, interval_ms: int, callback: Callable[[], None],
-                       repeat: bool = False) -> int:
+    def schedule_timer(self, interval_ms: int, callback: Callable[[], None], repeat: bool = False) -> int:
         tid = self._next_timer_id
         self._next_timer_id += 1
-        self._timers[tid] = {"interval": interval_ms, "callback": callback,
-                             "repeat": repeat}
+        self._timers[tid] = {"interval": interval_ms, "callback": callback, "repeat": repeat}
         return tid
 
     def cancel_timer(self, timer_id: int) -> None:

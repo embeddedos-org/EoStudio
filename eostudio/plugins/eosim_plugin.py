@@ -31,6 +31,7 @@ log = logging.getLogger(__name__)
 # Simulation result container
 # ------------------------------------------------------------------
 
+
 @dataclass
 class SimulationResult:
     """Encapsulates the outcome of an EoSim simulation run."""
@@ -47,6 +48,7 @@ class SimulationResult:
 # ------------------------------------------------------------------
 # EoSim plugin
 # ------------------------------------------------------------------
+
 
 class EoSimPlugin(Plugin):
     """EoSim hardware simulator plugin for EoStudio."""
@@ -134,6 +136,7 @@ class EoSimPlugin(Plugin):
     def _discover_eosim_cli(self) -> None:
         """Fall-back discovery via CLI / importlib."""
         import importlib
+
         try:
             eosim = importlib.import_module("eosim")
             self._eosim_version = getattr(eosim, "__version__", "unknown")
@@ -143,17 +146,45 @@ class EoSimPlugin(Plugin):
 
         if not self._available_platforms:
             self._available_platforms = [
-                "stm32f4", "stm32h7", "esp32", "nrf52", "nrf5340",
-                "nrf9160", "rp2040", "imx8m", "raspi4", "k64f",
-                "psoc6", "pic32mz", "samc21", "s32k344", "renesas-ra6m5",
-                "renesas-rh850", "ti-msp432", "ti-tms570",
-                "jetson-orin", "x86_64", "arm64", "riscv64",
+                "stm32f4",
+                "stm32h7",
+                "esp32",
+                "nrf52",
+                "nrf5340",
+                "nrf9160",
+                "rp2040",
+                "imx8m",
+                "raspi4",
+                "k64f",
+                "psoc6",
+                "pic32mz",
+                "samc21",
+                "s32k344",
+                "renesas-ra6m5",
+                "renesas-rh850",
+                "ti-msp432",
+                "ti-tms570",
+                "jetson-orin",
+                "x86_64",
+                "arm64",
+                "riscv64",
             ]
         if not self._available_domains:
             self._available_domains = [
-                "consumer", "vehicle", "drone", "robot",
-                "medical", "industrial", "satellite", "aircraft",
-                "iot", "wearable", "energy", "speaker", "camera", "media",
+                "consumer",
+                "vehicle",
+                "drone",
+                "robot",
+                "medical",
+                "industrial",
+                "satellite",
+                "aircraft",
+                "iot",
+                "wearable",
+                "energy",
+                "speaker",
+                "camera",
+                "media",
             ]
 
     # -- hook handlers --------------------------------------------
@@ -187,7 +218,9 @@ class EoSimPlugin(Plugin):
             if total_ram > limits.get("max_ram", float("inf")):
                 errors.append(f"RAM usage ({total_ram} bytes) exceeds {platform} limit ({limits['max_ram']} bytes)")
             if total_flash > limits.get("max_flash", float("inf")):
-                errors.append(f"Flash usage ({total_flash} bytes) exceeds {platform} limit ({limits['max_flash']} bytes)")
+                errors.append(
+                    f"Flash usage ({total_flash} bytes) exceeds {platform} limit ({limits['max_flash']} bytes)"
+                )
 
         return {"valid": len(errors) == 0, "errors": errors, "warnings": warnings}
 
@@ -290,7 +323,9 @@ class EoSimPlugin(Plugin):
     # -- public API -----------------------------------------------
 
     def simulate_current_design(
-        self, design: Dict[str, Any], platform: Optional[str] = None,
+        self,
+        design: Dict[str, Any],
+        platform: Optional[str] = None,
     ) -> SimulationResult:
         """Run a full EoSim simulation for *design* on *platform*."""
         platform = platform or self._current_platform
@@ -338,14 +373,18 @@ class EoSimPlugin(Plugin):
             log.warning("Unknown platform %s", platform)
 
     def build_and_simulate(
-        self, board_config: Dict[str, Any], firmware_source: str,
+        self,
+        board_config: Dict[str, Any],
+        firmware_source: str,
     ) -> SimulationResult:
         """Build firmware from *firmware_source* then run simulation."""
-        build_result = self._on_build({
-            "board_config": board_config,
-            "source_dir": firmware_source,
-            "platform": self._current_platform,
-        })
+        build_result = self._on_build(
+            {
+                "board_config": board_config,
+                "source_dir": firmware_source,
+                "platform": self._current_platform,
+            }
+        )
         if not build_result.get("success"):
             return SimulationResult(
                 success=False,
@@ -372,6 +411,7 @@ class EoSimPlugin(Plugin):
 
         try:
             from eostudio.codegen.hardware import FirmwareGenerator
+
             gen = FirmwareGenerator(board_yaml, target_os="eos")
             fw_files = gen.generate(app_name=design.get("name", "app"))
             files.update(fw_files)
@@ -410,6 +450,7 @@ class EoSimPlugin(Plugin):
     def launch_eosim_gui(self) -> None:
         """Launch the EoSim standalone GUI application."""
         import subprocess as sp
+
         try:
             sp.Popen(
                 [sys.executable, "-m", "eosim", "gui"],
@@ -422,6 +463,7 @@ class EoSimPlugin(Plugin):
     def view_3d_product(self, platform: Optional[str] = None) -> None:
         """Launch the EoSim 3-D product viewer."""
         import subprocess as sp
+
         platform = platform or self._current_platform
         try:
             sp.Popen(

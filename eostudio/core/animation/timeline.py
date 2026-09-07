@@ -38,6 +38,7 @@ class Direction(Enum):
 @dataclass
 class AnimationClip:
     """A single animation clip that animates one or more properties on a target."""
+
     target_id: str
     tracks: List[KeyframeTrack] = field(default_factory=list)
     delay: float = 0.0
@@ -181,15 +182,19 @@ class AnimationTimeline:
         self.clips.append(clip)
         return clip
 
-    def create_clip(self, target_id: str, duration: float = 1.0,
-                    delay: float = 0.0, **kwargs: Any) -> AnimationClip:
+    def create_clip(self, target_id: str, duration: float = 1.0, delay: float = 0.0, **kwargs: Any) -> AnimationClip:
         clip = AnimationClip(target_id=target_id, duration=duration, delay=delay, **kwargs)
         self.clips.append(clip)
         return clip
 
-    def stagger(self, target_ids: List[str], tracks_config: List[Dict[str, Any]],
-                stagger_delay: float = 0.1, duration: float = 0.5,
-                base_delay: float = 0.0) -> List[AnimationClip]:
+    def stagger(
+        self,
+        target_ids: List[str],
+        tracks_config: List[Dict[str, Any]],
+        stagger_delay: float = 0.1,
+        duration: float = 0.5,
+        base_delay: float = 0.0,
+    ) -> List[AnimationClip]:
         """Create staggered animations across multiple targets."""
         clips = []
         for i, target_id in enumerate(target_ids):

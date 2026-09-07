@@ -1,15 +1,19 @@
 """UML Diagram Editor — class, sequence, state, use-case, and activity diagrams."""
 
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -26,27 +30,59 @@ try:
 except ImportError:
     UMLClass = UMLRelation = UMLDiagram = None  # type: ignore[assignment,misc]
 
-CLASS_TOOLS = [("class", "Class", "#89b4fa"), ("interface", "Interface", "#cba6f7"),
-               ("abstract", "Abstract Class", "#a6e3a1"), ("enum", "Enum", "#f9e2af"),
-               ("note", "Note", "#6c7086")]
-RELATION_TOOLS = [("association", "Association ——►", "#cdd6f4"), ("aggregation", "Aggregation ◇——", "#cdd6f4"),
-                  ("composition", "Composition ◆——", "#cdd6f4"), ("inheritance", "Inheritance △——", "#cdd6f4"),
-                  ("implementation", "Implementation △⋯", "#cdd6f4"), ("dependency", "Dependency ⋯►", "#cdd6f4")]
-SEQUENCE_TOOLS = [("actor", "Actor", "#89b4fa"), ("lifeline", "Lifeline", "#a6e3a1"),
-                  ("sync_msg", "Sync Message", "#f9e2af"), ("async_msg", "Async Message", "#f38ba8"),
-                  ("return_msg", "Return", "#6c7086"), ("self_msg", "Self Call", "#cba6f7")]
-STATE_TOOLS = [("state", "State", "#89b4fa"), ("initial", "Initial", "#a6e3a1"),
-               ("final", "Final", "#f38ba8"), ("transition", "Transition", "#f9e2af"),
-               ("choice", "Choice", "#cba6f7")]
-USECASE_TOOLS = [("actor_uc", "Actor", "#89b4fa"), ("usecase", "Use Case", "#a6e3a1"),
-                 ("include", "«include»", "#f9e2af"), ("extend", "«extend»", "#f38ba8"),
-                 ("boundary", "System Boundary", "#6c7086")]
-ACTIVITY_TOOLS = [("action", "Action", "#89b4fa"), ("decision", "Decision", "#f9e2af"),
-                  ("fork", "Fork / Join", "#a6e3a1"), ("start", "Start", "#a6e3a1"),
-                  ("end", "End", "#f38ba8"), ("flow", "Flow Arrow", "#6c7086")]
+CLASS_TOOLS = [
+    ("class", "Class", "#89b4fa"),
+    ("interface", "Interface", "#cba6f7"),
+    ("abstract", "Abstract Class", "#a6e3a1"),
+    ("enum", "Enum", "#f9e2af"),
+    ("note", "Note", "#6c7086"),
+]
+RELATION_TOOLS = [
+    ("association", "Association ——►", "#cdd6f4"),
+    ("aggregation", "Aggregation ◇——", "#cdd6f4"),
+    ("composition", "Composition ◆——", "#cdd6f4"),
+    ("inheritance", "Inheritance △——", "#cdd6f4"),
+    ("implementation", "Implementation △⋯", "#cdd6f4"),
+    ("dependency", "Dependency ⋯►", "#cdd6f4"),
+]
+SEQUENCE_TOOLS = [
+    ("actor", "Actor", "#89b4fa"),
+    ("lifeline", "Lifeline", "#a6e3a1"),
+    ("sync_msg", "Sync Message", "#f9e2af"),
+    ("async_msg", "Async Message", "#f38ba8"),
+    ("return_msg", "Return", "#6c7086"),
+    ("self_msg", "Self Call", "#cba6f7"),
+]
+STATE_TOOLS = [
+    ("state", "State", "#89b4fa"),
+    ("initial", "Initial", "#a6e3a1"),
+    ("final", "Final", "#f38ba8"),
+    ("transition", "Transition", "#f9e2af"),
+    ("choice", "Choice", "#cba6f7"),
+]
+USECASE_TOOLS = [
+    ("actor_uc", "Actor", "#89b4fa"),
+    ("usecase", "Use Case", "#a6e3a1"),
+    ("include", "«include»", "#f9e2af"),
+    ("extend", "«extend»", "#f38ba8"),
+    ("boundary", "System Boundary", "#6c7086"),
+]
+ACTIVITY_TOOLS = [
+    ("action", "Action", "#89b4fa"),
+    ("decision", "Decision", "#f9e2af"),
+    ("fork", "Fork / Join", "#a6e3a1"),
+    ("start", "Start", "#a6e3a1"),
+    ("end", "End", "#f38ba8"),
+    ("flow", "Flow Arrow", "#6c7086"),
+]
 LANGUAGES = ["Python", "Java", "Kotlin", "TypeScript", "C++", "C#"]
-_TAB_TOOLS: Dict[str, list] = {"Class": CLASS_TOOLS + RELATION_TOOLS, "Sequence": SEQUENCE_TOOLS,
-                               "State Machine": STATE_TOOLS, "Use Case": USECASE_TOOLS, "Activity": ACTIVITY_TOOLS}
+_TAB_TOOLS: Dict[str, list] = {
+    "Class": CLASS_TOOLS + RELATION_TOOLS,
+    "Sequence": SEQUENCE_TOOLS,
+    "State Machine": STATE_TOOLS,
+    "Use Case": USECASE_TOOLS,
+    "Activity": ACTIVITY_TOOLS,
+}
 _REL_IDS = {r[0] for r in RELATION_TOOLS}
 _CONN_IDS = {"transition", "flow", "include", "extend", "sync_msg", "async_msg", "return_msg", "self_msg"}
 
@@ -60,6 +96,7 @@ def _uml_field(a: str, lang: str) -> str:
 
 class UMLEditor(tk.Frame):
     """Full UML diagram editor with code generation and export."""
+
     def __init__(self, master: tk.Widget, bg: str = "#1e1e2e", fg: str = "#cdd6f4", **kw: Any):
         super().__init__(master, bg=bg, **kw)
         self._bg, self._fg = bg, fg
@@ -77,24 +114,41 @@ class UMLEditor(tk.Frame):
         left = tk.Frame(self, bg=self._bg, width=175)
         left.pack(side=tk.LEFT, fill=tk.Y)
         left.pack_propagate(False)
-        tk.Label(left, text="Tools", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 10, "bold"), anchor=tk.W).pack(fill=tk.X, padx=8, pady=(8, 2))
+        tk.Label(left, text="Tools", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold"), anchor=tk.W).pack(
+            fill=tk.X, padx=8, pady=(8, 2)
+        )
         self._tframe = tk.Frame(left, bg=self._bg)
         self._tframe.pack(fill=tk.BOTH, expand=True)
         ttk.Separator(left, orient=tk.HORIZONTAL).pack(fill=tk.X, padx=4, pady=4)
-        ef = tk.LabelFrame(left, text="Export", bg=self._bg, fg="#f9e2af",
-                           font=("Segoe UI", 9, "bold"), bd=1, relief=tk.GROOVE)
+        ef = tk.LabelFrame(
+            left, text="Export", bg=self._bg, fg="#f9e2af", font=("Segoe UI", 9, "bold"), bd=1, relief=tk.GROOVE
+        )
         ef.pack(fill=tk.X, padx=4, pady=4)
         for fmt in ("PlantUML", "Mermaid"):
-            tk.Button(ef, text=f"Export {fmt}", bg="#313244", fg=self._fg, relief=tk.FLAT,
-                      font=("Segoe UI", 8), command=lambda f=fmt: self._export(f)).pack(fill=tk.X, padx=4, pady=1)
-        tk.Button(ef, text="Generate Code…", bg="#89b4fa", fg="#1e1e2e", relief=tk.FLAT,
-                  font=("Segoe UI", 9), command=self._codegen_dlg).pack(fill=tk.X, padx=4, pady=(4, 4))
+            tk.Button(
+                ef,
+                text=f"Export {fmt}",
+                bg="#313244",
+                fg=self._fg,
+                relief=tk.FLAT,
+                font=("Segoe UI", 8),
+                command=lambda f=fmt: self._export(f),
+            ).pack(fill=tk.X, padx=4, pady=1)
+        tk.Button(
+            ef,
+            text="Generate Code…",
+            bg="#89b4fa",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 9),
+            command=self._codegen_dlg,
+        ).pack(fill=tk.X, padx=4, pady=(4, 4))
         right = tk.Frame(self, bg=self._bg, width=220)
         right.pack(side=tk.RIGHT, fill=tk.Y)
         right.pack_propagate(False)
-        tk.Label(right, text="Properties", bg=self._bg, fg=self._fg,
-                 font=("Segoe UI", 11, "bold"), anchor=tk.W).pack(fill=tk.X, padx=8, pady=(8, 4))
+        tk.Label(right, text="Properties", bg=self._bg, fg=self._fg, font=("Segoe UI", 11, "bold"), anchor=tk.W).pack(
+            fill=tk.X, padx=8, pady=(8, 4)
+        )
         self._pf = tk.Frame(right, bg=self._bg)
         self._pf.pack(fill=tk.BOTH, expand=True, padx=4)
         self._nsl = tk.Label(self._pf, text="No element selected", bg=self._bg, fg="#6c7086", font=("Segoe UI", 9))
@@ -120,10 +174,19 @@ class UMLEditor(tk.Frame):
         for w in self._tframe.winfo_children():
             w.destroy()
         for tid, lbl, clr in _TAB_TOOLS.get(self._tab, []):
-            b = tk.Button(self._tframe, text=lbl, bg="#313244", fg=clr, relief=tk.FLAT,
-                          font=("Segoe UI", 9), anchor=tk.W, padx=6, pady=2)
+            b = tk.Button(
+                self._tframe,
+                text=lbl,
+                bg="#313244",
+                fg=clr,
+                relief=tk.FLAT,
+                font=("Segoe UI", 9),
+                anchor=tk.W,
+                padx=6,
+                pady=2,
+            )
             b.pack(fill=tk.X, padx=4, pady=1)
-            b.bind("<ButtonPress-1>", lambda e, t=tid: setattr(self, '_tool', t) or setattr(self, '_conn0', None))
+            b.bind("<ButtonPress-1>", lambda e, t=tid: setattr(self, "_tool", t) or setattr(self, "_conn0", None))
 
     def _tab_chg(self, _e: tk.Event) -> None:
         self._tab = list(_TAB_TOOLS.keys())[self._nb.index(self._nb.select())]
@@ -139,8 +202,9 @@ class UMLEditor(tk.Frame):
                 if self._conn0 is None:
                     self._conn0 = h
                 else:
-                    self._relations[tab].append({"type": t, "from": self._conn0, "to": h,
-                                                 "label": t.replace("_", " ").title()})
+                    self._relations[tab].append(
+                        {"type": t, "from": self._conn0, "to": h, "label": t.replace("_", " ").title()}
+                    )
                     self._conn0 = self._tool = None
                     self._redraw(tab)
             return
@@ -183,8 +247,14 @@ class UMLEditor(tk.Frame):
     def _mk(self, t: str, x: int, y: int) -> Dict[str, Any]:
         b: Dict[str, Any] = {"type": t, "x": x, "y": y, "name": t.title()}
         if t in ("class", "interface", "abstract", "enum"):
-            b.update(w=160, h=120, name=f"My{t.title()}", stereotype=f"«{t}»" if t != "class" else "",
-                     attributes=["+name: String", "+id: int"], methods=["+toString(): String"])
+            b.update(
+                w=160,
+                h=120,
+                name=f"My{t.title()}",
+                stereotype=f"«{t}»" if t != "class" else "",
+                attributes=["+name: String", "+id: int"],
+                methods=["+toString(): String"],
+            )
         elif t == "note":
             b.update(w=120, h=60, text="…")
         elif t == "state":
@@ -236,8 +306,7 @@ class UMLEditor(tk.Frame):
                 elif rt == "return_msg":
                     dash = (4, 4)
                     clr = "#6c7086"
-            c.create_line(x1, y1, x2, y2, fill=clr, width=2, arrow=tk.LAST,
-                          arrowshape=(10, 12, 5), dash=dash)
+            c.create_line(x1, y1, x2, y2, fill=clr, width=2, arrow=tk.LAST, arrowshape=(10, 12, 5), dash=dash)
             mx, my = (x1 + x2) // 2, (y1 + y2) // 2
             if rt == "aggregation":
                 c.create_polygon(x1, y1 - 8, x1 + 8, y1, x1, y1 + 8, x1 - 8, y1, fill="", outline=clr)
@@ -265,7 +334,9 @@ class UMLEditor(tk.Frame):
             c.create_oval(x, y, x + w, y + h, fill="", outline=ol, width=lw)
             c.create_oval(x + 4, y + 4, x + w - 4, y + h - 4, fill="#f38ba8", outline="")
         elif t in ("choice", "decision"):
-            c.create_polygon(x + w // 2, y, x + w, y + h // 2, x + w // 2, y + h, x, y + h // 2, fill="#313244", outline=ol, width=lw)
+            c.create_polygon(
+                x + w // 2, y, x + w, y + h // 2, x + w // 2, y + h, x, y + h // 2, fill="#313244", outline=ol, width=lw
+            )
         elif t == "fork":
             c.create_rectangle(x, y, x + w, y + h, fill="#585b70", outline=ol, width=lw)
         elif t in ("actor", "actor_uc"):
@@ -328,29 +399,59 @@ class UMLEditor(tk.Frame):
             self._nsl.pack(pady=20)
             return
         el = self._elements[tab][self._sel]
-        flds = [("Type", el["type"], True), ("Name", el["name"], False),
-                ("X", str(el["x"]), False), ("Y", str(el["y"]), False),
-                ("Width", str(el["w"]), False), ("Height", str(el["h"]), False)]
+        flds = [
+            ("Type", el["type"], True),
+            ("Name", el["name"], False),
+            ("X", str(el["x"]), False),
+            ("Y", str(el["y"]), False),
+            ("Width", str(el["w"]), False),
+            ("Height", str(el["h"]), False),
+        ]
         if "stereotype" in el:
             flds.append(("Stereotype", el["stereotype"], False))
         for lbl, val, ro in flds:
             row = tk.Frame(self._pf, bg=self._bg)
             row.pack(fill=tk.X, padx=4, pady=1)
             self._pw.append(row)
-            tk.Label(row, text=lbl, bg=self._bg, fg=self._fg, font=("Segoe UI", 8), width=10, anchor=tk.W).pack(side=tk.LEFT)
+            tk.Label(row, text=lbl, bg=self._bg, fg=self._fg, font=("Segoe UI", 8), width=10, anchor=tk.W).pack(
+                side=tk.LEFT
+            )
             var = tk.StringVar(value=val)
-            ent = tk.Entry(row, textvariable=var, width=14, bg="#313244", fg=self._fg, font=("Consolas", 8),
-                           relief=tk.FLAT, insertbackground=self._fg, state=tk.DISABLED if ro else tk.NORMAL)
+            ent = tk.Entry(
+                row,
+                textvariable=var,
+                width=14,
+                bg="#313244",
+                fg=self._fg,
+                font=("Consolas", 8),
+                relief=tk.FLAT,
+                insertbackground=self._fg,
+                state=tk.DISABLED if ro else tk.NORMAL,
+            )
             ent.pack(side=tk.LEFT, fill=tk.X, expand=True)
             if not ro:
                 ent.bind("<Return>", lambda e, k=lbl.lower(), v=var, t=tab: self._pchg(k, v.get(), t))
         if el["type"] in ("class", "interface", "abstract", "enum"):
-            b = tk.Button(self._pf, text="Edit Class…", bg="#89b4fa", fg="#1e1e2e", relief=tk.FLAT,
-                          font=("Segoe UI", 9), command=lambda: self._cls_edit(tab, self._sel))
+            b = tk.Button(
+                self._pf,
+                text="Edit Class…",
+                bg="#89b4fa",
+                fg="#1e1e2e",
+                relief=tk.FLAT,
+                font=("Segoe UI", 9),
+                command=lambda: self._cls_edit(tab, self._sel),
+            )
             b.pack(padx=4, pady=4)
             self._pw.append(b)
-        db = tk.Button(self._pf, text="Delete", bg="#f38ba8", fg="#1e1e2e", relief=tk.FLAT,
-                       font=("Segoe UI", 9), command=lambda: self._del(tab))
+        db = tk.Button(
+            self._pf,
+            text="Delete",
+            bg="#f38ba8",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 9),
+            command=lambda: self._del(tab),
+        )
         db.pack(padx=4, pady=4)
         self._pw.append(db)
 
@@ -381,18 +482,46 @@ class UMLEditor(tk.Frame):
         win.title(f"Edit {el['name']}")
         win.geometry("480x520")
         win.transient(self)
-        tk.Label(win, text="Class Name:", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(anchor=tk.W, padx=8, pady=(8, 2))
+        tk.Label(win, text="Class Name:", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(
+            anchor=tk.W, padx=8, pady=(8, 2)
+        )
         nv = tk.StringVar(value=el["name"])
-        tk.Entry(win, textvariable=nv, bg="#313244", fg=self._fg, font=("Consolas", 10), relief=tk.FLAT, insertbackground=self._fg).pack(fill=tk.X, padx=8)
-        tk.Label(win, text="Stereotype:", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(anchor=tk.W, padx=8, pady=(8, 2))
+        tk.Entry(
+            win,
+            textvariable=nv,
+            bg="#313244",
+            fg=self._fg,
+            font=("Consolas", 10),
+            relief=tk.FLAT,
+            insertbackground=self._fg,
+        ).pack(fill=tk.X, padx=8)
+        tk.Label(win, text="Stereotype:", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(
+            anchor=tk.W, padx=8, pady=(8, 2)
+        )
         sv = tk.StringVar(value=el.get("stereotype", ""))
-        tk.Entry(win, textvariable=sv, bg="#313244", fg=self._fg, font=("Consolas", 10), relief=tk.FLAT, insertbackground=self._fg).pack(fill=tk.X, padx=8)
-        tk.Label(win, text="Attributes (one per line):", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(anchor=tk.W, padx=8, pady=(8, 2))
-        at = tk.Text(win, height=8, bg="#313244", fg="#a6e3a1", font=("Consolas", 9), relief=tk.FLAT, insertbackground=self._fg)
+        tk.Entry(
+            win,
+            textvariable=sv,
+            bg="#313244",
+            fg=self._fg,
+            font=("Consolas", 10),
+            relief=tk.FLAT,
+            insertbackground=self._fg,
+        ).pack(fill=tk.X, padx=8)
+        tk.Label(win, text="Attributes (one per line):", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(
+            anchor=tk.W, padx=8, pady=(8, 2)
+        )
+        at = tk.Text(
+            win, height=8, bg="#313244", fg="#a6e3a1", font=("Consolas", 9), relief=tk.FLAT, insertbackground=self._fg
+        )
         at.pack(fill=tk.X, padx=8)
         at.insert("1.0", "\n".join(el.get("attributes", [])))
-        tk.Label(win, text="Methods (one per line):", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(anchor=tk.W, padx=8, pady=(8, 2))
-        mt = tk.Text(win, height=8, bg="#313244", fg="#f9e2af", font=("Consolas", 9), relief=tk.FLAT, insertbackground=self._fg)
+        tk.Label(win, text="Methods (one per line):", bg=self._bg, fg=self._fg, font=("Segoe UI", 9)).pack(
+            anchor=tk.W, padx=8, pady=(8, 2)
+        )
+        mt = tk.Text(
+            win, height=8, bg="#313244", fg="#f9e2af", font=("Consolas", 9), relief=tk.FLAT, insertbackground=self._fg
+        )
         mt.pack(fill=tk.X, padx=8)
         mt.insert("1.0", "\n".join(el.get("methods", [])))
 
@@ -403,19 +532,28 @@ class UMLEditor(tk.Frame):
             el["methods"] = [l for l in mt.get("1.0", tk.END).strip().split("\n") if l.strip()]
             self._redraw(tab)
             win.destroy()
-        tk.Button(win, text="Apply", bg="#89b4fa", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 10, "bold"), command=_apply).pack(pady=8)
+
+        tk.Button(
+            win, text="Apply", bg="#89b4fa", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 10, "bold"), command=_apply
+        ).pack(pady=8)
 
     def _export(self, fmt: str) -> None:
         els = self._elements.get(self._tab, [])
         rels = self._relations.get(self._tab, [])
         lines: List[str] = []
-        arw = {"association": "-->", "aggregation": "o--", "composition": "*--",
-               "inheritance": "--|>", "implementation": "..|>", "dependency": "..>"}
+        arw = {
+            "association": "-->",
+            "aggregation": "o--",
+            "composition": "*--",
+            "inheritance": "--|>",
+            "implementation": "..|>",
+            "dependency": "..>",
+        }
         if fmt == "PlantUML":
             lines.append("@startuml")
             for el in els:
                 if el["type"] in ("class", "interface", "abstract", "enum"):
-                    lines.append(f'{el["type"]} {el["name"]} {{')
+                    lines.append(f"{el['type']} {el['name']} {{")
                     for a in el.get("attributes", []):
                         lines.append(f"  {a}")
                     for m in el.get("methods", []):
@@ -423,13 +561,13 @@ class UMLEditor(tk.Frame):
                     lines.append("}")
             for r in rels:
                 if r["from"] < len(els) and r["to"] < len(els):
-                    lines.append(f'{els[r["from"]]["name"]} {arw.get(r["type"], "-->")} {els[r["to"]]["name"]}')
+                    lines.append(f"{els[r['from']]['name']} {arw.get(r['type'], '-->')} {els[r['to']]['name']}")
             lines.append("@enduml")
         else:
             lines.append("classDiagram")
             for el in els:
                 if el["type"] in ("class", "interface", "abstract", "enum"):
-                    lines.append(f'  class {el["name"]} {{')
+                    lines.append(f"  class {el['name']} {{")
                     for a in el.get("attributes", []):
                         lines.append(f"    {a}")
                     for m in el.get("methods", []):
@@ -437,7 +575,7 @@ class UMLEditor(tk.Frame):
                     lines.append("  }")
             for r in rels:
                 if r["from"] < len(els) and r["to"] < len(els):
-                    lines.append(f'  {els[r["from"]]["name"]} {arw.get(r["type"], "-->")} {els[r["to"]]["name"]}')
+                    lines.append(f"  {els[r['from']]['name']} {arw.get(r['type'], '-->')} {els[r['to']]['name']}")
         self._code_win(f"Export — {fmt}", "\n".join(lines))
 
     def _codegen_dlg(self) -> None:
@@ -445,22 +583,49 @@ class UMLEditor(tk.Frame):
         win.title("Generate Code")
         win.geometry("360x200")
         win.transient(self)
-        tk.Label(win, text="Target Language:", bg=self._bg, fg=self._fg, font=("Segoe UI", 10)).pack(anchor=tk.W, padx=12, pady=(12, 4))
+        tk.Label(win, text="Target Language:", bg=self._bg, fg=self._fg, font=("Segoe UI", 10)).pack(
+            anchor=tk.W, padx=12, pady=(12, 4)
+        )
         lv = tk.StringVar(value=LANGUAGES[0])
         ttk.Combobox(win, textvariable=lv, values=LANGUAGES, state="readonly", width=20).pack(padx=12)
-        tk.Label(win, text="Output Directory:", bg=self._bg, fg=self._fg, font=("Segoe UI", 10)).pack(anchor=tk.W, padx=12, pady=(12, 4))
+        tk.Label(win, text="Output Directory:", bg=self._bg, fg=self._fg, font=("Segoe UI", 10)).pack(
+            anchor=tk.W, padx=12, pady=(12, 4)
+        )
         dv = tk.StringVar(value="./generated")
         r = tk.Frame(win, bg=self._bg)
         r.pack(fill=tk.X, padx=12)
-        tk.Entry(r, textvariable=dv, bg="#313244", fg=self._fg, font=("Consolas", 9), relief=tk.FLAT, insertbackground=self._fg).pack(side=tk.LEFT, fill=tk.X, expand=True)
-        tk.Button(r, text="…", bg="#313244", fg=self._fg, relief=tk.FLAT,
-                  command=lambda: dv.set(filedialog.askdirectory() or dv.get())).pack(side=tk.LEFT, padx=(4, 0))
+        tk.Entry(
+            r,
+            textvariable=dv,
+            bg="#313244",
+            fg=self._fg,
+            font=("Consolas", 9),
+            relief=tk.FLAT,
+            insertbackground=self._fg,
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        tk.Button(
+            r,
+            text="…",
+            bg="#313244",
+            fg=self._fg,
+            relief=tk.FLAT,
+            command=lambda: dv.set(filedialog.askdirectory() or dv.get()),
+        ).pack(side=tk.LEFT, padx=(4, 0))
 
         def _gen():
             code = self._gen_code(lv.get())
             win.destroy()
             self._code_win(f"Generated {lv.get()}", code)
-        tk.Button(win, text="Generate", bg="#89b4fa", fg="#1e1e2e", relief=tk.FLAT, font=("Segoe UI", 10, "bold"), command=_gen).pack(pady=12)
+
+        tk.Button(
+            win,
+            text="Generate",
+            bg="#89b4fa",
+            fg="#1e1e2e",
+            relief=tk.FLAT,
+            font=("Segoe UI", 10, "bold"),
+            command=_gen,
+        ).pack(pady=12)
 
     def _gen_code(self, lang: str) -> str:
         els = [e for e in self._elements.get("Class", []) if e["type"] in ("class", "interface", "abstract", "enum")]
@@ -530,7 +695,15 @@ class UMLEditor(tk.Frame):
         win.title(title)
         win.geometry("600x400")
         win.transient(self)
-        t = tk.Text(win, bg="#181825", fg=self._fg, insertbackground=self._fg, font=("Consolas", 10), wrap=tk.NONE, relief=tk.FLAT)
+        t = tk.Text(
+            win,
+            bg="#181825",
+            fg=self._fg,
+            insertbackground=self._fg,
+            font=("Consolas", 10),
+            wrap=tk.NONE,
+            relief=tk.FLAT,
+        )
         t.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
         t.insert("1.0", code)
         t.config(state=tk.DISABLED)

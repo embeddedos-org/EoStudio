@@ -33,9 +33,11 @@ CARD_BG = "#1e1e2e"
 
 # ── Data classes ─────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ChangelogEntry:
     """A single parsed commit entry."""
+
     hash: str
     subject: str
     body: str = ""
@@ -48,6 +50,7 @@ class ChangelogEntry:
 @dataclass
 class ReleaseChangelog:
     """Parsed changelog between two version tags."""
+
     version: str
     previous_version: str
     date: str
@@ -56,14 +59,19 @@ class ReleaseChangelog:
     breaking_changes: List[ChangelogEntry] = field(default_factory=list)
     other: List[ChangelogEntry] = field(default_factory=list)
     contributors: Set[str] = field(default_factory=set)
-    stats: Dict[str, int] = field(default_factory=lambda: {
-        "files_changed": 0, "insertions": 0, "deletions": 0,
-    })
+    stats: Dict[str, int] = field(
+        default_factory=lambda: {
+            "files_changed": 0,
+            "insertions": 0,
+            "deletions": 0,
+        }
+    )
 
 
 @dataclass
 class ReleaseVideoConfig:
     """Configuration for release video generation."""
+
     version: str = "0.0.0"
     product_name: str = "EoStudio"
     tagline: str = ""
@@ -77,10 +85,16 @@ class ReleaseVideoConfig:
     include_narration: bool = True
     background_music_path: Optional[str] = None
     theme: str = "dark"
-    color_scheme: Dict[str, str] = field(default_factory=lambda: {
-        "bg": BG, "primary": PRIMARY, "secondary": SECONDARY,
-        "accent": ACCENT, "text": "#ffffff", "muted": SLATE,
-    })
+    color_scheme: Dict[str, str] = field(
+        default_factory=lambda: {
+            "bg": BG,
+            "primary": PRIMARY,
+            "secondary": SECONDARY,
+            "accent": ACCENT,
+            "text": "#ffffff",
+            "muted": SLATE,
+        }
+    )
     max_features_shown: int = 6
     max_duration: float = 60.0
 
@@ -188,9 +202,7 @@ class ChangelogParser:
         """Auto-detect the last two version tags and parse between them."""
         tags = self.get_version_tags()
         if len(tags) < 2:
-            raise RuntimeError(
-                f"Need at least 2 version tags, found {len(tags)}: {tags}"
-            )
+            raise RuntimeError(f"Need at least 2 version tags, found {len(tags)}: {tags}")
         return self.parse_between_tags(tags[-2], tags[-1])
 
     def get_stats(self, from_tag: str, to_tag: str) -> Dict[str, int]:
@@ -215,6 +227,7 @@ class ChangelogParser:
 
 # ── Release Video Generator ─────────────────────────────────────────────────
 
+
 class ReleaseVideoGenerator:
     """Generate a professional release video from a changelog."""
 
@@ -224,9 +237,13 @@ class ReleaseVideoGenerator:
 
     @staticmethod
     def _find_ffmpeg() -> str:
-        for path in ["ffmpeg", "/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg",
-                      "/home/spatchava/.local/bin/ffmpeg",
-                      "C:\\ffmpeg\\bin\\ffmpeg.exe"]:
+        for path in [
+            "ffmpeg",
+            "/usr/bin/ffmpeg",
+            "/usr/local/bin/ffmpeg",
+            "/home/spatchava/.local/bin/ffmpeg",
+            "C:\\ffmpeg\\bin\\ffmpeg.exe",
+        ]:
             try:
                 subprocess.run([path, "-version"], capture_output=True, timeout=5)
                 return path
@@ -260,7 +277,11 @@ class ReleaseVideoGenerator:
                 items.append(f'            "{safe}",')
             return "\n".join(items) if items else '            "No items in this release",'
 
-        features_block = _quote_items(cl.features, cfg.max_features_shown) if cl else '            "No new features in this release",'
+        features_block = (
+            _quote_items(cl.features, cfg.max_features_shown)
+            if cl
+            else '            "No new features in this release",'
+        )
         fixes_block = _quote_items(cl.fixes, 5) if cl else '            "Stability and performance improvements",'
 
         lines = [
@@ -291,7 +312,7 @@ class ReleaseVideoGenerator:
             "        self.slide_cta()",
             "",
             "    def slide_hero(self):",
-            '        glow = Circle(radius=3, fill_opacity=0.15, fill_color=SECONDARY, stroke_width=0)',
+            "        glow = Circle(radius=3, fill_opacity=0.15, fill_color=SECONDARY, stroke_width=0)",
             "        glow.set_opacity(0)",
             f'        title = Text("{product}", font_size=96, font="Inter", weight=BOLD)',
             "        title.set_color_by_gradient(PRIMARY, SECONDARY, ACCENT)",
@@ -382,54 +403,58 @@ class ReleaseVideoGenerator:
 
         if has_breaking:
             breaking_block = _quote_items(cl.breaking_changes, 3) if cl else ""
-            lines.extend([
-                "",
-                "    def slide_breaking(self):",
-                '        title = Text("\\u26a0\\ufe0f Breaking Changes", font_size=56, font="Inter", weight=BOLD)',
-                "        title.set_color_by_gradient(AMBER, ACCENT)",
-                "        title.to_edge(UP, buff=0.8)",
-                "        changes = [",
-                breaking_block,
-                "        ]",
-                "        items = VGroup()",
-                "        for change in changes:",
-                '            icon = Text("\\u26a0\\ufe0f", font_size=24)',
-                '            label = Text(change[:60], font_size=22, color=AMBER, font="Inter")',
-                "            row = VGroup(icon, label).arrange(RIGHT, buff=0.3)",
-                "            items.add(row)",
-                "        items.arrange(DOWN, buff=0.3, aligned_edge=LEFT)",
-                "        items.next_to(title, DOWN, buff=0.6)",
-                "",
-                "        self.play(Write(title), run_time=0.5)",
-                "        for item in items:",
-                "            self.play(FadeIn(item, shift=RIGHT * 0.3), run_time=0.25)",
-                "        self.wait(1.5)",
-                "        self.play(FadeOut(Group(*self.mobjects)), run_time=0.5)",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "    def slide_breaking(self):",
+                    '        title = Text("\\u26a0\\ufe0f Breaking Changes", font_size=56, font="Inter", weight=BOLD)',
+                    "        title.set_color_by_gradient(AMBER, ACCENT)",
+                    "        title.to_edge(UP, buff=0.8)",
+                    "        changes = [",
+                    breaking_block,
+                    "        ]",
+                    "        items = VGroup()",
+                    "        for change in changes:",
+                    '            icon = Text("\\u26a0\\ufe0f", font_size=24)',
+                    '            label = Text(change[:60], font_size=22, color=AMBER, font="Inter")',
+                    "            row = VGroup(icon, label).arrange(RIGHT, buff=0.3)",
+                    "            items.add(row)",
+                    "        items.arrange(DOWN, buff=0.3, aligned_edge=LEFT)",
+                    "        items.next_to(title, DOWN, buff=0.6)",
+                    "",
+                    "        self.play(Write(title), run_time=0.5)",
+                    "        for item in items:",
+                    "            self.play(FadeIn(item, shift=RIGHT * 0.3), run_time=0.25)",
+                    "        self.wait(1.5)",
+                    "        self.play(FadeOut(Group(*self.mobjects)), run_time=0.5)",
+                ]
+            )
 
-        lines.extend([
-            "",
-            "    def slide_cta(self):",
-            f'        title = Text("Upgrade to {product} v{version}", font_size=56, font="Inter", weight=BOLD)',
-            "        title.set_color_by_gradient(PRIMARY, SECONDARY, ACCENT)",
-            '        sub = Text("Available now", font_size=28, color=SLATE, font="Inter")',
-            "        sub.next_to(title, DOWN, buff=0.3)",
-            "        url_bg = RoundedRectangle(",
-            "            width=8, height=0.8, corner_radius=0.15,",
-            "            fill_opacity=0.9, stroke_width=0,",
-            "        )",
-            "        url_bg.set_color_by_gradient(PRIMARY, SECONDARY)",
-            f'        url_text = Text("Try {product} v{version} today", font_size=22, color=WHITE, font="Inter", weight=BOLD)',
-            "        url_text.move_to(url_bg)",
-            "        url_group = VGroup(url_bg, url_text).next_to(sub, DOWN, buff=0.5)",
-            "",
-            "        self.play(Write(title), run_time=0.8)",
-            "        self.play(FadeIn(sub, shift=UP * 0.2), run_time=0.4)",
-            "        self.play(FadeIn(url_group, scale=0.9), run_time=0.5)",
-            "        self.wait(2)",
-            "        self.play(FadeOut(Group(*self.mobjects)), run_time=0.8)",
-            "",
-        ])
+        lines.extend(
+            [
+                "",
+                "    def slide_cta(self):",
+                f'        title = Text("Upgrade to {product} v{version}", font_size=56, font="Inter", weight=BOLD)',
+                "        title.set_color_by_gradient(PRIMARY, SECONDARY, ACCENT)",
+                '        sub = Text("Available now", font_size=28, color=SLATE, font="Inter")',
+                "        sub.next_to(title, DOWN, buff=0.3)",
+                "        url_bg = RoundedRectangle(",
+                "            width=8, height=0.8, corner_radius=0.15,",
+                "            fill_opacity=0.9, stroke_width=0,",
+                "        )",
+                "        url_bg.set_color_by_gradient(PRIMARY, SECONDARY)",
+                f'        url_text = Text("Try {product} v{version} today", font_size=22, color=WHITE, font="Inter", weight=BOLD)',
+                "        url_text.move_to(url_bg)",
+                "        url_group = VGroup(url_bg, url_text).next_to(sub, DOWN, buff=0.5)",
+                "",
+                "        self.play(Write(title), run_time=0.8)",
+                "        self.play(FadeIn(sub, shift=UP * 0.2), run_time=0.4)",
+                "        self.play(FadeIn(url_group, scale=0.9), run_time=0.5)",
+                "        self.wait(2)",
+                "        self.play(FadeOut(Group(*self.mobjects)), run_time=0.8)",
+                "",
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -445,11 +470,12 @@ class ReleaseVideoGenerator:
         segments: List[Dict[str, Any]] = []
 
         # Intro
-        segments.append({
-            "text": f"Introducing {product} version {version}. "
-                    f"Here's what's new in this release.",
-            "pause_after": 1.0,
-        })
+        segments.append(
+            {
+                "text": f"Introducing {product} version {version}. Here's what's new in this release.",
+                "pause_after": 1.0,
+            }
+        )
 
         # Features
         if cl and cl.features:
@@ -459,43 +485,50 @@ class ReleaseVideoGenerator:
                 features_text += f", and {top_features[-1]}"
             else:
                 features_text = top_features[0]
-            segments.append({
-                "text": f"This release brings {len(cl.features)} new features, "
-                        f"including {features_text}.",
-                "pause_after": 1.0,
-            })
+            segments.append(
+                {
+                    "text": f"This release brings {len(cl.features)} new features, including {features_text}.",
+                    "pause_after": 1.0,
+                }
+            )
 
         # Fixes
         if cl and cl.fixes:
-            segments.append({
-                "text": f"{len(cl.fixes)} bugs have been fixed, "
-                        f"improving stability and performance.",
-                "pause_after": 0.8,
-            })
+            segments.append(
+                {
+                    "text": f"{len(cl.fixes)} bugs have been fixed, improving stability and performance.",
+                    "pause_after": 0.8,
+                }
+            )
 
         # Stats
         if cl and cl.contributors:
-            segments.append({
-                "text": f"With contributions from {len(cl.contributors)} developers, "
-                        f"this release touches {cl.stats.get('files_changed', 0)} files "
-                        f"with {cl.stats.get('insertions', 0)} additions.",
-                "pause_after": 0.8,
-            })
+            segments.append(
+                {
+                    "text": f"With contributions from {len(cl.contributors)} developers, "
+                    f"this release touches {cl.stats.get('files_changed', 0)} files "
+                    f"with {cl.stats.get('insertions', 0)} additions.",
+                    "pause_after": 0.8,
+                }
+            )
 
         # Breaking changes
         if cl and cl.breaking_changes:
-            segments.append({
-                "text": f"Please note, there are {len(cl.breaking_changes)} breaking changes "
-                        f"in this release. Check the changelog for migration details.",
-                "pause_after": 1.0,
-            })
+            segments.append(
+                {
+                    "text": f"Please note, there are {len(cl.breaking_changes)} breaking changes "
+                    f"in this release. Check the changelog for migration details.",
+                    "pause_after": 1.0,
+                }
+            )
 
         # Outro
-        segments.append({
-            "text": f"Upgrade to {product} version {version} today. "
-                    f"Thank you for your support.",
-            "pause_after": 1.5,
-        })
+        segments.append(
+            {
+                "text": f"Upgrade to {product} version {version} today. Thank you for your support.",
+                "pause_after": 1.5,
+            }
+        )
 
         return segments
 
@@ -516,10 +549,15 @@ class ReleaseVideoGenerator:
         quality = "-qh" if h >= 1080 else "-qm"
 
         cmd = [
-            "manim", "render", quality,
-            "--fps", str(cfg.fps),
-            "--media_dir", cfg.output_dir,
-            script_path, "ReleaseVideo",
+            "manim",
+            "render",
+            quality,
+            "--fps",
+            str(cfg.fps),
+            "--media_dir",
+            cfg.output_dir,
+            script_path,
+            "ReleaseVideo",
         ]
 
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
@@ -544,16 +582,16 @@ class ReleaseVideoGenerator:
 
         loop = asyncio.new_event_loop()
         try:
-            audio_path = loop.run_until_complete(
-                self._generate_narration_async(segments, narration_dir)
-            )
+            audio_path = loop.run_until_complete(self._generate_narration_async(segments, narration_dir))
         finally:
             loop.close()
 
         return audio_path
 
     async def _generate_narration_async(
-        self, segments: List[Dict[str, Any]], narration_dir: str,
+        self,
+        segments: List[Dict[str, Any]],
+        narration_dir: str,
     ) -> str:
         if edge_tts is None:
             raise RuntimeError(
@@ -567,7 +605,10 @@ class ReleaseVideoGenerator:
         for i, seg in enumerate(segments):
             seg_path = os.path.join(narration_dir, f"seg_{i:02d}.mp3")
             comm = edge_tts.Communicate(
-                seg["text"], cfg.voice, rate=cfg.voice_rate, pitch=cfg.voice_pitch,
+                seg["text"],
+                cfg.voice,
+                rate=cfg.voice_rate,
+                pitch=cfg.voice_pitch,
             )
             await comm.save(seg_path)
             part_paths.append(seg_path)
@@ -577,10 +618,21 @@ class ReleaseVideoGenerator:
             if pause > 0:
                 sil_path = os.path.join(narration_dir, f"sil_{i:02d}.mp3")
                 subprocess.run(
-                    [self._ffmpeg, "-y", "-f", "lavfi",
-                     "-i", "anullsrc=r=24000:cl=mono",
-                     "-t", str(pause),
-                     "-c:a", "libmp3lame", "-q:a", "9", sil_path],
+                    [
+                        self._ffmpeg,
+                        "-y",
+                        "-f",
+                        "lavfi",
+                        "-i",
+                        "anullsrc=r=24000:cl=mono",
+                        "-t",
+                        str(pause),
+                        "-c:a",
+                        "libmp3lame",
+                        "-q:a",
+                        "9",
+                        sil_path,
+                    ],
                     capture_output=True,
                 )
                 part_paths.append(sil_path)
@@ -593,8 +645,21 @@ class ReleaseVideoGenerator:
 
         output_path = os.path.join(self.config.output_dir, "narration.mp3")
         subprocess.run(
-            [self._ffmpeg, "-y", "-f", "concat", "-safe", "0",
-             "-i", list_path, "-c:a", "libmp3lame", "-q:a", "2", output_path],
+            [
+                self._ffmpeg,
+                "-y",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                list_path,
+                "-c:a",
+                "libmp3lame",
+                "-q:a",
+                "2",
+                output_path,
+            ],
             capture_output=True,
         )
         return output_path
@@ -615,13 +680,28 @@ class ReleaseVideoGenerator:
             dur = cfg.max_duration
 
         cmd = [
-            self._ffmpeg, "-y",
-            "-stream_loop", "-1", "-i", video_path,
-            "-i", audio_path,
-            "-c:v", "libx264", "-preset", "fast", "-crf", "23",
-            "-c:a", "aac", "-b:a", "192k",
-            "-t", str(min(dur, cfg.max_duration)),
-            "-pix_fmt", "yuv420p",
+            self._ffmpeg,
+            "-y",
+            "-stream_loop",
+            "-1",
+            "-i",
+            video_path,
+            "-i",
+            audio_path,
+            "-c:v",
+            "libx264",
+            "-preset",
+            "fast",
+            "-crf",
+            "23",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            "-t",
+            str(min(dur, cfg.max_duration)),
+            "-pix_fmt",
+            "yuv420p",
             output_path,
         ]
 
@@ -634,7 +714,8 @@ class ReleaseVideoGenerator:
     def _get_duration(self, path: str) -> float:
         result = subprocess.run(
             [self._ffmpeg, "-i", path, "-f", "null", "-"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         for line in result.stderr.splitlines():
             if "Duration:" in line:

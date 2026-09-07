@@ -59,8 +59,7 @@ def check_pii(text: str) -> List[str]:
             detected.append(pii_type)
     if detected:
         security_log.warning(
-            "Potential PII detected in LLM input: %s. "
-            "Review data before sending to external APIs.",
+            "Potential PII detected in LLM input: %s. Review data before sending to external APIs.",
             ", ".join(detected),
         )
     return detected

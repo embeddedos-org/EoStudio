@@ -27,16 +27,11 @@ class DocGenerator:
             except OSError:
                 continue
         context = "\n\n".join(context_parts)
-        prompt = (
-            f"Generate a comprehensive README.md for this project.\n\n{context}"
-        )
+        prompt = f"Generate a comprehensive README.md for this project.\n\n{context}"
         return self._ask(prompt)
 
     def generate_api_docs(self, code: str, filename: str) -> str:
-        prompt = (
-            f"Generate API documentation for the following code "
-            f"from {filename}:\n\n{code}"
-        )
+        prompt = f"Generate API documentation for the following code from {filename}:\n\n{code}"
         return self._ask(prompt)
 
     def generate_architecture_diagram(self, project_path: str) -> str:
@@ -47,16 +42,11 @@ class DocGenerator:
                     rel = os.path.relpath(os.path.join(root, fname), project_path)
                     files.append(rel)
         file_list = "\n".join(files[:50])
-        prompt = (
-            f"Generate a Mermaid architecture diagram for a project with "
-            f"these files:\n{file_list}"
-        )
+        prompt = f"Generate a Mermaid architecture diagram for a project with these files:\n{file_list}"
         return self._ask(prompt)
 
     def generate_changelog(self, git_log: str) -> str:
-        prompt = (
-            f"Generate a changelog from the following git log:\n\n{git_log}"
-        )
+        prompt = f"Generate a changelog from the following git log:\n\n{git_log}"
         return self._ask(prompt)
 
     def generate_migration_guide(self, old_code: str, new_code: str) -> str:

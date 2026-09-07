@@ -9,27 +9,33 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class TechDataModel:
     """A data model/entity in the tech spec."""
+
     name: str
     fields: List[Dict[str, str]] = field(default_factory=list)
     relationships: List[str] = field(default_factory=list)
     description: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"name": self.name, "fields": self.fields,
-                "relationships": self.relationships, "description": self.description}
+        return {
+            "name": self.name,
+            "fields": self.fields,
+            "relationships": self.relationships,
+            "description": self.description,
+        }
 
     def to_markdown(self) -> str:
         lines = [f"#### {self.name}", self.description, ""]
         lines.append("| Field | Type | Description |")
         lines.append("|-------|------|-------------|")
         for f in self.fields:
-            lines.append(f"| {f.get('name','')} | {f.get('type','')} | {f.get('description','')} |")
+            lines.append(f"| {f.get('name', '')} | {f.get('type', '')} | {f.get('description', '')} |")
         return "\n".join(lines)
 
 
 @dataclass
 class TechAPI:
     """An API endpoint in the tech spec."""
+
     method: str  # GET, POST, PUT, DELETE
     path: str
     description: str = ""
@@ -39,9 +45,14 @@ class TechAPI:
     rate_limit: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"method": self.method, "path": self.path, "description": self.description,
-                "request_body": self.request_body, "response": self.response,
-                "auth_required": self.auth_required}
+        return {
+            "method": self.method,
+            "path": self.path,
+            "description": self.description,
+            "request_body": self.request_body,
+            "response": self.response,
+            "auth_required": self.auth_required,
+        }
 
     def to_markdown(self) -> str:
         auth = "Auth required" if self.auth_required else "Public"
@@ -51,6 +62,7 @@ class TechAPI:
 @dataclass
 class TechComponent:
     """A system component (service, module, package)."""
+
     name: str
     description: str = ""
     tech_stack: List[str] = field(default_factory=list)
@@ -62,8 +74,10 @@ class TechComponent:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "name": self.name, "description": self.description,
-            "tech_stack": self.tech_stack, "responsibilities": self.responsibilities,
+            "name": self.name,
+            "description": self.description,
+            "tech_stack": self.tech_stack,
+            "responsibilities": self.responsibilities,
             "dependencies": self.dependencies,
             "apis": [a.to_dict() for a in self.apis],
             "data_models": [d.to_dict() for d in self.data_models],
@@ -71,9 +85,15 @@ class TechComponent:
         }
 
     def to_markdown(self) -> str:
-        lines = [f"### {self.name}", self.description, "",
-                 f"**Stack:** {', '.join(self.tech_stack)}", "",
-                 "**Responsibilities:**", *[f"- {r}" for r in self.responsibilities]]
+        lines = [
+            f"### {self.name}",
+            self.description,
+            "",
+            f"**Stack:** {', '.join(self.tech_stack)}",
+            "",
+            "**Responsibilities:**",
+            *[f"- {r}" for r in self.responsibilities],
+        ]
         if self.apis:
             lines.extend(["", "**APIs:**", *[a.to_markdown() for a in self.apis]])
         if self.data_models:
@@ -86,6 +106,7 @@ class TechComponent:
 @dataclass
 class TechSpec:
     """Complete technical specification."""
+
     project_name: str
     version: str = "1.0"
     architecture_overview: str = ""
@@ -104,18 +125,26 @@ class TechSpec:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "project_name": self.project_name, "version": self.version,
+            "project_name": self.project_name,
+            "version": self.version,
             "architecture_overview": self.architecture_overview,
             "tech_stack": self.tech_stack,
             "components": [c.to_dict() for c in self.components],
-            "infrastructure": self.infrastructure, "security": self.security,
+            "infrastructure": self.infrastructure,
+            "security": self.security,
             "performance_targets": self.performance_targets,
-            "testing_strategy": self.testing_strategy, "deployment": self.deployment,
+            "testing_strategy": self.testing_strategy,
+            "deployment": self.deployment,
         }
 
     def to_markdown(self) -> str:
-        lines = [f"# Tech Spec: {self.project_name} v{self.version}", "",
-                 "## Architecture", self.architecture_overview, ""]
+        lines = [
+            f"# Tech Spec: {self.project_name} v{self.version}",
+            "",
+            "## Architecture",
+            self.architecture_overview,
+            "",
+        ]
         if self.tech_stack:
             lines.append("## Tech Stack")
             for cat, items in self.tech_stack.items():
@@ -139,18 +168,24 @@ class TechSpec:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "TechSpec":
-        spec = cls(project_name=data["project_name"], version=data.get("version", "1.0"),
-                   architecture_overview=data.get("architecture_overview", ""),
-                   tech_stack=data.get("tech_stack", {}),
-                   infrastructure=data.get("infrastructure", {}),
-                   security=data.get("security", []),
-                   performance_targets=data.get("performance_targets", {}),
-                   testing_strategy=data.get("testing_strategy", {}),
-                   deployment=data.get("deployment", {}))
+        spec = cls(
+            project_name=data["project_name"],
+            version=data.get("version", "1.0"),
+            architecture_overview=data.get("architecture_overview", ""),
+            tech_stack=data.get("tech_stack", {}),
+            infrastructure=data.get("infrastructure", {}),
+            security=data.get("security", []),
+            performance_targets=data.get("performance_targets", {}),
+            testing_strategy=data.get("testing_strategy", {}),
+            deployment=data.get("deployment", {}),
+        )
         for c in data.get("components", []):
-            comp = TechComponent(name=c["name"], description=c.get("description", ""),
-                                 tech_stack=c.get("tech_stack", []),
-                                 responsibilities=c.get("responsibilities", []),
-                                 file_structure=c.get("file_structure", []))
+            comp = TechComponent(
+                name=c["name"],
+                description=c.get("description", ""),
+                tech_stack=c.get("tech_stack", []),
+                responsibilities=c.get("responsibilities", []),
+                file_structure=c.get("file_structure", []),
+            )
             spec.components.append(comp)
         return spec

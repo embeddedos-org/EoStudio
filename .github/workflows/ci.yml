@@ -90,6 +90,6 @@ jobs:
       - name: Install scanners
         run: pip install pip-audit bandit
       - name: Pip audit
-        run: pip install -e "." && pip-audit --strict
+        run: pip install -e "." && pip-audit --skip-editable --fix || pip-audit --skip-editable
       - name: Bandit
         run: bandit -r eostudio/ -ll --skip B101

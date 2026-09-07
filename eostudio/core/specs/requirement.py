@@ -16,15 +16,16 @@ class RequirementType(Enum):
 
 
 class RequirementPriority(Enum):
-    MUST = "must"         # P0 — must have
-    SHOULD = "should"     # P1 — should have
-    COULD = "could"       # P2 — nice to have
-    WONT = "wont"         # P3 — won't have this release
+    MUST = "must"  # P0 — must have
+    SHOULD = "should"  # P1 — should have
+    COULD = "could"  # P2 — nice to have
+    WONT = "wont"  # P3 — won't have this release
 
 
 @dataclass
 class AcceptanceCriteria:
     """A single acceptance criterion for a requirement."""
+
     description: str
     test_method: str = "manual"  # manual, unit, integration, e2e
     verified: bool = False
@@ -36,6 +37,7 @@ class AcceptanceCriteria:
 @dataclass
 class Requirement:
     """A single requirement/user story in the spec."""
+
     id: str
     title: str
     description: str
@@ -59,18 +61,29 @@ class Requirement:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "id": self.id, "title": self.title, "description": self.description,
-            "type": self.req_type.value, "priority": self.priority.value,
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "type": self.req_type.value,
+            "priority": self.priority.value,
             "acceptance_criteria": [ac.to_dict() for ac in self.acceptance_criteria],
-            "dependencies": self.dependencies, "tags": self.tags,
-            "status": self.status, "assignee": self.assignee,
+            "dependencies": self.dependencies,
+            "tags": self.tags,
+            "status": self.status,
+            "assignee": self.assignee,
             "estimated_effort": self.estimated_effort,
         }
 
     def to_markdown(self) -> str:
-        lines = [f"### {self.id}: {self.title}", "",
-                 f"**Type:** {self.req_type.value} | **Priority:** {self.priority.value} | **Effort:** {self.estimated_effort}", "",
-                 self.description, "", "**Acceptance Criteria:**"]
+        lines = [
+            f"### {self.id}: {self.title}",
+            "",
+            f"**Type:** {self.req_type.value} | **Priority:** {self.priority.value} | **Effort:** {self.estimated_effort}",
+            "",
+            self.description,
+            "",
+            "**Acceptance Criteria:**",
+        ]
         for i, ac in enumerate(self.acceptance_criteria, 1):
             check = "x" if ac.verified else " "
             lines.append(f"- [{check}] {ac.description} ({ac.test_method})")
@@ -81,11 +94,14 @@ class Requirement:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Requirement":
         req = cls(
-            id=data["id"], title=data["title"], description=data["description"],
+            id=data["id"],
+            title=data["title"],
+            description=data["description"],
             req_type=RequirementType(data.get("type", "user_story")),
             priority=RequirementPriority(data.get("priority", "should")),
             dependencies=data.get("dependencies", []),
-            tags=data.get("tags", []), status=data.get("status", "draft"),
+            tags=data.get("tags", []),
+            status=data.get("status", "draft"),
             assignee=data.get("assignee", ""),
             estimated_effort=data.get("estimated_effort", ""),
         )

@@ -447,10 +447,12 @@ class GitIntegration:
                 if not line:
                     continue
                 parts = line.split(" ", 1)
-                entries.append({
-                    "hash": parts[0],
-                    "message": parts[1] if len(parts) > 1 else "",
-                })
+                entries.append(
+                    {
+                        "hash": parts[0],
+                        "message": parts[1] if len(parts) > 1 else "",
+                    }
+                )
             return entries
 
         # Detailed format: use a separator that is unlikely to appear in
@@ -469,12 +471,14 @@ class GitIntegration:
             parts = line.split(sep, 3)
             if len(parts) < 4:
                 continue
-            entries.append({
-                "hash": parts[0],
-                "author": parts[1],
-                "date": parts[2],
-                "message": parts[3],
-            })
+            entries.append(
+                {
+                    "hash": parts[0],
+                    "author": parts[1],
+                    "date": parts[2],
+                    "message": parts[3],
+                }
+            )
         return entries
 
     def blame(self, file: str) -> List[Dict[str, str]]:
@@ -503,9 +507,9 @@ class GitIntegration:
                     "line_no": header_match.group(3),
                 }
             elif line.startswith("author "):
-                current["author"] = line[len("author "):]
+                current["author"] = line[len("author ") :]
             elif line.startswith("author-time "):
-                current.setdefault("date", line[len("author-time "):])
+                current.setdefault("date", line[len("author-time ") :])
             elif line.startswith("\t"):
                 current["content"] = line[1:]
                 entries.append(current)
@@ -527,7 +531,10 @@ class GitIntegration:
         unmerged paths.
         """
         result = self._run_git(
-            "diff", "--name-only", "--diff-filter=U", check=False,
+            "diff",
+            "--name-only",
+            "--diff-filter=U",
+            check=False,
         )
         if result.returncode != 0:
             return []

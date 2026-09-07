@@ -7,6 +7,7 @@ environment variable overrides, and change notifications.
 Scope resolution order (highest priority first):
     FOLDER -> WORKSPACE -> USER -> SYSTEM -> DEFAULT
 """
+
 from __future__ import annotations
 
 import base64
@@ -67,38 +68,57 @@ _BUILTIN_SCHEMAS: List[ConfigSchema] = [
         enum_values=["dark", "light", "high-contrast"],
     ),
     ConfigSchema(
-        "editor.wordWrap", str, "off", "Word wrap mode.",
+        "editor.wordWrap",
+        str,
+        "off",
+        "Word wrap mode.",
         enum_values=["off", "on", "wordWrapColumn", "bounded"],
     ),
     ConfigSchema(
-        "editor.lineNumbers", str, "on", "Line number rendering.",
+        "editor.lineNumbers",
+        str,
+        "on",
+        "Line number rendering.",
         enum_values=["off", "on", "relative"],
     ),
     ConfigSchema("editor.minimap.enabled", bool, True, "Show minimap."),
     ConfigSchema("editor.formatOnSave", bool, False, "Format the file on save."),
     ConfigSchema(
-        "editor.autoSave", str, "off", "Auto-save mode.",
+        "editor.autoSave",
+        str,
+        "off",
+        "Auto-save mode.",
         enum_values=["off", "afterDelay", "onFocusChange"],
     ),
     ConfigSchema("editor.autoSaveDelay", int, 1000, "Auto-save delay in milliseconds."),
     ConfigSchema(
-        "editor.renderWhitespace", str, "selection", "Whitespace rendering.",
+        "editor.renderWhitespace",
+        str,
+        "selection",
+        "Whitespace rendering.",
         enum_values=["none", "boundary", "selection", "all"],
     ),
     ConfigSchema("terminal.shell", str, "", "Path to the default terminal shell."),
     ConfigSchema("terminal.fontSize", int, 13, "Font size for the integrated terminal."),
     ConfigSchema(
-        "terminal.cursorStyle", str, "block", "Terminal cursor style.",
+        "terminal.cursorStyle",
+        str,
+        "block",
+        "Terminal cursor style.",
         enum_values=["block", "underline", "line"],
     ),
     ConfigSchema("files.encoding", str, "utf-8", "Default file encoding."),
     ConfigSchema("files.autoGuessEncoding", bool, False, "Auto-detect file encoding."),
     ConfigSchema(
-        "files.trimTrailingWhitespace", bool, False,
+        "files.trimTrailingWhitespace",
+        bool,
+        False,
         "Trim trailing whitespace on save.",
     ),
     ConfigSchema(
-        "files.insertFinalNewline", bool, False,
+        "files.insertFinalNewline",
+        bool,
+        False,
         "Insert a final newline at end of file on save.",
     ),
     ConfigSchema("files.exclude", dict, {}, "Glob patterns for files to exclude."),
@@ -142,9 +162,7 @@ def _write_json(path: Path, data: Dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     try:
-        tmp.write_text(
-            json.dumps(data, indent=4, sort_keys=True) + "\n", encoding="utf-8"
-        )
+        tmp.write_text(json.dumps(data, indent=4, sort_keys=True) + "\n", encoding="utf-8")
         tmp.replace(path)
     except OSError as exc:
         logger.error("Failed to write config %s: %s", path, exc)
@@ -239,6 +257,7 @@ class SecretsManager:
     def _try_import_keyring():
         try:
             import keyring  # type: ignore[import-untyped]
+
             return keyring
         except ImportError:
             return None
@@ -247,11 +266,7 @@ class SecretsManager:
 
     def _derive_key(self) -> bytes:
         """Derive a machine-local obfuscation key."""
-        seed = (
-            f"{platform.node()}-"
-            f"{os.getlogin() if hasattr(os, 'getlogin') else 'user'}-"
-            f"eostudio"
-        )
+        seed = f"{platform.node()}-{os.getlogin() if hasattr(os, 'getlogin') else 'user'}-eostudio"
         return hashlib.sha256(seed.encode()).digest()
 
     def _xor_bytes(self, data: bytes) -> bytes:
@@ -325,9 +340,7 @@ class ConfigManager:
         self._lock = threading.RLock()
         self._schemas: Dict[str, ConfigSchema] = {}
         self._listeners: Dict[str, List[Callable]] = {}
-        self._workspace_path: Optional[Path] = (
-            Path(workspace_path) if workspace_path else None
-        )
+        self._workspace_path: Optional[Path] = Path(workspace_path) if workspace_path else None
         self._folder_paths: List[Path] = []
 
         # Scope -> in-memory cache (loaded lazily on first access)
@@ -504,9 +517,7 @@ class ConfigManager:
         attempting to write to the DEFAULT scope.
         """
         if scope == ConfigScope.DEFAULT:
-            raise ValueError(
-                "Cannot write to DEFAULT scope; register a schema instead."
-            )
+            raise ValueError("Cannot write to DEFAULT scope; register a schema instead.")
 
         if not self.validate(key, value):
             schema = self._schemas.get(key)
@@ -520,16 +531,12 @@ class ConfigManager:
 
         if scope == ConfigScope.FOLDER:
             if not self._folder_paths:
-                raise ValueError(
-                    "No folder paths configured. Call add_folder_path() first."
-                )
+                raise ValueError("No folder paths configured. Call add_folder_path() first.")
             path = self._folder_paths[0] / ".eostudio" / "settings.json"
         else:
             path = self._path_for_scope(scope)
             if path is None:
-                raise ValueError(
-                    f"No config path available for scope {scope.name}."
-                )
+                raise ValueError(f"No config path available for scope {scope.name}.")
 
         data = _read_json(path)
         data[key] = value
@@ -636,9 +643,7 @@ class ConfigManager:
         data = self.get_scope(scope)
         _write_json(Path(path), data)
 
-    def import_config(
-        self, path: str, scope: ConfigScope = ConfigScope.USER
-    ) -> None:
+    def import_config(self, path: str, scope: ConfigScope = ConfigScope.USER) -> None:
         """Import configuration from a JSON file into *scope*.
 
         Existing keys in *scope* are merged (imported values win).
@@ -688,6 +693,4 @@ class ConfigManager:
             try:
                 cb(key, new_value)
             except Exception:
-                logger.exception(
-                    "Error in config change listener for %r", key
-                )
+                logger.exception("Error in config change listener for %r", key)

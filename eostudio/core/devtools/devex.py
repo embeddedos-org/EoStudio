@@ -19,6 +19,7 @@ Features:
 - Port Manager: see what's running on which ports
 - SSH Remote: connect to remote machines and edit files
 """
+
 from __future__ import annotations
 
 import json
@@ -35,6 +36,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 # ------------------------------------------------------------------
 # Git Supercharger
 # ------------------------------------------------------------------
+
 
 @dataclass
 class GitCommit:
@@ -110,8 +112,10 @@ class GitSupercharger:
         """Run a git command in the workspace."""
         return subprocess.run(
             ["git"] + list(args),
-            capture_output=True, text=True,
-            cwd=self._workspace, timeout=30,
+            capture_output=True,
+            text=True,
+            cwd=self._workspace,
+            timeout=30,
         )
 
     # ---- Status & Info ----
@@ -163,11 +167,16 @@ class GitSupercharger:
         for line in result.stdout.strip().splitlines():
             parts = line.split("|", 5)
             if len(parts) == 6:
-                commits.append(GitCommit(
-                    hash=parts[0], short_hash=parts[1],
-                    author=parts[2], email=parts[3],
-                    date=parts[4], message=parts[5],
-                ))
+                commits.append(
+                    GitCommit(
+                        hash=parts[0],
+                        short_hash=parts[1],
+                        author=parts[2],
+                        email=parts[3],
+                        date=parts[4],
+                        message=parts[5],
+                    )
+                )
         return commits
 
     def branches(self) -> List[GitBranch]:
@@ -190,11 +199,16 @@ class GitSupercharger:
                 m = re.search(r"behind (\d+)", parts[2])
                 if m:
                     behind = int(m.group(1))
-            branches.append(GitBranch(
-                name=name, is_current=is_current,
-                is_remote=is_remote, ahead=ahead, behind=behind,
-                last_commit=parts[1] if len(parts) > 1 else "",
-            ))
+            branches.append(
+                GitBranch(
+                    name=name,
+                    is_current=is_current,
+                    is_remote=is_remote,
+                    ahead=ahead,
+                    behind=behind,
+                    last_commit=parts[1] if len(parts) > 1 else "",
+                )
+            )
         return branches
 
     # ---- AI-Powered Operations ----
@@ -218,6 +232,7 @@ class GitSupercharger:
             return f"chore: update {files.split()[0] if files else 'files'}"
 
         from eostudio.core.ai.multi_model_router import TaskType
+
         style_guide = (
             "Use Conventional Commits format: type(scope): description\n"
             "Types: feat, fix, docs, style, refactor, test, chore, perf\n"
@@ -247,6 +262,7 @@ class GitSupercharger:
             return conflict.ours  # Default to ours
 
         from eostudio.core.ai.multi_model_router import TaskType
+
         prompt = (
             f"Resolve this git merge conflict intelligently. "
             f"Choose the best resolution that preserves both changes where possible.\n\n"
@@ -275,6 +291,7 @@ class GitSupercharger:
 
         if self._router and not title:
             from eostudio.core.ai.multi_model_router import TaskType
+
             prompt = (
                 f"Write a GitHub Pull Request title and description.\n\n"
                 f"Branch: {head}\n"
@@ -289,7 +306,7 @@ class GitSupercharger:
             title_line = next((l for l in lines if l.startswith("TITLE:")), "")
             title = title_line.replace("TITLE:", "").strip() or f"feat: {head}"
             body_start = next((i for i, l in enumerate(lines) if l.startswith("BODY:")), -1)
-            body = "\n".join(lines[body_start + 1:]).strip() if body_start >= 0 else ""
+            body = "\n".join(lines[body_start + 1 :]).strip() if body_start >= 0 else ""
         else:
             title = title or f"feat: {head}"
             body = body or f"## Changes\n\n{commits_text}"
@@ -320,18 +337,21 @@ class GitSupercharger:
                 if conflict_count > 0:
                     ours = re.search(r"<<<<<<< HEAD\n(.*?)\n=======", content, re.DOTALL)
                     theirs = re.search(r"=======\n(.*?)\n>>>>>>>", content, re.DOTALL)
-                    conflicts.append(GitConflict(
-                        file=fname,
-                        conflict_count=conflict_count,
-                        ours=ours.group(1) if ours else "",
-                        theirs=theirs.group(1) if theirs else "",
-                    ))
+                    conflicts.append(
+                        GitConflict(
+                            file=fname,
+                            conflict_count=conflict_count,
+                            ours=ours.group(1) if ours else "",
+                            theirs=theirs.group(1) if theirs else "",
+                        )
+                    )
         return conflicts
 
 
 # ------------------------------------------------------------------
 # CI/CD Integration
 # ------------------------------------------------------------------
+
 
 class CIStatus(Enum):
     SUCCESS = "success"
@@ -400,9 +420,18 @@ class CICDIntegration:
     def _github_runs(self, limit: int) -> List[CIPipeline]:
         """Get GitHub Actions workflow runs using gh CLI."""
         result = subprocess.run(
-            ["gh", "run", "list", f"--limit={limit}", "--json",
-             "databaseId,name,status,conclusion,headBranch,headSha,startedAt,updatedAt,url"],
-            capture_output=True, text=True, cwd=self._workspace, timeout=30,
+            [
+                "gh",
+                "run",
+                "list",
+                f"--limit={limit}",
+                "--json",
+                "databaseId,name,status,conclusion,headBranch,headSha,startedAt,updatedAt,url",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=self._workspace,
+            timeout=30,
         )
         if result.returncode != 0:
             return []
@@ -424,23 +453,28 @@ class CICDIntegration:
         for run in runs:
             conclusion = run.get("conclusion", "") or run.get("status", "")
             status = status_map.get(conclusion, CIStatus.UNKNOWN)
-            pipelines.append(CIPipeline(
-                id=str(run.get("databaseId", "")),
-                name=run.get("name", ""),
-                status=status,
-                branch=run.get("headBranch", ""),
-                commit=run.get("headSha", "")[:7],
-                started_at=run.get("startedAt", ""),
-                duration_seconds=0,
-                url=run.get("url", ""),
-            ))
+            pipelines.append(
+                CIPipeline(
+                    id=str(run.get("databaseId", "")),
+                    name=run.get("name", ""),
+                    status=status,
+                    branch=run.get("headBranch", ""),
+                    commit=run.get("headSha", "")[:7],
+                    started_at=run.get("startedAt", ""),
+                    duration_seconds=0,
+                    url=run.get("url", ""),
+                )
+            )
         return pipelines
 
     def trigger_workflow(self, workflow: str, branch: str = "main") -> bool:
         """Trigger a GitHub Actions workflow."""
         result = subprocess.run(
             ["gh", "workflow", "run", workflow, "--ref", branch],
-            capture_output=True, text=True, cwd=self._workspace, timeout=30,
+            capture_output=True,
+            text=True,
+            cwd=self._workspace,
+            timeout=30,
         )
         return result.returncode == 0
 
@@ -450,6 +484,7 @@ class CICDIntegration:
             return "No AI router or logs available."
 
         from eostudio.core.ai.multi_model_router import TaskType
+
         prompt = (
             f"This CI/CD pipeline failed. Analyze the logs and provide specific fixes.\n\n"
             f"Pipeline: {pipeline.name}\n"
@@ -473,6 +508,7 @@ class CICDIntegration:
             return self._template_workflow(workflow_type, language)
 
         from eostudio.core.ai.multi_model_router import TaskType
+
         prompt = (
             f"Generate a production-ready GitHub Actions workflow for:\n"
             f"- Type: {workflow_type}\n"
@@ -513,6 +549,7 @@ jobs:
 # Docker Manager
 # ------------------------------------------------------------------
 
+
 @dataclass
 class DockerContainer:
     id: str
@@ -549,7 +586,9 @@ class DockerManager:
     def _run(self, *args: str) -> subprocess.CompletedProcess:
         return subprocess.run(
             ["docker"] + list(args),
-            capture_output=True, text=True, timeout=60,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
 
     def is_available(self) -> bool:
@@ -568,11 +607,16 @@ class DockerManager:
         for line in result.stdout.strip().splitlines():
             parts = line.split("|", 5)
             if len(parts) == 6:
-                containers.append(DockerContainer(
-                    id=parts[0][:12], name=parts[1].lstrip("/"),
-                    image=parts[2], status=parts[3],
-                    ports=parts[4], created=parts[5],
-                ))
+                containers.append(
+                    DockerContainer(
+                        id=parts[0][:12],
+                        name=parts[1].lstrip("/"),
+                        image=parts[2],
+                        status=parts[3],
+                        ports=parts[4],
+                        created=parts[5],
+                    )
+                )
         return containers
 
     def list_images(self) -> List[DockerImage]:
@@ -591,11 +635,15 @@ class DockerManager:
                     val = float(m.group(1))
                     unit = m.group(2).upper()
                     size_mb = val * 1024 if unit == "GB" else val if unit == "MB" else val / 1024
-                images.append(DockerImage(
-                    id=parts[0][:12], repository=parts[1],
-                    tag=parts[2], size_mb=round(size_mb, 1),
-                    created=parts[4],
-                ))
+                images.append(
+                    DockerImage(
+                        id=parts[0][:12],
+                        repository=parts[1],
+                        tag=parts[2],
+                        size_mb=round(size_mb, 1),
+                        created=parts[4],
+                    )
+                )
         return images
 
     def start_container(self, name_or_id: str) -> bool:
@@ -635,7 +683,9 @@ class DockerManager:
         args.append(context)
         result = subprocess.run(
             ["docker"] + args,
-            capture_output=True, text=True, timeout=300,
+            capture_output=True,
+            text=True,
+            timeout=300,
             cwd=context,
         )
         return result.returncode == 0, (result.stdout + result.stderr)[-2000:]
@@ -685,6 +735,7 @@ class DockerManager:
 
         if router:
             from eostudio.core.ai.multi_model_router import TaskType
+
             # Read project files for context
             context_files = []
             for fname in ["requirements.txt", "package.json", "Cargo.toml", "go.mod"]:
@@ -745,6 +796,7 @@ CMD ["node", "index.js"]
 # Environment Manager
 # ------------------------------------------------------------------
 
+
 class EnvironmentManager:
     """Manage .env files, secrets, and per-environment configurations."""
 
@@ -755,11 +807,7 @@ class EnvironmentManager:
 
     def list_env_files(self) -> List[str]:
         """List all .env files in the workspace."""
-        return [
-            str(p.relative_to(self._workspace))
-            for p in self._workspace.rglob(".env*")
-            if p.is_file()
-        ]
+        return [str(p.relative_to(self._workspace)) for p in self._workspace.rglob(".env*") if p.is_file()]
 
     def read_env(self, env_file: str = ".env") -> Dict[str, str]:
         """Read an .env file (values masked for secrets)."""
@@ -810,6 +858,7 @@ class EnvironmentManager:
 # DevEx Hub
 # ------------------------------------------------------------------
 
+
 class DevExHub:
     """Unified developer experience hub — single entry point.
 
@@ -849,7 +898,5 @@ class DevExHub:
         }
 
     def _check_git(self) -> bool:
-        result = subprocess.run(
-            ["git", "status"], capture_output=True, cwd=self._workspace
-        )
+        result = subprocess.run(["git", "status"], capture_output=True, cwd=self._workspace)
         return result.returncode == 0

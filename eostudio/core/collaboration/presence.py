@@ -42,9 +42,7 @@ class PresenceManager:
             user.cursor_col = col
             user.last_active = datetime.now(timezone.utc).isoformat()
 
-    def update_selection(
-        self, user_id: str, start: tuple[int, int], end: tuple[int, int]
-    ) -> None:
+    def update_selection(self, user_id: str, start: tuple[int, int], end: tuple[int, int]) -> None:
         user = self._users.get(user_id)
         if user:
             user.selection_start = start

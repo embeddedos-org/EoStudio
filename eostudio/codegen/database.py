@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional
 # Schema dataclasses
 # ------------------------------------------------------------------
 
+
 @dataclass
 class DatabaseColumn:
     """A single column within a database table."""
@@ -72,45 +73,30 @@ class DatabaseSchema:
                 errors.append(f"Table '{table.name}' has no columns.")
             pk_count = sum(1 for c in table.columns if c.primary_key)
             if pk_count == 0:
-                errors.append(
-                    f"Table '{table.name}' has no primary key column."
-                )
+                errors.append(f"Table '{table.name}' has no primary key column.")
             col_names = [c.name for c in table.columns]
             dupes = {n for n in col_names if col_names.count(n) > 1}
             for d in dupes:
-                errors.append(
-                    f"Table '{table.name}' has duplicate column '{d}'."
-                )
+                errors.append(f"Table '{table.name}' has duplicate column '{d}'.")
             for idx_cols in table.indexes:
                 for ic in idx_cols:
                     if ic not in col_names:
-                        errors.append(
-                            f"Index on '{table.name}' references "
-                            f"unknown column '{ic}'."
-                        )
+                        errors.append(f"Index on '{table.name}' references unknown column '{ic}'.")
             for col in table.columns:
                 if col.foreign_key:
                     parts = col.foreign_key.split(".")
                     if len(parts) != 2:
                         errors.append(
-                            f"Column '{table.name}.{col.name}' has "
-                            f"malformed foreign_key '{col.foreign_key}'."
+                            f"Column '{table.name}.{col.name}' has malformed foreign_key '{col.foreign_key}'."
                         )
                     elif parts[0] not in table_names:
-                        errors.append(
-                            f"Column '{table.name}.{col.name}' references "
-                            f"unknown table '{parts[0]}'."
-                        )
+                        errors.append(f"Column '{table.name}.{col.name}' references unknown table '{parts[0]}'.")
 
         for rel in self.relations:
             if rel.from_table not in table_names:
-                errors.append(
-                    f"Relation references unknown table '{rel.from_table}'."
-                )
+                errors.append(f"Relation references unknown table '{rel.from_table}'.")
             if rel.to_table not in table_names:
-                errors.append(
-                    f"Relation references unknown table '{rel.to_table}'."
-                )
+                errors.append(f"Relation references unknown table '{rel.to_table}'.")
 
         return errors
 
@@ -274,6 +260,7 @@ def _map_sql_type(type_str: str, dialect: str) -> str:
 # SQL DDL generator
 # ------------------------------------------------------------------
 
+
 def generate_sql(schema: DatabaseSchema, dialect: str = "sqlite") -> str:
     """Generate SQL CREATE TABLE statements.
 
@@ -286,10 +273,7 @@ def generate_sql(schema: DatabaseSchema, dialect: str = "sqlite") -> str:
         CREATE INDEX statements.
     """
     if dialect not in ("sqlite", "postgresql", "mysql"):
-        raise ValueError(
-            f"Unsupported SQL dialect {dialect!r}. "
-            "Supported: sqlite, postgresql, mysql"
-        )
+        raise ValueError(f"Unsupported SQL dialect {dialect!r}. Supported: sqlite, postgresql, mysql")
 
     lines: List[str] = []
     lines.append(f"-- {schema.name} schema ({dialect})")
@@ -324,10 +308,7 @@ def generate_sql(schema: DatabaseSchema, dialect: str = "sqlite") -> str:
 
             if col.foreign_key:
                 ref_table, ref_col = col.foreign_key.split(".")
-                fk_defs.append(
-                    f"    FOREIGN KEY ({col.name}) "
-                    f"REFERENCES {ref_table}({ref_col})"
-                )
+                fk_defs.append(f"    FOREIGN KEY ({col.name}) REFERENCES {ref_table}({ref_col})")
 
         all_defs = col_defs + fk_defs
         lines.append(f"CREATE TABLE {table.name} (")
@@ -337,9 +318,7 @@ def generate_sql(schema: DatabaseSchema, dialect: str = "sqlite") -> str:
         for idx_cols in table.indexes:
             idx_name = f"idx_{table.name}_{'_'.join(idx_cols)}"
             cols_str = ", ".join(idx_cols)
-            lines.append(
-                f"CREATE INDEX {idx_name} ON {table.name} ({cols_str});\n"
-            )
+            lines.append(f"CREATE INDEX {idx_name} ON {table.name} ({cols_str});\n")
 
     return "\n".join(lines)
 
@@ -407,9 +386,7 @@ def generate_sqlalchemy(schema: DatabaseSchema) -> str:
         lines.append("")
 
         for col in table.columns:
-            sa_type = _SA_TYPE_MAP.get(
-                col.type_str.upper().strip(), "String(255)"
-            )
+            sa_type = _SA_TYPE_MAP.get(col.type_str.upper().strip(), "String(255)")
             args: List[str] = [sa_type]
 
             if col.foreign_key:
@@ -431,9 +408,7 @@ def generate_sqlalchemy(schema: DatabaseSchema) -> str:
         for rel in schema.relations:
             if rel.from_table == table.name:
                 target_cls = _pascal(rel.to_table)
-                lines.append(
-                    f'    {rel.to_table} = relationship("{target_cls}")'
-                )
+                lines.append(f'    {rel.to_table} = relationship("{target_cls}")')
 
         # indexes
         if table.indexes:
@@ -442,9 +417,7 @@ def generate_sqlalchemy(schema: DatabaseSchema) -> str:
             for idx_cols in table.indexes:
                 idx_name = f"idx_{table.name}_{'_'.join(idx_cols)}"
                 cols_str = ", ".join(f'"{c}"' for c in idx_cols)
-                lines.append(
-                    f'        Index("{idx_name}", {cols_str}),'
-                )
+                lines.append(f'        Index("{idx_name}", {cols_str}),')
             lines.append("    )")
 
         lines.append("")
@@ -510,9 +483,7 @@ def generate_prisma(schema: DatabaseSchema) -> str:
         lines.append(f"model {model_name} {{")
 
         for col in table.columns:
-            prisma_type = _PRISMA_TYPE_MAP.get(
-                col.type_str.upper().strip(), "String"
-            )
+            prisma_type = _PRISMA_TYPE_MAP.get(col.type_str.upper().strip(), "String")
             attrs: List[str] = []
 
             if col.primary_key:
@@ -532,16 +503,12 @@ def generate_prisma(schema: DatabaseSchema) -> str:
             if col.foreign_key:
                 ref_table, ref_col = col.foreign_key.split(".")
                 ref_model = _pascal(ref_table)
-                attrs.append(
-                    f'@relation(fields: [{col.name}], references: [{ref_col}])'
-                )
+                attrs.append(f"@relation(fields: [{col.name}], references: [{ref_col}])")
 
             optional = "?" if col.nullable and not col.primary_key else ""
             attr_str = " ".join(attrs)
             spacing = " " if attr_str else ""
-            lines.append(
-                f"  {col.name} {prisma_type}{optional}{spacing}{attr_str}"
-            )
+            lines.append(f"  {col.name} {prisma_type}{optional}{spacing}{attr_str}")
 
         # relation fields
         for rel in schema.relations:
@@ -626,9 +593,7 @@ def generate_django_models(schema: DatabaseSchema) -> str:
             upper = col.type_str.upper().strip()
 
             if col.primary_key and upper in ("SERIAL", "INTEGER", "INT"):
-                lines.append(
-                    f"    {col.name} = models.AutoField(primary_key=True)"
-                )
+                lines.append(f"    {col.name} = models.AutoField(primary_key=True)")
                 continue
 
             if col.foreign_key:
@@ -638,9 +603,7 @@ def generate_django_models(schema: DatabaseSchema) -> str:
                 lines.append(
                     f"    {col.name} = models.ForeignKey("
                     f'"{ref_model}", on_delete={on_delete}, '
-                    f'db_column="{col.name}"'
-                    + (", null=True, blank=True" if col.nullable else "")
-                    + ")"
+                    f'db_column="{col.name}"' + (", null=True, blank=True" if col.nullable else "") + ")"
                 )
                 continue
 
@@ -706,6 +669,7 @@ def generate_django_models(schema: DatabaseSchema) -> str:
 # ASCII ERD generator
 # ------------------------------------------------------------------
 
+
 def generate_erd_ascii(schema: DatabaseSchema) -> str:
     """Generate an ASCII-art Entity-Relationship Diagram.
 
@@ -754,9 +718,7 @@ def generate_erd_ascii(schema: DatabaseSchema) -> str:
         for rel in schema.relations:
             arrow = _erd_arrow(rel.relation_type)
             lines.append(
-                f"  {rel.from_table}.{rel.from_column} "
-                f"{arrow} {rel.to_table}.{rel.to_column}"
-                f"  [{rel.relation_type}]"
+                f"  {rel.from_table}.{rel.from_column} {arrow} {rel.to_table}.{rel.to_column}  [{rel.relation_type}]"
             )
         lines.append("")
 
@@ -794,9 +756,7 @@ def _erd_arrow(relation_type: str) -> str:
 # Naming helpers
 # ------------------------------------------------------------------
 
+
 def _pascal(name: str) -> str:
     """Convert a name to PascalCase."""
-    return "".join(
-        w.capitalize()
-        for w in name.replace("-", " ").replace("_", " ").split()
-    )
+    return "".join(w.capitalize() for w in name.replace("-", " ").replace("_", " ").split())

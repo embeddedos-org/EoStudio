@@ -4,17 +4,20 @@ Activity bar, sidebar, tabbed editor, bottom panel, status bar,
 command palette, find/replace, syntax highlighting, git integration.
 """
 
-
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -75,15 +78,23 @@ except ImportError:
 # Keyboard shortcuts
 # ---------------------------------------------------------------------------
 SHORTCUTS: Dict[str, str] = {
-    "<Control-s>": "save", "<Control-Shift-S>": "save_as",
-    "<Control-n>": "new_file", "<Control-o>": "open_file",
-    "<Control-w>": "close_tab", "<Control-Tab>": "next_tab",
+    "<Control-s>": "save",
+    "<Control-Shift-S>": "save_as",
+    "<Control-n>": "new_file",
+    "<Control-o>": "open_file",
+    "<Control-w>": "close_tab",
+    "<Control-Tab>": "next_tab",
     "<Control-Shift-Tab>": "prev_tab",
-    "<Control-f>": "find", "<Control-h>": "find_replace",
-    "<Control-g>": "go_to_line", "<Control-Shift-P>": "command_palette",
-    "<Control-b>": "toggle_sidebar", "<Control-j>": "toggle_panel",
-    "<Control-d>": "duplicate_line", "<Control-slash>": "toggle_comment",
-    "<F5>": "run", "<F9>": "toggle_breakpoint",
+    "<Control-f>": "find",
+    "<Control-h>": "find_replace",
+    "<Control-g>": "go_to_line",
+    "<Control-Shift-P>": "command_palette",
+    "<Control-b>": "toggle_sidebar",
+    "<Control-j>": "toggle_panel",
+    "<Control-d>": "duplicate_line",
+    "<Control-slash>": "toggle_comment",
+    "<F5>": "run",
+    "<F9>": "toggle_breakpoint",
     "<Control-Shift-grave>": "new_terminal",
 }
 
@@ -91,52 +102,113 @@ SHORTCUTS: Dict[str, str] = {
 # Activity-bar icons (ASCII-safe Unicode)
 # ---------------------------------------------------------------------------
 ACTIVITY_ICONS: List[Tuple[str, str]] = [
-    ("explorer", "\u2630"), ("search", "\u2315"),
-    ("git", "\u2387"), ("extensions", "\u29c9"),
-    ("debug", "\u2699"), ("run", "\u25b6"),
+    ("explorer", "\u2630"),
+    ("search", "\u2315"),
+    ("git", "\u2387"),
+    ("extensions", "\u29c9"),
+    ("debug", "\u2699"),
+    ("run", "\u25b6"),
 ]
 
 # ---------------------------------------------------------------------------
 # File-type icons (short ASCII labels)
 # ---------------------------------------------------------------------------
 FILE_ICONS: Dict[str, str] = {
-    ".py": "Py", ".js": "JS", ".ts": "TS", ".tsx": "Tx",
-    ".jsx": "Jx", ".html": "Ht", ".css": "Cs", ".json": "Jn",
-    ".md": "Md", ".xml": "Xm", ".yaml": "Ym", ".yml": "Ym",
-    ".toml": "Tm", ".c": "C", ".h": "H", ".cpp": "C+",
-    ".java": "Jv", ".go": "Go", ".rs": "Rs", ".rb": "Rb",
-    ".php": "Ph", ".sh": "Sh", ".sql": "Sq", ".lua": "Lu",
-    ".dart": "Dt", ".ini": "In", ".txt": "Tx",
+    ".py": "Py",
+    ".js": "JS",
+    ".ts": "TS",
+    ".tsx": "Tx",
+    ".jsx": "Jx",
+    ".html": "Ht",
+    ".css": "Cs",
+    ".json": "Jn",
+    ".md": "Md",
+    ".xml": "Xm",
+    ".yaml": "Ym",
+    ".yml": "Ym",
+    ".toml": "Tm",
+    ".c": "C",
+    ".h": "H",
+    ".cpp": "C+",
+    ".java": "Jv",
+    ".go": "Go",
+    ".rs": "Rs",
+    ".rb": "Rb",
+    ".php": "Ph",
+    ".sh": "Sh",
+    ".sql": "Sq",
+    ".lua": "Lu",
+    ".dart": "Dt",
+    ".ini": "In",
+    ".txt": "Tx",
 }
 
 # ---------------------------------------------------------------------------
 # Extension -> language name mapping
 # ---------------------------------------------------------------------------
 LANGUAGE_MAP: Dict[str, str] = {
-    ".py": "Python", ".pyw": "Python", ".js": "JavaScript",
-    ".mjs": "JavaScript", ".ts": "TypeScript", ".tsx": "TypeScript",
-    ".jsx": "JavaScript", ".html": "HTML", ".htm": "HTML",
-    ".css": "CSS", ".json": "JSON", ".md": "Markdown",
-    ".xml": "XML", ".yaml": "YAML", ".yml": "YAML",
-    ".toml": "TOML", ".c": "C", ".h": "C", ".cpp": "C++",
-    ".cxx": "C++", ".cc": "C++", ".java": "Java",
-    ".go": "Go", ".rs": "Rust", ".rb": "Ruby",
-    ".php": "PHP", ".sh": "Shell", ".bash": "Shell",
-    ".sql": "SQL", ".lua": "Lua", ".dart": "Dart",
-    ".txt": "Plain Text", ".ini": "INI",
+    ".py": "Python",
+    ".pyw": "Python",
+    ".js": "JavaScript",
+    ".mjs": "JavaScript",
+    ".ts": "TypeScript",
+    ".tsx": "TypeScript",
+    ".jsx": "JavaScript",
+    ".html": "HTML",
+    ".htm": "HTML",
+    ".css": "CSS",
+    ".json": "JSON",
+    ".md": "Markdown",
+    ".xml": "XML",
+    ".yaml": "YAML",
+    ".yml": "YAML",
+    ".toml": "TOML",
+    ".c": "C",
+    ".h": "C",
+    ".cpp": "C++",
+    ".cxx": "C++",
+    ".cc": "C++",
+    ".java": "Java",
+    ".go": "Go",
+    ".rs": "Rust",
+    ".rb": "Ruby",
+    ".php": "PHP",
+    ".sh": "Shell",
+    ".bash": "Shell",
+    ".sql": "SQL",
+    ".lua": "Lua",
+    ".dart": "Dart",
+    ".txt": "Plain Text",
+    ".ini": "INI",
 }
 
 # ---------------------------------------------------------------------------
 # Comment prefixes per language
 # ---------------------------------------------------------------------------
 COMMENT_PREFIXES: Dict[str, str] = {
-    "Python": "# ", "JavaScript": "// ", "TypeScript": "// ",
-    "HTML": "<!-- ", "CSS": "/* ", "JSON": "// ",
-    "Markdown": "<!-- ", "XML": "<!-- ", "YAML": "# ",
-    "TOML": "# ", "C": "// ", "C++": "// ", "Java": "// ",
-    "Go": "// ", "Rust": "// ", "Ruby": "# ", "PHP": "// ",
-    "Shell": "# ", "SQL": "-- ", "Lua": "-- ", "Dart": "// ",
-    "Plain Text": "# ", "INI": "; ",
+    "Python": "# ",
+    "JavaScript": "// ",
+    "TypeScript": "// ",
+    "HTML": "<!-- ",
+    "CSS": "/* ",
+    "JSON": "// ",
+    "Markdown": "<!-- ",
+    "XML": "<!-- ",
+    "YAML": "# ",
+    "TOML": "# ",
+    "C": "// ",
+    "C++": "// ",
+    "Java": "// ",
+    "Go": "// ",
+    "Rust": "// ",
+    "Ruby": "# ",
+    "PHP": "// ",
+    "Shell": "# ",
+    "SQL": "-- ",
+    "Lua": "-- ",
+    "Dart": "// ",
+    "Plain Text": "# ",
+    "INI": "; ",
 }
 
 # ---------------------------------------------------------------------------
@@ -144,57 +216,99 @@ COMMENT_PREFIXES: Dict[str, str] = {
 # ---------------------------------------------------------------------------
 THEMES: Dict[str, Dict[str, str]] = {
     "dark": {
-        "bg": "#1e1e2e", "fg": "#cdd6f4",
-        "editor_bg": "#1e1e2e", "editor_fg": "#cdd6f4",
-        "gutter_bg": "#181825", "gutter_fg": "#6c7086",
-        "sidebar_bg": "#181825", "sidebar_fg": "#cdd6f4",
-        "activity_bg": "#11111b", "activity_fg": "#6c7086",
+        "bg": "#1e1e2e",
+        "fg": "#cdd6f4",
+        "editor_bg": "#1e1e2e",
+        "editor_fg": "#cdd6f4",
+        "gutter_bg": "#181825",
+        "gutter_fg": "#6c7086",
+        "sidebar_bg": "#181825",
+        "sidebar_fg": "#cdd6f4",
+        "activity_bg": "#11111b",
+        "activity_fg": "#6c7086",
         "activity_active": "#cba6f7",
-        "tab_bg": "#181825", "tab_fg": "#6c7086",
-        "tab_active_bg": "#1e1e2e", "tab_active_fg": "#cdd6f4",
-        "panel_bg": "#181825", "panel_fg": "#cdd6f4",
-        "status_bg": "#11111b", "status_fg": "#bac2de",
-        "selection": "#45475a", "current_line": "#313244",
-        "cursor": "#f5e0dc", "find_hl": "#f9e2af",
+        "tab_bg": "#181825",
+        "tab_fg": "#6c7086",
+        "tab_active_bg": "#1e1e2e",
+        "tab_active_fg": "#cdd6f4",
+        "panel_bg": "#181825",
+        "panel_fg": "#cdd6f4",
+        "status_bg": "#11111b",
+        "status_fg": "#bac2de",
+        "selection": "#45475a",
+        "current_line": "#313244",
+        "cursor": "#f5e0dc",
+        "find_hl": "#f9e2af",
         "bracket_match": "#a6e3a1",
-        "modified_dot": "#f9e2af", "error": "#f38ba8",
-        "warning": "#fab387", "info": "#89b4fa", "success": "#a6e3a1",
-        "comment": "#6c7086", "keyword": "#cba6f7",
-        "string": "#a6e3a1", "number": "#fab387",
-        "function": "#89b4fa", "class_name": "#f9e2af",
-        "operator": "#89dceb", "decorator": "#f5c2e7",
+        "modified_dot": "#f9e2af",
+        "error": "#f38ba8",
+        "warning": "#fab387",
+        "info": "#89b4fa",
+        "success": "#a6e3a1",
+        "comment": "#6c7086",
+        "keyword": "#cba6f7",
+        "string": "#a6e3a1",
+        "number": "#fab387",
+        "function": "#89b4fa",
+        "class_name": "#f9e2af",
+        "operator": "#89dceb",
+        "decorator": "#f5c2e7",
         "builtin": "#f2cdcd",
-        "minimap_bg": "#11111b", "tree_bg": "#181825",
-        "input_bg": "#313244", "input_fg": "#cdd6f4",
+        "minimap_bg": "#11111b",
+        "tree_bg": "#181825",
+        "input_bg": "#313244",
+        "input_fg": "#cdd6f4",
         "border": "#313244",
-        "button_bg": "#cba6f7", "button_fg": "#1e1e2e",
+        "button_bg": "#cba6f7",
+        "button_fg": "#1e1e2e",
         "scrollbar": "#45475a",
     },
     "light": {
-        "bg": "#fafafa", "fg": "#383a42",
-        "editor_bg": "#fafafa", "editor_fg": "#383a42",
-        "gutter_bg": "#f0f0f0", "gutter_fg": "#9d9d9f",
-        "sidebar_bg": "#f0f0f0", "sidebar_fg": "#383a42",
-        "activity_bg": "#e5e5e6", "activity_fg": "#696c77",
+        "bg": "#fafafa",
+        "fg": "#383a42",
+        "editor_bg": "#fafafa",
+        "editor_fg": "#383a42",
+        "gutter_bg": "#f0f0f0",
+        "gutter_fg": "#9d9d9f",
+        "sidebar_bg": "#f0f0f0",
+        "sidebar_fg": "#383a42",
+        "activity_bg": "#e5e5e6",
+        "activity_fg": "#696c77",
         "activity_active": "#a626a4",
-        "tab_bg": "#f0f0f0", "tab_fg": "#696c77",
-        "tab_active_bg": "#fafafa", "tab_active_fg": "#383a42",
-        "panel_bg": "#f0f0f0", "panel_fg": "#383a42",
-        "status_bg": "#e5e5e6", "status_fg": "#383a42",
-        "selection": "#d7d7d8", "current_line": "#f2f2f2",
-        "cursor": "#526fff", "find_hl": "#e5c07b",
+        "tab_bg": "#f0f0f0",
+        "tab_fg": "#696c77",
+        "tab_active_bg": "#fafafa",
+        "tab_active_fg": "#383a42",
+        "panel_bg": "#f0f0f0",
+        "panel_fg": "#383a42",
+        "status_bg": "#e5e5e6",
+        "status_fg": "#383a42",
+        "selection": "#d7d7d8",
+        "current_line": "#f2f2f2",
+        "cursor": "#526fff",
+        "find_hl": "#e5c07b",
         "bracket_match": "#50a14f",
-        "modified_dot": "#c18401", "error": "#e45649",
-        "warning": "#c18401", "info": "#4078f2", "success": "#50a14f",
-        "comment": "#a0a1a7", "keyword": "#a626a4",
-        "string": "#50a14f", "number": "#c18401",
-        "function": "#4078f2", "class_name": "#c18401",
-        "operator": "#0184bc", "decorator": "#a626a4",
+        "modified_dot": "#c18401",
+        "error": "#e45649",
+        "warning": "#c18401",
+        "info": "#4078f2",
+        "success": "#50a14f",
+        "comment": "#a0a1a7",
+        "keyword": "#a626a4",
+        "string": "#50a14f",
+        "number": "#c18401",
+        "function": "#4078f2",
+        "class_name": "#c18401",
+        "operator": "#0184bc",
+        "decorator": "#a626a4",
         "builtin": "#e45649",
-        "minimap_bg": "#e5e5e6", "tree_bg": "#f0f0f0",
-        "input_bg": "#ffffff", "input_fg": "#383a42",
+        "minimap_bg": "#e5e5e6",
+        "tree_bg": "#f0f0f0",
+        "input_bg": "#ffffff",
+        "input_fg": "#383a42",
         "border": "#d7d7d8",
-        "button_bg": "#4078f2", "button_fg": "#ffffff",
+        "button_bg": "#4078f2",
+        "button_fg": "#ffffff",
         "scrollbar": "#c8c8c9",
     },
 }
@@ -203,47 +317,207 @@ THEMES: Dict[str, Dict[str, str]] = {
 # Language keyword / builtin sets
 # ---------------------------------------------------------------------------
 _PY_KW: Set[str] = {
-    "False", "None", "True", "and", "as", "assert", "async", "await",
-    "break", "class", "continue", "def", "del", "elif", "else", "except",
-    "finally", "for", "from", "global", "if", "import", "in", "is",
-    "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try",
-    "while", "with", "yield",
+    "False",
+    "None",
+    "True",
+    "and",
+    "as",
+    "assert",
+    "async",
+    "await",
+    "break",
+    "class",
+    "continue",
+    "def",
+    "del",
+    "elif",
+    "else",
+    "except",
+    "finally",
+    "for",
+    "from",
+    "global",
+    "if",
+    "import",
+    "in",
+    "is",
+    "lambda",
+    "nonlocal",
+    "not",
+    "or",
+    "pass",
+    "raise",
+    "return",
+    "try",
+    "while",
+    "with",
+    "yield",
 }
 
 _PY_BI: Set[str] = {
-    "abs", "all", "any", "bin", "bool", "bytes", "callable", "chr",
-    "dict", "dir", "enumerate", "eval", "filter", "float", "format",
-    "frozenset", "getattr", "globals", "hasattr", "hash", "hex", "id",
-    "input", "int", "isinstance", "issubclass", "iter", "len", "list",
-    "locals", "map", "max", "min", "next", "object", "open", "ord",
-    "pow", "print", "property", "range", "repr", "reversed", "round",
-    "set", "setattr", "slice", "sorted", "staticmethod", "str", "sum",
-    "super", "tuple", "type", "vars", "zip",
+    "abs",
+    "all",
+    "any",
+    "bin",
+    "bool",
+    "bytes",
+    "callable",
+    "chr",
+    "dict",
+    "dir",
+    "enumerate",
+    "eval",
+    "filter",
+    "float",
+    "format",
+    "frozenset",
+    "getattr",
+    "globals",
+    "hasattr",
+    "hash",
+    "hex",
+    "id",
+    "input",
+    "int",
+    "isinstance",
+    "issubclass",
+    "iter",
+    "len",
+    "list",
+    "locals",
+    "map",
+    "max",
+    "min",
+    "next",
+    "object",
+    "open",
+    "ord",
+    "pow",
+    "print",
+    "property",
+    "range",
+    "repr",
+    "reversed",
+    "round",
+    "set",
+    "setattr",
+    "slice",
+    "sorted",
+    "staticmethod",
+    "str",
+    "sum",
+    "super",
+    "tuple",
+    "type",
+    "vars",
+    "zip",
 }
 
 _JS_KW: Set[str] = {
-    "abstract", "arguments", "async", "await", "boolean", "break", "byte",
-    "case", "catch", "class", "const", "continue", "debugger", "default",
-    "delete", "do", "else", "enum", "export", "extends", "false", "final",
-    "finally", "for", "function", "goto", "if", "implements", "import",
-    "in", "instanceof", "interface", "let", "new", "null", "of", "package",
-    "private", "protected", "public", "return", "static", "super", "switch",
-    "this", "throw", "true", "try", "typeof", "undefined", "var", "void",
-    "while", "with", "yield",
+    "abstract",
+    "arguments",
+    "async",
+    "await",
+    "boolean",
+    "break",
+    "byte",
+    "case",
+    "catch",
+    "class",
+    "const",
+    "continue",
+    "debugger",
+    "default",
+    "delete",
+    "do",
+    "else",
+    "enum",
+    "export",
+    "extends",
+    "false",
+    "final",
+    "finally",
+    "for",
+    "function",
+    "goto",
+    "if",
+    "implements",
+    "import",
+    "in",
+    "instanceof",
+    "interface",
+    "let",
+    "new",
+    "null",
+    "of",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "return",
+    "static",
+    "super",
+    "switch",
+    "this",
+    "throw",
+    "true",
+    "try",
+    "typeof",
+    "undefined",
+    "var",
+    "void",
+    "while",
+    "with",
+    "yield",
 }
 
 _C_KW: Set[str] = {
-    "auto", "break", "case", "char", "const", "continue", "default", "do",
-    "double", "else", "enum", "extern", "float", "for", "goto", "if",
-    "inline", "int", "long", "register", "return", "short", "signed",
-    "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned",
-    "void", "volatile", "while",
+    "auto",
+    "break",
+    "case",
+    "char",
+    "const",
+    "continue",
+    "default",
+    "do",
+    "double",
+    "else",
+    "enum",
+    "extern",
+    "float",
+    "for",
+    "goto",
+    "if",
+    "inline",
+    "int",
+    "long",
+    "register",
+    "return",
+    "short",
+    "signed",
+    "sizeof",
+    "static",
+    "struct",
+    "switch",
+    "typedef",
+    "union",
+    "unsigned",
+    "void",
+    "volatile",
+    "while",
 }
 
 _LANG_KW: Dict[str, Set[str]] = {
-    "Python": _PY_KW, "JavaScript": _JS_KW, "TypeScript": _JS_KW,
-    "C": _C_KW, "C++": _C_KW, "Java": _JS_KW, "Go": _C_KW,
-    "Rust": _C_KW, "Dart": _JS_KW, "PHP": _JS_KW,
+    "Python": _PY_KW,
+    "JavaScript": _JS_KW,
+    "TypeScript": _JS_KW,
+    "C": _C_KW,
+    "C++": _C_KW,
+    "Java": _JS_KW,
+    "Go": _C_KW,
+    "Rust": _C_KW,
+    "Dart": _JS_KW,
+    "PHP": _JS_KW,
 }
 
 # ---------------------------------------------------------------------------
@@ -255,9 +529,21 @@ class _FileTab:
     """Metadata for an open editor tab."""
 
     __slots__ = (
-        "path", "title", "content", "modified", "language", "encoding",
-        "eol", "indent_size", "use_tabs", "cursor_line", "cursor_col",
-        "scroll_y", "undo_stack", "redo_stack", "breakpoints",
+        "path",
+        "title",
+        "content",
+        "modified",
+        "language",
+        "encoding",
+        "eol",
+        "indent_size",
+        "use_tabs",
+        "cursor_line",
+        "cursor_col",
+        "scroll_y",
+        "undo_stack",
+        "redo_stack",
+        "breakpoints",
     )
 
     def __init__(
@@ -309,9 +595,15 @@ class _Diagnostic:
 class IDEEditor(tk.Frame):
     """Full-featured IDE/code editor panel comparable to VS Code."""
 
-    def __init__(self, master: tk.Widget, bg: str = "#1e1e2e",
-                 fg: str = "#cdd6f4", workspace: Optional[str] = None,
-                 theme: str = "dark", **kw: Any) -> None:
+    def __init__(
+        self,
+        master: tk.Widget,
+        bg: str = "#1e1e2e",
+        fg: str = "#cdd6f4",
+        workspace: Optional[str] = None,
+        theme: str = "dark",
+        **kw: Any,
+    ) -> None:
         self._theme_name = theme
         self._theme = THEMES.get(theme, THEMES["dark"])
         super().__init__(master, bg=self._theme["bg"], **kw)
@@ -392,8 +684,9 @@ class IDEEditor(tk.Frame):
         self._sidebar_frame.pack(side=tk.LEFT, fill=tk.Y)
         self._sidebar_frame.pack_propagate(False)
         self._build_sidebar()
-        self._right_pane = tk.PanedWindow(self._main_frame, orient=tk.VERTICAL,
-                                          bg=t["bg"], sashwidth=4, sashrelief=tk.FLAT, bd=0)
+        self._right_pane = tk.PanedWindow(
+            self._main_frame, orient=tk.VERTICAL, bg=t["bg"], sashwidth=4, sashrelief=tk.FLAT, bd=0
+        )
         self._right_pane.pack(fill=tk.BOTH, expand=True)
         self._editor_area = tk.Frame(self._right_pane, bg=t["bg"])
         self._right_pane.add(self._editor_area, stretch="always")
@@ -410,8 +703,15 @@ class IDEEditor(tk.Frame):
         t = self._theme
         self._activity_buttons: Dict[str, tk.Label] = {}
         for act_id, icon in ACTIVITY_ICONS:
-            lbl = tk.Label(self._activity_bar, text=icon, bg=t["activity_bg"],
-                           fg=t["activity_fg"], font=self._icon_font, width=2, cursor="hand2")
+            lbl = tk.Label(
+                self._activity_bar,
+                text=icon,
+                bg=t["activity_bg"],
+                fg=t["activity_fg"],
+                font=self._icon_font,
+                width=2,
+                cursor="hand2",
+            )
             lbl.pack(pady=2, padx=2)
             lbl.bind("<Button-1>", lambda e, a=act_id: self._on_activity_click(a))
             self._activity_buttons[act_id] = lbl
@@ -436,9 +736,16 @@ class IDEEditor(tk.Frame):
 
     def _build_sidebar(self) -> None:
         t = self._theme
-        self._sidebar_title = tk.Label(self._sidebar_frame, text="EXPLORER", anchor=tk.W,
-                                       bg=t["sidebar_bg"], fg=t["sidebar_fg"],
-                                       font=self._ui_font_bold, padx=12, pady=6)
+        self._sidebar_title = tk.Label(
+            self._sidebar_frame,
+            text="EXPLORER",
+            anchor=tk.W,
+            bg=t["sidebar_bg"],
+            fg=t["sidebar_fg"],
+            font=self._ui_font_bold,
+            padx=12,
+            pady=6,
+        )
         self._sidebar_title.pack(fill=tk.X)
         self._sidebar_content = tk.Frame(self._sidebar_frame, bg=t["sidebar_bg"])
         self._sidebar_content.pack(fill=tk.BOTH, expand=True)
@@ -450,13 +757,23 @@ class IDEEditor(tk.Frame):
 
     def _refresh_sidebar(self) -> None:
         self._clear_sidebar()
-        titles = {"explorer": "EXPLORER", "search": "SEARCH", "git": "SOURCE CONTROL",
-                  "extensions": "EXTENSIONS", "debug": "DEBUG", "run": "RUN AND DEBUG"}
+        titles = {
+            "explorer": "EXPLORER",
+            "search": "SEARCH",
+            "git": "SOURCE CONTROL",
+            "extensions": "EXTENSIONS",
+            "debug": "DEBUG",
+            "run": "RUN AND DEBUG",
+        }
         self._sidebar_title.config(text=titles.get(self._active_activity, "EXPLORER"))
         builders: Dict[str, Callable[[], None]] = {
-            "explorer": self._build_explorer_panel, "search": self._build_search_panel,
-            "git": self._build_git_panel, "extensions": self._build_extensions_panel,
-            "debug": self._build_debug_panel, "run": self._build_run_panel}
+            "explorer": self._build_explorer_panel,
+            "search": self._build_search_panel,
+            "git": self._build_git_panel,
+            "extensions": self._build_extensions_panel,
+            "debug": self._build_debug_panel,
+            "run": self._build_run_panel,
+        }
         builders.get(self._active_activity, self._build_explorer_panel)()
 
     # -- Explorer --
@@ -464,10 +781,15 @@ class IDEEditor(tk.Frame):
     def _build_explorer_panel(self) -> None:
         t = self._theme
         s = ttk.Style()
-        s.configure("IDE.Treeview", background=t["tree_bg"], foreground=t["sidebar_fg"],
-                    fieldbackground=t["tree_bg"], rowheight=22, font=("Segoe UI", 9))
-        s.map("IDE.Treeview", background=[("selected", t["selection"])],
-              foreground=[("selected", t["fg"])])
+        s.configure(
+            "IDE.Treeview",
+            background=t["tree_bg"],
+            foreground=t["sidebar_fg"],
+            fieldbackground=t["tree_bg"],
+            rowheight=22,
+            font=("Segoe UI", 9),
+        )
+        s.map("IDE.Treeview", background=[("selected", t["selection"])], foreground=[("selected", t["fg"])])
         fr = tk.Frame(self._sidebar_content, bg=t["tree_bg"])
         fr.pack(fill=tk.BOTH, expand=True)
         self._file_tree = ttk.Treeview(fr, style="IDE.Treeview", show="tree", selectmode="browse")
@@ -495,8 +817,9 @@ class IDEEditor(tk.Frame):
             return
         skip = {".git", "__pycache__", "node_modules", ".venv", "venv", "dist", "build"}
         try:
-            entries = sorted(os.listdir(directory),
-                             key=lambda x: (not os.path.isdir(os.path.join(directory, x)), x.lower()))
+            entries = sorted(
+                os.listdir(directory), key=lambda x: (not os.path.isdir(os.path.join(directory, x)), x.lower())
+            )
         except PermissionError:
             return
         for entry in entries:
@@ -537,8 +860,7 @@ class IDEEditor(tk.Frame):
         m.add_command(label="Delete", command=lambda: self._tree_delete(path))
         m.add_separator()
         m.add_command(label="Copy Path", command=lambda: self._clip(path))
-        m.add_command(label="Copy Relative Path",
-                      command=lambda: self._clip(os.path.relpath(path, self._workspace)))
+        m.add_command(label="Copy Relative Path", command=lambda: self._clip(os.path.relpath(path, self._workspace)))
         m.post(event.x_root, event.y_root)
 
     def _tree_new_file(self, p: str) -> None:
@@ -585,6 +907,7 @@ class IDEEditor(tk.Frame):
         try:
             if os.path.isdir(p):
                 import shutil
+
                 shutil.rmtree(p)
             else:
                 os.remove(p)
@@ -606,25 +929,77 @@ class IDEEditor(tk.Frame):
         self._repl_var = tk.StringVar()
         self._srch_case = tk.BooleanVar(value=False)
         self._srch_regex = tk.BooleanVar(value=False)
-        tk.Entry(f, textvariable=self._srch_var, bg=t["input_bg"], fg=t["input_fg"],
-                 insertbackground=t["cursor"], font=self._ui_font, relief=tk.FLAT, bd=4).pack(fill=tk.X, pady=2)
-        tk.Entry(f, textvariable=self._repl_var, bg=t["input_bg"], fg=t["input_fg"],
-                 insertbackground=t["cursor"], font=self._ui_font, relief=tk.FLAT, bd=4).pack(fill=tk.X, pady=2)
+        tk.Entry(
+            f,
+            textvariable=self._srch_var,
+            bg=t["input_bg"],
+            fg=t["input_fg"],
+            insertbackground=t["cursor"],
+            font=self._ui_font,
+            relief=tk.FLAT,
+            bd=4,
+        ).pack(fill=tk.X, pady=2)
+        tk.Entry(
+            f,
+            textvariable=self._repl_var,
+            bg=t["input_bg"],
+            fg=t["input_fg"],
+            insertbackground=t["cursor"],
+            font=self._ui_font,
+            relief=tk.FLAT,
+            bd=4,
+        ).pack(fill=tk.X, pady=2)
         opts = tk.Frame(f, bg=t["sidebar_bg"])
         opts.pack(fill=tk.X, pady=2)
-        tk.Checkbutton(opts, text="Aa", variable=self._srch_case, bg=t["sidebar_bg"],
-                       fg=t["sidebar_fg"], selectcolor=t["input_bg"], font=self._small_font).pack(side=tk.LEFT)
-        tk.Checkbutton(opts, text=".*", variable=self._srch_regex, bg=t["sidebar_bg"],
-                       fg=t["sidebar_fg"], selectcolor=t["input_bg"], font=self._small_font).pack(side=tk.LEFT)
+        tk.Checkbutton(
+            opts,
+            text="Aa",
+            variable=self._srch_case,
+            bg=t["sidebar_bg"],
+            fg=t["sidebar_fg"],
+            selectcolor=t["input_bg"],
+            font=self._small_font,
+        ).pack(side=tk.LEFT)
+        tk.Checkbutton(
+            opts,
+            text=".*",
+            variable=self._srch_regex,
+            bg=t["sidebar_bg"],
+            fg=t["sidebar_fg"],
+            selectcolor=t["input_bg"],
+            font=self._small_font,
+        ).pack(side=tk.LEFT)
         bf = tk.Frame(f, bg=t["sidebar_bg"])
         bf.pack(fill=tk.X, pady=2)
-        tk.Button(bf, text="Search", command=self._do_search_files, bg=t["button_bg"],
-                  fg=t["button_fg"], relief=tk.FLAT, font=self._small_font, padx=8).pack(side=tk.LEFT, padx=2)
-        tk.Button(bf, text="Replace All", command=self._do_replace_files, bg=t["button_bg"],
-                  fg=t["button_fg"], relief=tk.FLAT, font=self._small_font, padx=8).pack(side=tk.LEFT, padx=2)
-        self._search_results = tk.Listbox(self._sidebar_content, bg=t["tree_bg"], fg=t["sidebar_fg"],
-                                          font=self._small_font, selectbackground=t["selection"],
-                                          bd=0, highlightthickness=0)
+        tk.Button(
+            bf,
+            text="Search",
+            command=self._do_search_files,
+            bg=t["button_bg"],
+            fg=t["button_fg"],
+            relief=tk.FLAT,
+            font=self._small_font,
+            padx=8,
+        ).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            bf,
+            text="Replace All",
+            command=self._do_replace_files,
+            bg=t["button_bg"],
+            fg=t["button_fg"],
+            relief=tk.FLAT,
+            font=self._small_font,
+            padx=8,
+        ).pack(side=tk.LEFT, padx=2)
+        self._search_results = tk.Listbox(
+            self._sidebar_content,
+            bg=t["tree_bg"],
+            fg=t["sidebar_fg"],
+            font=self._small_font,
+            selectbackground=t["selection"],
+            bd=0,
+            highlightthickness=0,
+        )
         self._search_results.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
         self._search_results.bind("<Double-1>", self._on_search_result_click)
         self._search_match_data: List[Tuple[str, int]] = []
@@ -696,26 +1071,56 @@ class IDEEditor(tk.Frame):
         p = self._sidebar_content
         bf = tk.Frame(p, bg=t["sidebar_bg"])
         bf.pack(fill=tk.X, padx=8, pady=4)
-        tk.Label(bf, text="Branch:", bg=t["sidebar_bg"], fg=t["sidebar_fg"],
-                 font=self._small_font).pack(side=tk.LEFT)
+        tk.Label(bf, text="Branch:", bg=t["sidebar_bg"], fg=t["sidebar_fg"], font=self._small_font).pack(side=tk.LEFT)
         self._branch_var = tk.StringVar(value=self._git_branch)
-        tk.Entry(bf, textvariable=self._branch_var, bg=t["input_bg"], fg=t["input_fg"],
-                 font=self._small_font, relief=tk.FLAT, bd=2, width=15).pack(side=tk.LEFT, padx=4)
+        tk.Entry(
+            bf,
+            textvariable=self._branch_var,
+            bg=t["input_bg"],
+            fg=t["input_fg"],
+            font=self._small_font,
+            relief=tk.FLAT,
+            bd=2,
+            width=15,
+        ).pack(side=tk.LEFT, padx=4)
         mf = tk.Frame(p, bg=t["sidebar_bg"])
         mf.pack(fill=tk.X, padx=8, pady=2)
-        self._commit_msg = tk.Text(mf, bg=t["input_bg"], fg=t["input_fg"], font=self._ui_font,
-                                   height=3, relief=tk.FLAT, bd=4, insertbackground=t["cursor"])
+        self._commit_msg = tk.Text(
+            mf,
+            bg=t["input_bg"],
+            fg=t["input_fg"],
+            font=self._ui_font,
+            height=3,
+            relief=tk.FLAT,
+            bd=4,
+            insertbackground=t["cursor"],
+        )
         self._commit_msg.pack(fill=tk.X)
         btf = tk.Frame(p, bg=t["sidebar_bg"])
         btf.pack(fill=tk.X, padx=8, pady=2)
-        for txt, cmd in [("Commit", self._git_commit), ("Push", self._git_push),
-                         ("Pull", self._git_pull)]:
-            tk.Button(btf, text=txt, command=cmd, bg=t["button_bg"], fg=t["button_fg"],
-                      relief=tk.FLAT, font=self._small_font, padx=8).pack(side=tk.LEFT, padx=2)
-        tk.Label(p, text="Changes", bg=t["sidebar_bg"], fg=t["sidebar_fg"],
-                 font=self._ui_font_bold, anchor=tk.W, padx=8).pack(fill=tk.X, pady=(8, 2))
-        self._git_list = tk.Listbox(p, bg=t["tree_bg"], fg=t["sidebar_fg"], font=self._small_font,
-                                    selectbackground=t["selection"], bd=0, highlightthickness=0)
+        for txt, cmd in [("Commit", self._git_commit), ("Push", self._git_push), ("Pull", self._git_pull)]:
+            tk.Button(
+                btf,
+                text=txt,
+                command=cmd,
+                bg=t["button_bg"],
+                fg=t["button_fg"],
+                relief=tk.FLAT,
+                font=self._small_font,
+                padx=8,
+            ).pack(side=tk.LEFT, padx=2)
+        tk.Label(
+            p, text="Changes", bg=t["sidebar_bg"], fg=t["sidebar_fg"], font=self._ui_font_bold, anchor=tk.W, padx=8
+        ).pack(fill=tk.X, pady=(8, 2))
+        self._git_list = tk.Listbox(
+            p,
+            bg=t["tree_bg"],
+            fg=t["sidebar_fg"],
+            font=self._small_font,
+            selectbackground=t["selection"],
+            bd=0,
+            highlightthickness=0,
+        )
         self._git_list.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
         for path, status in self._git_files.items():
             self._git_list.insert(tk.END, f"  [{status}] {os.path.basename(path)}")
@@ -752,8 +1157,7 @@ class IDEEditor(tk.Frame):
     def _refresh_git_status(self) -> None:
         self._git_files.clear()
         try:
-            r = subprocess.run(["git", "status", "--porcelain"], cwd=self._workspace,
-                               capture_output=True, text=True)
+            r = subprocess.run(["git", "status", "--porcelain"], cwd=self._workspace, capture_output=True, text=True)
             if r.returncode == 0:
                 for line in r.stdout.strip().splitlines():
                     if len(line) > 3:
@@ -761,8 +1165,9 @@ class IDEEditor(tk.Frame):
                         fp = os.path.join(self._workspace, line[3:].strip())
                         sm = {"M": "M", "A": "A", "D": "D", "??": "?", "R": "R", "U": "U"}
                         self._git_files[fp] = sm.get(st, st)
-            r2 = subprocess.run(["git", "branch", "--show-current"], cwd=self._workspace,
-                                capture_output=True, text=True)
+            r2 = subprocess.run(
+                ["git", "branch", "--show-current"], cwd=self._workspace, capture_output=True, text=True
+            )
             if r2.returncode == 0 and r2.stdout.strip():
                 self._git_branch = r2.stdout.strip()
         except FileNotFoundError:
@@ -773,34 +1178,48 @@ class IDEEditor(tk.Frame):
     def _build_extensions_panel(self) -> None:
         t = self._theme
         p = self._sidebar_content
-        tk.Entry(p, bg=t["input_bg"], fg=t["input_fg"], font=self._ui_font,
-                 relief=tk.FLAT, bd=4).pack(fill=tk.X, padx=8, pady=4)
-        tk.Label(p, text="Installed", bg=t["sidebar_bg"], fg=t["sidebar_fg"],
-                 font=self._ui_font_bold, anchor=tk.W, padx=8).pack(fill=tk.X, pady=(8, 2))
-        exts = [("Python", "v2024.1", True), ("GitLens", "v14.0", True),
-                ("Prettier", "v10.0", True), ("ESLint", "v3.0", False),
-                ("Docker", "v1.28", True)]
+        tk.Entry(p, bg=t["input_bg"], fg=t["input_fg"], font=self._ui_font, relief=tk.FLAT, bd=4).pack(
+            fill=tk.X, padx=8, pady=4
+        )
+        tk.Label(
+            p, text="Installed", bg=t["sidebar_bg"], fg=t["sidebar_fg"], font=self._ui_font_bold, anchor=tk.W, padx=8
+        ).pack(fill=tk.X, pady=(8, 2))
+        exts = [
+            ("Python", "v2024.1", True),
+            ("GitLens", "v14.0", True),
+            ("Prettier", "v10.0", True),
+            ("ESLint", "v3.0", False),
+            ("Docker", "v1.28", True),
+        ]
         for name, ver, enabled in exts:
             f = tk.Frame(p, bg=t["tree_bg"])
             f.pack(fill=tk.X, padx=8, pady=1)
-            tk.Label(f, text=f"  {name} {ver}", bg=t["tree_bg"], fg=t["sidebar_fg"],
-                     font=self._small_font, anchor=tk.W).pack(side=tk.LEFT, fill=tk.X, expand=True)
+            tk.Label(
+                f, text=f"  {name} {ver}", bg=t["tree_bg"], fg=t["sidebar_fg"], font=self._small_font, anchor=tk.W
+            ).pack(side=tk.LEFT, fill=tk.X, expand=True)
             var = tk.BooleanVar(value=enabled)
-            tk.Checkbutton(f, variable=var, bg=t["tree_bg"],
-                           selectcolor=t["input_bg"]).pack(side=tk.RIGHT)
+            tk.Checkbutton(f, variable=var, bg=t["tree_bg"], selectcolor=t["input_bg"]).pack(side=tk.RIGHT)
 
     # -- Debug panel --
 
     def _build_debug_panel(self) -> None:
         t = self._theme
         p = self._sidebar_content
-        sections = [("Breakpoints", []), ("Variables", []),
-                    ("Call Stack", []), ("Watch", [])]
+        sections = [("Breakpoints", []), ("Variables", []), ("Call Stack", []), ("Watch", [])]
         for title, _ in sections:
-            tk.Label(p, text=title, bg=t["sidebar_bg"], fg=t["sidebar_fg"],
-                     font=self._ui_font_bold, anchor=tk.W, padx=8).pack(fill=tk.X, pady=(6, 2))
-            lb = tk.Listbox(p, bg=t["tree_bg"], fg=t["sidebar_fg"], font=self._small_font,
-                            height=4, bd=0, highlightthickness=0, selectbackground=t["selection"])
+            tk.Label(
+                p, text=title, bg=t["sidebar_bg"], fg=t["sidebar_fg"], font=self._ui_font_bold, anchor=tk.W, padx=8
+            ).pack(fill=tk.X, pady=(6, 2))
+            lb = tk.Listbox(
+                p,
+                bg=t["tree_bg"],
+                fg=t["sidebar_fg"],
+                font=self._small_font,
+                height=4,
+                bd=0,
+                highlightthickness=0,
+                selectbackground=t["selection"],
+            )
             lb.pack(fill=tk.X, padx=8, pady=2)
 
     # -- Run panel --
@@ -808,19 +1227,50 @@ class IDEEditor(tk.Frame):
     def _build_run_panel(self) -> None:
         t = self._theme
         p = self._sidebar_content
-        tk.Label(p, text="Run Configuration", bg=t["sidebar_bg"], fg=t["sidebar_fg"],
-                 font=self._ui_font_bold, anchor=tk.W, padx=8).pack(fill=tk.X, pady=(8, 4))
+        tk.Label(
+            p,
+            text="Run Configuration",
+            bg=t["sidebar_bg"],
+            fg=t["sidebar_fg"],
+            font=self._ui_font_bold,
+            anchor=tk.W,
+            padx=8,
+        ).pack(fill=tk.X, pady=(8, 4))
         self._run_config = tk.StringVar(value="Python: Current File")
         for cfg in ["Python: Current File", "Python: Module", "Node.js", "Custom Command"]:
-            tk.Radiobutton(p, text=cfg, variable=self._run_config, value=cfg,
-                           bg=t["sidebar_bg"], fg=t["sidebar_fg"], selectcolor=t["input_bg"],
-                           font=self._small_font, anchor=tk.W).pack(fill=tk.X, padx=12)
+            tk.Radiobutton(
+                p,
+                text=cfg,
+                variable=self._run_config,
+                value=cfg,
+                bg=t["sidebar_bg"],
+                fg=t["sidebar_fg"],
+                selectcolor=t["input_bg"],
+                font=self._small_font,
+                anchor=tk.W,
+            ).pack(fill=tk.X, padx=12)
         bf = tk.Frame(p, bg=t["sidebar_bg"])
         bf.pack(fill=tk.X, padx=8, pady=8)
-        tk.Button(bf, text="Run", command=self._run_current, bg=t["success"], fg=t["bg"],
-                  relief=tk.FLAT, font=self._ui_font_bold, padx=16).pack(side=tk.LEFT, padx=2)
-        tk.Button(bf, text="Debug", command=self._debug_current, bg=t["warning"], fg=t["bg"],
-                  relief=tk.FLAT, font=self._ui_font_bold, padx=16).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            bf,
+            text="Run",
+            command=self._run_current,
+            bg=t["success"],
+            fg=t["bg"],
+            relief=tk.FLAT,
+            font=self._ui_font_bold,
+            padx=16,
+        ).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            bf,
+            text="Debug",
+            command=self._debug_current,
+            bg=t["warning"],
+            fg=t["bg"],
+            relief=tk.FLAT,
+            font=self._ui_font_bold,
+            padx=16,
+        ).pack(side=tk.LEFT, padx=2)
 
     # === Editor area =======================================================
 
@@ -832,28 +1282,48 @@ class IDEEditor(tk.Frame):
         self._tab_widgets: List[tk.Frame] = []
         self._editor_container = tk.Frame(self._editor_area, bg=t["editor_bg"])
         self._editor_container.pack(fill=tk.BOTH, expand=True)
-        self._gutter = tk.Text(self._editor_container, width=5, bg=t["gutter_bg"],
-                               fg=t["gutter_fg"], font=self._code_font, state=tk.DISABLED,
-                               bd=0, padx=4, pady=4, relief=tk.FLAT, cursor="arrow",
-                               selectbackground=t["gutter_bg"], selectforeground=t["gutter_fg"],
-                               wrap=tk.NONE)
+        self._gutter = tk.Text(
+            self._editor_container,
+            width=5,
+            bg=t["gutter_bg"],
+            fg=t["gutter_fg"],
+            font=self._code_font,
+            state=tk.DISABLED,
+            bd=0,
+            padx=4,
+            pady=4,
+            relief=tk.FLAT,
+            cursor="arrow",
+            selectbackground=t["gutter_bg"],
+            selectforeground=t["gutter_fg"],
+            wrap=tk.NONE,
+        )
         self._gutter.pack(side=tk.LEFT, fill=tk.Y)
         ef = tk.Frame(self._editor_container, bg=t["editor_bg"])
         ef.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self._editor = tk.Text(ef, bg=t["editor_bg"], fg=t["editor_fg"], font=self._code_font,
-                               insertbackground=t["cursor"], selectbackground=t["selection"],
-                               bd=0, padx=8, pady=4, relief=tk.FLAT, wrap=tk.NONE,
-                               undo=True, maxundo=-1,
-                               tabs=(self._code_font.measure("    "),))
+        self._editor = tk.Text(
+            ef,
+            bg=t["editor_bg"],
+            fg=t["editor_fg"],
+            font=self._code_font,
+            insertbackground=t["cursor"],
+            selectbackground=t["selection"],
+            bd=0,
+            padx=8,
+            pady=4,
+            relief=tk.FLAT,
+            wrap=tk.NONE,
+            undo=True,
+            maxundo=-1,
+            tabs=(self._code_font.measure("    "),),
+        )
         vs = ttk.Scrollbar(ef, orient=tk.VERTICAL, command=self._on_editor_yscroll)
         hs = ttk.Scrollbar(ef, orient=tk.HORIZONTAL, command=self._editor.xview)
-        self._editor.configure(yscrollcommand=self._on_editor_yscroll_set,
-                               xscrollcommand=hs.set)
+        self._editor.configure(yscrollcommand=self._on_editor_yscroll_set, xscrollcommand=hs.set)
         vs.pack(side=tk.RIGHT, fill=tk.Y)
         hs.pack(side=tk.BOTTOM, fill=tk.X)
         self._editor.pack(fill=tk.BOTH, expand=True)
-        self._minimap = tk.Canvas(self._editor_container, width=60, bg=t["minimap_bg"],
-                                  bd=0, highlightthickness=0)
+        self._minimap = tk.Canvas(self._editor_container, width=60, bg=t["minimap_bg"], bd=0, highlightthickness=0)
         self._minimap.pack(side=tk.RIGHT, fill=tk.Y)
         self._setup_editor_tags()
         self._editor.bind("<KeyRelease>", self._on_key_release)
@@ -864,12 +1334,20 @@ class IDEEditor(tk.Frame):
 
     def _setup_editor_tags(self) -> None:
         t = self._theme
-        for tag, key in [("current_line", "current_line"), ("bracket_match", "bracket_match"),
-                         ("find_highlight", "find_hl"), ("keyword", "keyword"),
-                         ("builtin", "builtin"), ("string", "string"), ("comment", "comment"),
-                         ("number", "number"), ("function", "function"),
-                         ("class_name", "class_name"), ("decorator", "decorator"),
-                         ("operator", "operator")]:
+        for tag, key in [
+            ("current_line", "current_line"),
+            ("bracket_match", "bracket_match"),
+            ("find_highlight", "find_hl"),
+            ("keyword", "keyword"),
+            ("builtin", "builtin"),
+            ("string", "string"),
+            ("comment", "comment"),
+            ("number", "number"),
+            ("function", "function"),
+            ("class_name", "class_name"),
+            ("decorator", "decorator"),
+            ("operator", "operator"),
+        ]:
             if tag == "current_line":
                 self._editor.tag_configure(tag, background=t[key])
             else:
@@ -897,8 +1375,7 @@ class IDEEditor(tk.Frame):
             frame = tk.Frame(self._tab_bar, bg=bg, padx=8, pady=2)
             frame.pack(side=tk.LEFT, padx=(0, 1))
             dot = " \u25cf" if tab.modified else ""
-            lbl = tk.Label(frame, text=f"{tab.title}{dot}", bg=bg, fg=fg,
-                           font=self._small_font, cursor="hand2")
+            lbl = tk.Label(frame, text=f"{tab.title}{dot}", bg=bg, fg=fg, font=self._small_font, cursor="hand2")
             lbl.pack(side=tk.LEFT)
             lbl.bind("<Button-1>", lambda e, idx=i: self._switch_tab(idx))
             cl = tk.Label(frame, text="\u00d7", bg=bg, fg=fg, font=self._small_font, cursor="hand2")
@@ -1104,9 +1581,7 @@ class IDEEditor(tk.Frame):
             depth = 0
             idx = pos
             while True:
-                idx = self._editor.search(
-                    f"[{re.escape(char)}{re.escape(target)}]",
-                    f"{idx}+1c", tk.END, regexp=True)
+                idx = self._editor.search(f"[{re.escape(char)}{re.escape(target)}]", f"{idx}+1c", tk.END, regexp=True)
                 if not idx:
                     break
                 c = self._editor.get(idx)
@@ -1124,8 +1599,8 @@ class IDEEditor(tk.Frame):
             idx = pos
             while True:
                 idx = self._editor.search(
-                    f"[{re.escape(opener)}{re.escape(char)}]",
-                    idx, "1.0", backwards=True, regexp=True)
+                    f"[{re.escape(opener)}{re.escape(char)}]", idx, "1.0", backwards=True, regexp=True
+                )
                 if not idx:
                     break
                 c = self._editor.get(idx)
@@ -1148,8 +1623,17 @@ class IDEEditor(tk.Frame):
                 return
             except Exception:
                 pass
-        for tag in ("keyword", "builtin", "string", "comment", "number",
-                    "function", "class_name", "decorator", "operator"):
+        for tag in (
+            "keyword",
+            "builtin",
+            "string",
+            "comment",
+            "number",
+            "function",
+            "class_name",
+            "decorator",
+            "operator",
+        ):
             self._editor.tag_remove(tag, "1.0", tk.END)
         content = self._editor.get("1.0", tk.END)
         keywords = _LANG_KW.get(lang, set())
@@ -1204,8 +1688,7 @@ class IDEEditor(tk.Frame):
             y = int(i * scale)
             length = min(len(line.rstrip()), 60)
             if length > 0:
-                self._minimap.create_line(2, y, 2 + length, y,
-                                          fill=self._theme["gutter_fg"], width=1)
+                self._minimap.create_line(2, y, 2 + length, y, fill=self._theme["gutter_fg"], width=1)
 
     def duplicate_line(self) -> None:
         ln = self._editor.index(tk.INSERT).split(".")[0]
@@ -1245,46 +1728,75 @@ class IDEEditor(tk.Frame):
         self._panel_notebook = ttk.Notebook(self._panel_frame)
         s = ttk.Style()
         s.configure("Panel.TNotebook", background=t["panel_bg"])
-        s.configure("Panel.TNotebook.Tab", background=t["tab_bg"],
-                    foreground=t["tab_fg"], padding=[8, 2])
-        s.map("Panel.TNotebook.Tab", background=[("selected", t["tab_active_bg"])],
-              foreground=[("selected", t["tab_active_fg"])])
+        s.configure("Panel.TNotebook.Tab", background=t["tab_bg"], foreground=t["tab_fg"], padding=[8, 2])
+        s.map(
+            "Panel.TNotebook.Tab",
+            background=[("selected", t["tab_active_bg"])],
+            foreground=[("selected", t["tab_active_fg"])],
+        )
         self._panel_notebook.configure(style="Panel.TNotebook")
         self._terminal_frame = tk.Frame(self._panel_notebook, bg=t["panel_bg"])
         self._panel_notebook.add(self._terminal_frame, text="Terminal")
         self._build_terminal()
         self._problems_frame = tk.Frame(self._panel_notebook, bg=t["panel_bg"])
         self._panel_notebook.add(self._problems_frame, text="Problems")
-        self._problems_list = tk.Listbox(self._problems_frame, bg=t["panel_bg"],
-                                         fg=t["panel_fg"], font=self._small_font,
-                                         selectbackground=t["selection"], bd=0)
+        self._problems_list = tk.Listbox(
+            self._problems_frame,
+            bg=t["panel_bg"],
+            fg=t["panel_fg"],
+            font=self._small_font,
+            selectbackground=t["selection"],
+            bd=0,
+        )
         self._problems_list.pack(fill=tk.BOTH, expand=True)
         self._output_frame = tk.Frame(self._panel_notebook, bg=t["panel_bg"])
         self._panel_notebook.add(self._output_frame, text="Output")
-        self._output_text = tk.Text(self._output_frame, bg=t["panel_bg"], fg=t["panel_fg"],
-                                    font=self._code_font, state=tk.DISABLED, bd=0,
-                                    relief=tk.FLAT, wrap=tk.WORD)
+        self._output_text = tk.Text(
+            self._output_frame,
+            bg=t["panel_bg"],
+            fg=t["panel_fg"],
+            font=self._code_font,
+            state=tk.DISABLED,
+            bd=0,
+            relief=tk.FLAT,
+            wrap=tk.WORD,
+        )
         self._output_text.pack(fill=tk.BOTH, expand=True)
         self._debug_frame = tk.Frame(self._panel_notebook, bg=t["panel_bg"])
         self._panel_notebook.add(self._debug_frame, text="Debug Console")
-        self._debug_text = tk.Text(self._debug_frame, bg=t["panel_bg"], fg=t["panel_fg"],
-                                   font=self._code_font, bd=0, relief=tk.FLAT)
+        self._debug_text = tk.Text(
+            self._debug_frame, bg=t["panel_bg"], fg=t["panel_fg"], font=self._code_font, bd=0, relief=tk.FLAT
+        )
         self._debug_text.pack(fill=tk.BOTH, expand=True)
         self._panel_notebook.pack(fill=tk.BOTH, expand=True)
 
     def _build_terminal(self) -> None:
         t = self._theme
-        self._term_output = tk.Text(self._terminal_frame, bg="#11111b", fg="#a6e3a1",
-                                    font=self._code_font, state=tk.DISABLED, bd=0,
-                                    relief=tk.FLAT, wrap=tk.WORD)
+        self._term_output = tk.Text(
+            self._terminal_frame,
+            bg="#11111b",
+            fg="#a6e3a1",
+            font=self._code_font,
+            state=tk.DISABLED,
+            bd=0,
+            relief=tk.FLAT,
+            wrap=tk.WORD,
+        )
         self._term_output.pack(fill=tk.BOTH, expand=True)
         inp_frame = tk.Frame(self._terminal_frame, bg=t["panel_bg"])
         inp_frame.pack(fill=tk.X)
-        tk.Label(inp_frame, text="$", bg=t["panel_bg"], fg="#a6e3a1",
-                 font=self._code_font).pack(side=tk.LEFT, padx=(4, 2))
-        self._term_input = tk.Entry(inp_frame, bg="#11111b", fg="#a6e3a1",
-                                    font=self._code_font, relief=tk.FLAT, bd=4,
-                                    insertbackground="#a6e3a1")
+        tk.Label(inp_frame, text="$", bg=t["panel_bg"], fg="#a6e3a1", font=self._code_font).pack(
+            side=tk.LEFT, padx=(4, 2)
+        )
+        self._term_input = tk.Entry(
+            inp_frame,
+            bg="#11111b",
+            fg="#a6e3a1",
+            font=self._code_font,
+            relief=tk.FLAT,
+            bd=4,
+            insertbackground="#a6e3a1",
+        )
         self._term_input.pack(side=tk.LEFT, fill=tk.X, expand=True)
         self._term_input.bind("<Return>", self._on_terminal_enter)
         self._term_input.bind("<Up>", self._on_terminal_history_up)
@@ -1301,14 +1813,16 @@ class IDEEditor(tk.Frame):
 
         def run() -> None:
             try:
-                result = subprocess.run(cmd, shell=True, cwd=self._workspace,
-                                        capture_output=True, text=True, timeout=30)
+                result = subprocess.run(
+                    cmd, shell=True, cwd=self._workspace, capture_output=True, text=True, timeout=30
+                )
                 output = result.stdout + result.stderr
             except subprocess.TimeoutExpired:
                 output = "[timeout]\n"
             except Exception as e:
                 output = f"[error: {e}]\n"
             self.after(0, lambda: self._term_append(output))
+
         threading.Thread(target=run, daemon=True).start()
 
     def _on_terminal_history_up(self, event: tk.Event) -> None:
@@ -1342,21 +1856,21 @@ class IDEEditor(tk.Frame):
 
     def _build_status_bar(self) -> None:
         t = self._theme
-        self._status_left = tk.Label(self._status_bar, bg=t["status_bg"], fg=t["status_fg"],
-                                     font=self._small_font, anchor=tk.W, padx=8)
+        self._status_left = tk.Label(
+            self._status_bar, bg=t["status_bg"], fg=t["status_fg"], font=self._small_font, anchor=tk.W, padx=8
+        )
         self._status_left.pack(side=tk.LEFT, fill=tk.X, expand=True)
-        self._status_right = tk.Label(self._status_bar, bg=t["status_bg"], fg=t["status_fg"],
-                                      font=self._small_font, anchor=tk.E, padx=8)
+        self._status_right = tk.Label(
+            self._status_bar, bg=t["status_bg"], fg=t["status_fg"], font=self._small_font, anchor=tk.E, padx=8
+        )
         self._status_right.pack(side=tk.RIGHT)
         self._update_status_bar()
 
     def _update_status_bar(self) -> None:
         errs = sum(1 for d in self._diagnostics if d.severity == "error")
         warns = sum(1 for d in self._diagnostics if d.severity == "warning")
-        modified = "*" if (0 <= self._active_tab < len(self._tabs)
-                           and self._tabs[self._active_tab].modified) else ""
-        self._status_left.config(text=f"  {self._git_branch}  {modified}  "
-                                 f"Errors: {errs}  Warnings: {warns}")
+        modified = "*" if (0 <= self._active_tab < len(self._tabs) and self._tabs[self._active_tab].modified) else ""
+        self._status_left.config(text=f"  {self._git_branch}  {modified}  Errors: {errs}  Warnings: {warns}")
         if 0 <= self._active_tab < len(self._tabs):
             tab = self._tabs[self._active_tab]
             try:
@@ -1369,7 +1883,8 @@ class IDEEditor(tk.Frame):
             indent = f"Tab Size: {tab.indent_size}"
             self._status_right.config(
                 text=f"Ln {tab.cursor_line}, Col {tab.cursor_col}   "
-                     f"{tab.encoding}   {tab.language}   {indent}   {tab.eol}")
+                f"{tab.encoding}   {tab.language}   {indent}   {tab.eol}"
+            )
         else:
             self._status_right.config(text="")
 
@@ -1396,26 +1911,45 @@ class IDEEditor(tk.Frame):
         top.config(bg=t["bg"])
         top.protocol("WM_DELETE_WINDOW", lambda: self._close_palette(top))
         sv = tk.StringVar()
-        ent = tk.Entry(top, textvariable=sv, bg=t["input_bg"], fg=t["input_fg"],
-                       insertbackground=t["cursor"], font=self._ui_font, relief=tk.FLAT, bd=8)
+        ent = tk.Entry(
+            top,
+            textvariable=sv,
+            bg=t["input_bg"],
+            fg=t["input_fg"],
+            insertbackground=t["cursor"],
+            font=self._ui_font,
+            relief=tk.FLAT,
+            bd=8,
+        )
         ent.pack(fill=tk.X, padx=4, pady=4)
         ent.focus_set()
-        lb = tk.Listbox(top, bg=t["tree_bg"], fg=t["fg"], font=self._ui_font,
-                        selectbackground=t["selection"], bd=0, highlightthickness=0)
+        lb = tk.Listbox(
+            top,
+            bg=t["tree_bg"],
+            fg=t["fg"],
+            font=self._ui_font,
+            selectbackground=t["selection"],
+            bd=0,
+            highlightthickness=0,
+        )
         lb.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
         commands = [
-            ("Save", self.save), ("Save As...", self.save_as),
-            ("New File", self.new_file), ("Open File...", self.open_file_dialog),
+            ("Save", self.save),
+            ("Save As...", self.save_as),
+            ("New File", self.new_file),
+            ("Open File...", self.open_file_dialog),
             ("Close Tab", lambda: self.close_tab()),
             ("Toggle Sidebar", self.toggle_sidebar),
             ("Toggle Panel", self.toggle_panel),
-            ("Find", self.find), ("Find and Replace", self.find_replace),
+            ("Find", self.find),
+            ("Find and Replace", self.find_replace),
             ("Go to Line...", self.go_to_line),
             ("Duplicate Line", self.duplicate_line),
             ("Delete Line", self.delete_line),
             ("Toggle Comment", self.toggle_comment),
             ("Switch Theme", self.switch_theme),
-            ("Run", self._run_current), ("New Terminal", self.new_terminal),
+            ("Run", self._run_current),
+            ("New Terminal", self.new_terminal),
         ]
         for name, _ in commands:
             lb.insert(tk.END, f"  > {name}")
@@ -1463,29 +1997,81 @@ class IDEEditor(tk.Frame):
         self._find_frame_widget = f
         self._find_var = tk.StringVar()
         self._replace_var = tk.StringVar()
-        tk.Label(f, text="Find:", bg=t["input_bg"], fg=t["input_fg"],
-                 font=self._small_font).pack(side=tk.LEFT, padx=4)
-        fe = tk.Entry(f, textvariable=self._find_var, bg=t["bg"], fg=t["fg"],
-                      insertbackground=t["cursor"], font=self._ui_font, width=25, relief=tk.FLAT, bd=2)
+        tk.Label(f, text="Find:", bg=t["input_bg"], fg=t["input_fg"], font=self._small_font).pack(side=tk.LEFT, padx=4)
+        fe = tk.Entry(
+            f,
+            textvariable=self._find_var,
+            bg=t["bg"],
+            fg=t["fg"],
+            insertbackground=t["cursor"],
+            font=self._ui_font,
+            width=25,
+            relief=tk.FLAT,
+            bd=2,
+        )
         fe.pack(side=tk.LEFT, padx=2)
         fe.focus_set()
         fe.bind("<Return>", lambda e: self._find_next())
-        tk.Button(f, text="Next", command=self._find_next, bg=t["button_bg"],
-                  fg=t["button_fg"], relief=tk.FLAT, font=self._small_font).pack(side=tk.LEFT, padx=2)
-        tk.Button(f, text="Prev", command=self._find_prev, bg=t["button_bg"],
-                  fg=t["button_fg"], relief=tk.FLAT, font=self._small_font).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            f,
+            text="Next",
+            command=self._find_next,
+            bg=t["button_bg"],
+            fg=t["button_fg"],
+            relief=tk.FLAT,
+            font=self._small_font,
+        ).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            f,
+            text="Prev",
+            command=self._find_prev,
+            bg=t["button_bg"],
+            fg=t["button_fg"],
+            relief=tk.FLAT,
+            font=self._small_font,
+        ).pack(side=tk.LEFT, padx=2)
         if replace:
-            tk.Label(f, text="Replace:", bg=t["input_bg"], fg=t["input_fg"],
-                     font=self._small_font).pack(side=tk.LEFT, padx=(8, 4))
-            tk.Entry(f, textvariable=self._replace_var, bg=t["bg"], fg=t["fg"],
-                     insertbackground=t["cursor"], font=self._ui_font, width=25,
-                     relief=tk.FLAT, bd=2).pack(side=tk.LEFT, padx=2)
-            tk.Button(f, text="Replace", command=self._replace_one, bg=t["button_bg"],
-                      fg=t["button_fg"], relief=tk.FLAT, font=self._small_font).pack(side=tk.LEFT, padx=2)
-            tk.Button(f, text="All", command=self._replace_all, bg=t["button_bg"],
-                      fg=t["button_fg"], relief=tk.FLAT, font=self._small_font).pack(side=tk.LEFT, padx=2)
-        tk.Button(f, text="\u00d7", command=self._hide_find_bar, bg=t["input_bg"],
-                  fg=t["input_fg"], relief=tk.FLAT, font=self._small_font).pack(side=tk.RIGHT, padx=4)
+            tk.Label(f, text="Replace:", bg=t["input_bg"], fg=t["input_fg"], font=self._small_font).pack(
+                side=tk.LEFT, padx=(8, 4)
+            )
+            tk.Entry(
+                f,
+                textvariable=self._replace_var,
+                bg=t["bg"],
+                fg=t["fg"],
+                insertbackground=t["cursor"],
+                font=self._ui_font,
+                width=25,
+                relief=tk.FLAT,
+                bd=2,
+            ).pack(side=tk.LEFT, padx=2)
+            tk.Button(
+                f,
+                text="Replace",
+                command=self._replace_one,
+                bg=t["button_bg"],
+                fg=t["button_fg"],
+                relief=tk.FLAT,
+                font=self._small_font,
+            ).pack(side=tk.LEFT, padx=2)
+            tk.Button(
+                f,
+                text="All",
+                command=self._replace_all,
+                bg=t["button_bg"],
+                fg=t["button_fg"],
+                relief=tk.FLAT,
+                font=self._small_font,
+            ).pack(side=tk.LEFT, padx=2)
+        tk.Button(
+            f,
+            text="\u00d7",
+            command=self._hide_find_bar,
+            bg=t["input_bg"],
+            fg=t["input_fg"],
+            relief=tk.FLAT,
+            font=self._small_font,
+        ).pack(side=tk.RIGHT, padx=4)
 
     def _hide_find_bar(self) -> None:
         if self._find_frame_widget is not None:
@@ -1598,6 +2184,7 @@ class IDEEditor(tk.Frame):
                         pass
             self._refresh_tabs()
             self._auto_save_id = self.after(self._auto_save_interval, auto_save)
+
         self._auto_save_id = self.after(self._auto_save_interval, auto_save)
 
     # === Theme switching ===================================================
@@ -1625,8 +2212,7 @@ class IDEEditor(tk.Frame):
             self._sidebar_frame.pack_forget()
             self._sidebar_visible = False
         else:
-            self._sidebar_frame.pack(side=tk.LEFT, fill=tk.Y,
-                                     before=self._right_pane)
+            self._sidebar_frame.pack(side=tk.LEFT, fill=tk.Y, before=self._right_pane)
             self._sidebar_visible = True
 
     def toggle_panel(self) -> None:
@@ -1659,9 +2245,9 @@ class IDEEditor(tk.Frame):
         self.save()
         lang = tab.language
         if lang == "Python":
-            cmd = f"python \"{tab.path}\""
+            cmd = f'python "{tab.path}"'
         elif lang in ("JavaScript", "TypeScript"):
-            cmd = f"node \"{tab.path}\""
+            cmd = f'node "{tab.path}"'
         else:
             self._append_output(f"No run configuration for {lang}\n")
             return
@@ -1669,14 +2255,14 @@ class IDEEditor(tk.Frame):
 
         def run() -> None:
             try:
-                r = subprocess.run(cmd, shell=True, cwd=self._workspace,
-                                   capture_output=True, text=True, timeout=60)
+                r = subprocess.run(cmd, shell=True, cwd=self._workspace, capture_output=True, text=True, timeout=60)
                 out = r.stdout + r.stderr
             except subprocess.TimeoutExpired:
                 out = "[timeout]\n"
             except Exception as e:
                 out = f"[error: {e}]\n"
             self.after(0, lambda: self._append_output(out))
+
         threading.Thread(target=run, daemon=True).start()
 
     def _debug_current(self) -> None:

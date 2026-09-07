@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Tuple
 @dataclass
 class QualityIssue:
     """A code quality issue found during scanning."""
+
     file: str
     line: int
     severity: str  # "error", "warning", "info"
@@ -19,8 +20,11 @@ class QualityIssue:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "file": self.file, "line": self.line, "severity": self.severity,
-            "category": self.category, "message": self.message,
+            "file": self.file,
+            "line": self.line,
+            "severity": self.severity,
+            "category": self.category,
+            "message": self.message,
             "auto_fixable": self.auto_fixable,
         }
 
@@ -95,21 +99,32 @@ class CodeQualityChecker:
 
         # Check for fetch/axios calls without try-catch or .catch
         for i, line in enumerate(lines, 1):
-            if re.search(r"\bfetch\(|axios\.", line) and "catch" not in code[max(0, code.find(line)-200):code.find(line)+len(line)+200]:
-                issues.append(QualityIssue(
-                    file=filename, line=i, severity="warning",
-                    category="error_handling",
-                    message="API call without error handling (missing try-catch or .catch)",
-                ))
+            if (
+                re.search(r"\bfetch\(|axios\.", line)
+                and "catch" not in code[max(0, code.find(line) - 200) : code.find(line) + len(line) + 200]
+            ):
+                issues.append(
+                    QualityIssue(
+                        file=filename,
+                        line=i,
+                        severity="warning",
+                        category="error_handling",
+                        message="API call without error handling (missing try-catch or .catch)",
+                    )
+                )
 
             # Check for empty catch blocks
             if re.search(r"catch\s*\([^)]*\)\s*\{\s*\}", line):
-                issues.append(QualityIssue(
-                    file=filename, line=i, severity="error",
-                    category="error_handling",
-                    message="Empty catch block — errors are silently swallowed",
-                    auto_fixable=True,
-                ))
+                issues.append(
+                    QualityIssue(
+                        file=filename,
+                        line=i,
+                        severity="error",
+                        category="error_handling",
+                        message="Empty catch block — errors are silently swallowed",
+                        auto_fixable=True,
+                    )
+                )
 
         # Check that async functions have error handling
         for m in re.finditer(r"async\s+function\s+(\w+)|async\s+\(", code):
@@ -118,11 +133,15 @@ class CodeQualityChecker:
             block_end = min(len(code), block_start + 500)
             if "try" not in code[block_start:block_end] and "catch" not in code[block_start:block_end]:
                 line_num = code[:block_start].count("\n") + 1
-                issues.append(QualityIssue(
-                    file=filename, line=line_num, severity="warning",
-                    category="error_handling",
-                    message="Async function without try-catch error handling",
-                ))
+                issues.append(
+                    QualityIssue(
+                        file=filename,
+                        line=line_num,
+                        severity="warning",
+                        category="error_handling",
+                        message="Async function without try-catch error handling",
+                    )
+                )
 
         return issues
 
@@ -133,19 +152,27 @@ class CodeQualityChecker:
         for i, line in enumerate(lines, 1):
             # Check for explicit `any` type
             if re.search(r":\s*any\b", line) and "eslint-disable" not in line:
-                issues.append(QualityIssue(
-                    file=filename, line=i, severity="warning",
-                    category="types",
-                    message="Explicit `any` type — use a specific type instead",
-                ))
+                issues.append(
+                    QualityIssue(
+                        file=filename,
+                        line=i,
+                        severity="warning",
+                        category="types",
+                        message="Explicit `any` type — use a specific type instead",
+                    )
+                )
 
             # Check for type assertion with `as any`
             if "as any" in line:
-                issues.append(QualityIssue(
-                    file=filename, line=i, severity="warning",
-                    category="types",
-                    message="`as any` type assertion — weakens type safety",
-                ))
+                issues.append(
+                    QualityIssue(
+                        file=filename,
+                        line=i,
+                        severity="warning",
+                        category="types",
+                        message="`as any` type assertion — weakens type safety",
+                    )
+                )
 
         return issues
 
@@ -159,29 +186,41 @@ class CodeQualityChecker:
         for i, line in enumerate(lines, 1):
             # img without alt
             if "<img" in line and "alt=" not in line and "alt =" not in line:
-                issues.append(QualityIssue(
-                    file=filename, line=i, severity="error",
-                    category="accessibility",
-                    message="<img> missing alt attribute",
-                    auto_fixable=True,
-                ))
+                issues.append(
+                    QualityIssue(
+                        file=filename,
+                        line=i,
+                        severity="error",
+                        category="accessibility",
+                        message="<img> missing alt attribute",
+                        auto_fixable=True,
+                    )
+                )
 
             # onClick on non-interactive element without role/tabIndex
             if re.search(r"<(div|span|p)\s[^>]*onClick", line):
                 if "role=" not in line and "tabIndex" not in line:
-                    issues.append(QualityIssue(
-                        file=filename, line=i, severity="warning",
-                        category="accessibility",
-                        message="onClick on non-interactive element without role/tabIndex",
-                    ))
+                    issues.append(
+                        QualityIssue(
+                            file=filename,
+                            line=i,
+                            severity="warning",
+                            category="accessibility",
+                            message="onClick on non-interactive element without role/tabIndex",
+                        )
+                    )
 
             # Form input without label
             if re.search(r"<input\s", line) and "aria-label" not in line and "id=" not in line:
-                issues.append(QualityIssue(
-                    file=filename, line=i, severity="warning",
-                    category="accessibility",
-                    message="<input> without aria-label or associated label",
-                ))
+                issues.append(
+                    QualityIssue(
+                        file=filename,
+                        line=i,
+                        severity="warning",
+                        category="accessibility",
+                        message="<input> without aria-label or associated label",
+                    )
+                )
 
         return issues
 
@@ -191,20 +230,32 @@ class CodeQualityChecker:
 
         for i, line in enumerate(lines, 1):
             # Hardcoded URLs (not in comments or imports)
-            if re.search(r'https?://(?!localhost|127\.0\.0\.1)', line) and not line.strip().startswith("//") and "import" not in line:
-                issues.append(QualityIssue(
-                    file=filename, line=i, severity="info",
-                    category="hardcoded",
-                    message="Hardcoded URL — consider using environment variable",
-                ))
+            if (
+                re.search(r"https?://(?!localhost|127\.0\.0\.1)", line)
+                and not line.strip().startswith("//")
+                and "import" not in line
+            ):
+                issues.append(
+                    QualityIssue(
+                        file=filename,
+                        line=i,
+                        severity="info",
+                        category="hardcoded",
+                        message="Hardcoded URL — consider using environment variable",
+                    )
+                )
 
             # Hardcoded API keys or secrets
             if re.search(r'(api[_-]?key|secret|password|token)\s*[=:]\s*["\'][^"\']{8,}', line, re.IGNORECASE):
-                issues.append(QualityIssue(
-                    file=filename, line=i, severity="error",
-                    category="hardcoded",
-                    message="Possible hardcoded secret — use environment variable",
-                ))
+                issues.append(
+                    QualityIssue(
+                        file=filename,
+                        line=i,
+                        severity="error",
+                        category="hardcoded",
+                        message="Possible hardcoded secret — use environment variable",
+                    )
+                )
 
         return issues
 
@@ -221,15 +272,19 @@ class CodeQualityChecker:
                 if not name or name == "React":
                     continue
                 # Count usages (excluding the import line itself)
-                rest_of_code = code[m.end():]
+                rest_of_code = code[m.end() :]
                 if re.search(r"\b" + re.escape(name) + r"\b", rest_of_code) is None:
-                    line_num = code[:m.start()].count("\n") + 1
-                    issues.append(QualityIssue(
-                        file=filename, line=line_num, severity="warning",
-                        category="unused",
-                        message=f"Unused import: {name}",
-                        auto_fixable=True,
-                    ))
+                    line_num = code[: m.start()].count("\n") + 1
+                    issues.append(
+                        QualityIssue(
+                            file=filename,
+                            line=line_num,
+                            severity="warning",
+                            category="unused",
+                            message=f"Unused import: {name}",
+                            auto_fixable=True,
+                        )
+                    )
 
         return issues
 
@@ -255,12 +310,14 @@ class CodeQualityChecker:
         # Pattern: .map((item) => (<tag ...> without key=
         # This is a best-effort fix for simple cases
         pattern = r"\.map\(\((\w+)(?:,\s*(\w+))?\)\s*=>\s*\(\s*<(\w+)\s(?![^>]*\bkey=)"
+
         def add_key(m: re.Match) -> str:
             item = m.group(1)
             index = m.group(2)
             tag = m.group(3)
             key_expr = f"{item}.id" if not index else index
-            return f'.map(({item}{"," + index if index else ""}) => (<{tag} key={{{key_expr}}} '
+            return f".map(({item}{',' + index if index else ''}) => (<{tag} key={{{key_expr}}} "
+
         return re.sub(pattern, add_key, code)
 
     def _fix_implicit_any_returns(self, code: str) -> str:
@@ -268,9 +325,11 @@ class CodeQualityChecker:
         # Fix: export function foo(args) { -> export function foo(args): JSX.Element {
         # Only for simple React component cases
         pattern = r"(export\s+(?:default\s+)?function\s+\w+\([^)]*\))\s*\{"
+
         def add_return_type(m: re.Match) -> str:
             sig = m.group(1)
             if ":" in sig.split(")")[-1]:  # already has return type
                 return m.group(0)
             return f"{sig}: JSX.Element {{"
+
         return re.sub(pattern, add_return_type, code)

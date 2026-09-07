@@ -1,9 +1,9 @@
 """CAD editor — split sketch/model view with parametric feature tree."""
 
-
 from __future__ import annotations
 
 import math
+
 try:
     import tkinter as tk
     import tkinter.ttk as ttk
@@ -32,60 +32,78 @@ class CADEditor(tk.Frame):
         self._build_ui()
 
     def _build_ui(self) -> None:
-        self._toolbar = ToolBar(self, orientation="vertical", bg=self._bg, fg=self._fg,
-                                on_tool_select=self._on_tool_change)
+        self._toolbar = ToolBar(
+            self, orientation="vertical", bg=self._bg, fg=self._fg, on_tool_select=self._on_tool_change
+        )
         self._toolbar.pack(side=tk.LEFT, fill=tk.Y)
-        self._toolbar.set_tools([
-            ("Sketch", [
-                ("line", "╱"), ("circle", "○"), ("arc", "◠"),
-                ("rect", "□"), ("dimension", "↔"),
-            ]),
-            ("View", [("select", "⬚"), ("pan", "✥")]),
-        ])
+        self._toolbar.set_tools(
+            [
+                (
+                    "Sketch",
+                    [
+                        ("line", "╱"),
+                        ("circle", "○"),
+                        ("arc", "◠"),
+                        ("rect", "□"),
+                        ("dimension", "↔"),
+                    ],
+                ),
+                ("View", [("select", "⬚"), ("pan", "✥")]),
+            ]
+        )
         self._toolbar.select_tool("line")
 
         right_panel = tk.Frame(self, bg=self._bg, width=220)
         right_panel.pack(side=tk.RIGHT, fill=tk.Y)
         right_panel.pack_propagate(False)
 
-        feat_label = tk.Label(right_panel, text="Features", bg=self._bg, fg=self._fg,
-                              font=("Segoe UI", 10, "bold"), anchor=tk.W)
+        feat_label = tk.Label(
+            right_panel, text="Features", bg=self._bg, fg=self._fg, font=("Segoe UI", 10, "bold"), anchor=tk.W
+        )
         feat_label.pack(fill=tk.X, padx=8, pady=(8, 4))
 
         btn_frame = tk.Frame(right_panel, bg=self._bg)
         btn_frame.pack(fill=tk.X, padx=4, pady=2)
-        btn_style = {"bg": "#313244", "fg": self._fg, "relief": tk.FLAT,
-                     "font": ("Segoe UI", 8), "padx": 6, "pady": 2}
-        for label, cmd in [("Extrude", "extrude"), ("Revolve", "revolve"),
-                           ("Fillet", "fillet"), ("Chamfer", "chamfer")]:
-            tk.Button(btn_frame, text=label, command=lambda c=cmd: self._add_feature(c),
-                      **btn_style).pack(side=tk.LEFT, padx=1)
+        btn_style = {"bg": "#313244", "fg": self._fg, "relief": tk.FLAT, "font": ("Segoe UI", 8), "padx": 6, "pady": 2}
+        for label, cmd in [
+            ("Extrude", "extrude"),
+            ("Revolve", "revolve"),
+            ("Fillet", "fillet"),
+            ("Chamfer", "chamfer"),
+        ]:
+            tk.Button(btn_frame, text=label, command=lambda c=cmd: self._add_feature(c), **btn_style).pack(
+                side=tk.LEFT, padx=1
+            )
 
         style = ttk.Style()
-        style.configure("CAD.Treeview", background="#181825", foreground=self._fg,
-                        fieldbackground="#181825", rowheight=20, font=("Segoe UI", 9))
-        style.map("CAD.Treeview", background=[("selected", "#45475a")],
-                  foreground=[("selected", "#f9e2af")])
+        style.configure(
+            "CAD.Treeview",
+            background="#181825",
+            foreground=self._fg,
+            fieldbackground="#181825",
+            rowheight=20,
+            font=("Segoe UI", 9),
+        )
+        style.map("CAD.Treeview", background=[("selected", "#45475a")], foreground=[("selected", "#f9e2af")])
 
-        self._feature_tree = ttk.Treeview(right_panel, style="CAD.Treeview",
-                                          show="tree", height=10)
+        self._feature_tree = ttk.Treeview(right_panel, style="CAD.Treeview", show="tree", height=10)
         self._feature_tree.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
         self._feature_tree.insert("", tk.END, text="Origin")
         self._feature_tree.insert("", tk.END, text="Sketch 1")
 
-        self._constraint_label = tk.Label(right_panel, text="Constraints: 0",
-                                          bg=self._bg, fg="#6c7086",
-                                          font=("Consolas", 8))
+        self._constraint_label = tk.Label(
+            right_panel, text="Constraints: 0", bg=self._bg, fg="#6c7086", font=("Consolas", 8)
+        )
         self._constraint_label.pack(fill=tk.X, padx=8, pady=4)
 
-        center = tk.PanedWindow(self, orient=tk.VERTICAL, bg=self._bg,
-                                sashwidth=4, sashrelief=tk.FLAT)
+        center = tk.PanedWindow(self, orient=tk.VERTICAL, bg=self._bg, sashwidth=4, sashrelief=tk.FLAT)
         center.pack(fill=tk.BOTH, expand=True)
 
         sketch_frame = tk.Frame(center, bg=self._bg)
         center.add(sketch_frame, stretch="always")
-        sketch_header = tk.Label(sketch_frame, text="2D Sketch", bg="#181825", fg=self._fg,
-                                 font=("Segoe UI", 9, "bold"), anchor=tk.W)
+        sketch_header = tk.Label(
+            sketch_frame, text="2D Sketch", bg="#181825", fg=self._fg, font=("Segoe UI", 9, "bold"), anchor=tk.W
+        )
         sketch_header.pack(fill=tk.X)
         self._sketch = Canvas2D(sketch_frame, bg="#11111b", grid_size=20, snap=True)
         self._sketch.pack(fill=tk.BOTH, expand=True)
@@ -95,8 +113,9 @@ class CADEditor(tk.Frame):
 
         model_frame = tk.Frame(center, bg=self._bg)
         center.add(model_frame, stretch="always")
-        model_header = tk.Label(model_frame, text="3D Model", bg="#181825", fg=self._fg,
-                                font=("Segoe UI", 9, "bold"), anchor=tk.W)
+        model_header = tk.Label(
+            model_frame, text="3D Model", bg="#181825", fg=self._fg, font=("Segoe UI", 9, "bold"), anchor=tk.W
+        )
         model_header.pack(fill=tk.X)
         self._model_view = Viewport3D(model_frame, bg="#11111b")
         self._model_view.pack(fill=tk.BOTH, expand=True)
@@ -155,8 +174,7 @@ class CADEditor(tk.Frame):
             mid_y = (y0 + wy) / 2
             dist = math.hypot(wx - x0, wy - y0)
             self._sketch.draw_line(x0, y0, wx, wy, color="#f9e2af", width=1, tag="user")
-            self._sketch.draw_text(mid_x, mid_y - 10, f"{dist:.1f}",
-                                   color="#f9e2af", tag="user")
+            self._sketch.draw_text(mid_x, mid_y - 10, f"{dist:.1f}", color="#f9e2af", tag="user")
             self._constraints_count += 1
             self._constraint_label.config(text=f"Constraints: {self._constraints_count}")
 

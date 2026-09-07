@@ -8,8 +8,12 @@ from eostudio.core.collaboration.presence import PresenceManager, UserPresence
 from eostudio.core.collaboration.comments import CommentThread, Comment
 
 __all__ = [
-    "CRDTDocument", "CRDTOperation",
-    "CollabServer", "CollabSession",
-    "PresenceManager", "UserPresence",
-    "CommentThread", "Comment",
+    "CRDTDocument",
+    "CRDTOperation",
+    "CollabServer",
+    "CollabSession",
+    "PresenceManager",
+    "UserPresence",
+    "CommentThread",
+    "Comment",
 ]
