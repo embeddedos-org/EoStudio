@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from eostudio.plugins.plugin_base import (
     Plugin,
@@ -39,9 +39,9 @@ class SimulationResult:
     platform: str = ""
     duration_ms: float = 0.0
     log: str = ""
-    metrics: Dict[str, Any] = field(default_factory=dict)
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    metrics: dict[str, Any] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 # ------------------------------------------------------------------
@@ -69,18 +69,18 @@ class EoSimPlugin(Plugin):
         },
     )
 
-    def __init__(self, manifest: Optional[PluginManifest] = None) -> None:
+    def __init__(self, manifest: PluginManifest | None = None) -> None:
         super().__init__(manifest or self.__class__.manifest)
         self._bridge: Any = None
         self._current_platform: str = "stm32f4"
-        self._last_result: Optional[SimulationResult] = None
-        self._available_platforms: List[str] = []
-        self._available_domains: List[str] = []
+        self._last_result: SimulationResult | None = None
+        self._available_platforms: list[str] = []
+        self._available_domains: list[str] = []
         self._eosim_version: str = ""
 
     # -- lifecycle ------------------------------------------------
 
-    def activate(self, context: Dict[str, Any]) -> bool:
+    def activate(self, context: dict[str, Any]) -> bool:
         """Discover EoSim and initialise the bridge."""
         try:
             if EoSimBridge is not None:
@@ -158,12 +158,12 @@ class EoSimPlugin(Plugin):
 
     # -- hook handlers --------------------------------------------
 
-    def _on_design_change(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _on_design_change(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the design against the target platform constraints."""
         design = data.get("design", {})
         platform = data.get("platform", self._current_platform)
-        warnings: List[str] = []
-        errors: List[str] = []
+        warnings: list[str] = []
+        errors: list[str] = []
 
         _ = design.get("peripherals", [])
         memory = design.get("memory", [])
@@ -191,7 +191,7 @@ class EoSimPlugin(Plugin):
 
         return {"valid": len(errors) == 0, "errors": errors, "warnings": warnings}
 
-    def _on_build(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _on_build(self, data: dict[str, Any]) -> dict[str, Any]:
         """Trigger a firmware build via EoSim / ebuild."""
         board_config = data.get("board_config", {})
         source_dir = data.get("source_dir", "")
@@ -204,10 +204,10 @@ class EoSimPlugin(Plugin):
         return {
             "success": False,
             "output": "EoSim bridge not available; manual build required.",
-            "command": f"ebuild --platform {platform} --config board.yaml {source_dir}",
+            "command": f"ebuild configure --board {platform} && ebuild build",
         }
 
-    def _on_simulate(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _on_simulate(self, data: dict[str, Any]) -> dict[str, Any]:
         """Launch EoSim simulation for the current design."""
         design = data.get("design", {})
         platform = data.get("platform", self._current_platform)
@@ -222,17 +222,17 @@ class EoSimPlugin(Plugin):
             "errors": result.errors,
         }
 
-    def _on_export(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _on_export(self, data: dict[str, Any]) -> dict[str, Any]:
         """Export board config YAML and generate firmware."""
         design = data.get("design", {})
         files = self.export_for_eosim(design)
         return {"files": files}
 
-    def _on_post_codegen(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _on_post_codegen(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate generated code against the target platform."""
         generated_files = data.get("files", {})
         platform = data.get("platform", self._current_platform)
-        warnings: List[str] = []
+        warnings: list[str] = []
 
         if self._bridge and hasattr(self._bridge, "validate_code"):
             result = self._bridge.validate_code(generated_files, platform)
@@ -250,7 +250,7 @@ class EoSimPlugin(Plugin):
 
     # -- UI contributions -----------------------------------------
 
-    def get_menu_items(self) -> List[Dict[str, Any]]:
+    def get_menu_items(self) -> list[dict[str, Any]]:
         return [
             {"label": "Simulate with EoSim", "callback_name": "simulate_current_design"},
             {"label": "Launch EoSim GUI", "callback_name": "launch_eosim_gui"},
@@ -259,13 +259,13 @@ class EoSimPlugin(Plugin):
             {"label": "Run Domain Simulation", "callback_name": "launch_domain_simulator"},
         ]
 
-    def get_toolbar_items(self) -> List[Dict[str, Any]]:
+    def get_toolbar_items(self) -> list[dict[str, Any]]:
         return [
             {"label": "\u25b6 Simulate", "icon": "play", "callback_name": "simulate_current_design"},
             {"label": "\u2699 Platform", "icon": "settings", "callback_name": "select_platform"},
         ]
 
-    def get_panel(self) -> Optional[Dict[str, Any]]:
+    def get_panel(self) -> dict[str, Any] | None:
         available = self._eosim_version != ""
         return {
             "title": "EoSim Status",
@@ -290,7 +290,7 @@ class EoSimPlugin(Plugin):
     # -- public API -----------------------------------------------
 
     def simulate_current_design(
-        self, design: Dict[str, Any], platform: Optional[str] = None,
+        self, design: dict[str, Any], platform: str | None = None,
     ) -> SimulationResult:
         """Run a full EoSim simulation for *design* on *platform*."""
         platform = platform or self._current_platform
@@ -327,7 +327,7 @@ class EoSimPlugin(Plugin):
         """Return the list of available platforms for user selection."""
         return self._current_platform
 
-    def get_available_platforms(self) -> List[str]:
+    def get_available_platforms(self) -> list[str]:
         return list(self._available_platforms)
 
     def set_platform(self, platform: str) -> None:
@@ -338,7 +338,7 @@ class EoSimPlugin(Plugin):
             log.warning("Unknown platform %s", platform)
 
     def build_and_simulate(
-        self, board_config: Dict[str, Any], firmware_source: str,
+        self, board_config: dict[str, Any], firmware_source: str,
     ) -> SimulationResult:
         """Build firmware from *firmware_source* then run simulation."""
         build_result = self._on_build({
@@ -354,11 +354,11 @@ class EoSimPlugin(Plugin):
             )
         return self.simulate_current_design(board_config, self._current_platform)
 
-    def export_for_eosim(self, design: Dict[str, Any]) -> Dict[str, str]:
+    def export_for_eosim(self, design: dict[str, Any]) -> dict[str, str]:
         """Generate YAML board config and firmware source files for EoSim."""
         import yaml  # type: ignore[import-untyped]
 
-        files: Dict[str, str] = {}
+        files: dict[str, str] = {}
 
         board_yaml = {
             "name": design.get("name", "board"),
@@ -380,11 +380,11 @@ class EoSimPlugin(Plugin):
 
         return files
 
-    def get_available_domains(self) -> List[str]:
+    def get_available_domains(self) -> list[str]:
         """Return the list of simulation domains from the bridge."""
         return list(self._available_domains)
 
-    def launch_domain_simulator(self, domain: str, platform: Optional[str] = None) -> SimulationResult:
+    def launch_domain_simulator(self, domain: str, platform: str | None = None) -> SimulationResult:
         """Launch an EoSim domain-specific simulator."""
         platform = platform or self._current_platform
 
@@ -419,7 +419,7 @@ class EoSimPlugin(Plugin):
         except Exception as exc:
             log.error("Failed to launch EoSim GUI: %s", exc)
 
-    def view_3d_product(self, platform: Optional[str] = None) -> None:
+    def view_3d_product(self, platform: str | None = None) -> None:
         """Launch the EoSim 3-D product viewer."""
         import subprocess as sp
         platform = platform or self._current_platform
@@ -434,4 +434,4 @@ class EoSimPlugin(Plugin):
 
 
 # make sys available at module level for launch helpers
-import sys  # noqa: E402
+import sys

@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
 class TypingSequence:
     """A simulated typing sequence for demo videos."""
+
     text: str
     start_time: float
     typing_speed: float = 0.05  # seconds per character
@@ -18,6 +19,7 @@ class TypingSequence:
 @dataclass
 class UITransition:
     """A UI state transition for demo videos."""
+
     from_state: str
     to_state: str
     start_time: float
@@ -28,17 +30,20 @@ class UITransition:
 @dataclass
 class DemoScene:
     """A single scene in a product demo video."""
+
     title: str
     duration: float
     description: str = ""
-    typing_sequences: List[TypingSequence] = field(default_factory=list)
-    transitions: List[UITransition] = field(default_factory=list)
+    typing_sequences: list[TypingSequence] = field(default_factory=list)
+    transitions: list[UITransition] = field(default_factory=list)
     narration: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
-            "title": self.title, "duration": self.duration,
-            "description": self.description, "narration": self.narration,
+            "title": self.title,
+            "duration": self.duration,
+            "description": self.description,
+            "narration": self.narration,
             "typing_count": len(self.typing_sequences),
             "transition_count": len(self.transitions),
         }
@@ -54,8 +59,9 @@ class DemoTemplate:
     - Feature callout overlays
     - Subtitle/narration support
     """
+
     product_name: str
-    scenes: List[DemoScene] = field(default_factory=list)
+    scenes: list[DemoScene] = field(default_factory=list)
     width: int = 1920
     height: int = 1080
     fps: int = 30
@@ -87,44 +93,54 @@ class DemoTemplate:
         ]
 
         for i, scene in enumerate(self.scenes):
-            lines.append(f"        # --- Scene {i+1}: {scene.title} ---")
+            lines.append(f"        # --- Scene {i + 1}: {scene.title} ---")
 
             if i == 0:
                 # Intro: Product name reveal
-                lines.extend([
-                    f'        title = Text("{self.product_name}", font_size=72, color=WHITE)',
-                    f"        title.set_weight(BOLD)",
-                    f"        self.play(Write(title), run_time=1.5)",
-                ])
+                lines.extend(
+                    [
+                        f'        title = Text("{self.product_name}", font_size=72, color=WHITE)',
+                        "        title.set_weight(BOLD)",
+                        "        self.play(Write(title), run_time=1.5)",
+                    ]
+                )
                 if scene.description:
-                    lines.extend([
-                        f'        subtitle = Text("{scene.description}", font_size=28, color=GRAY)',
-                        f"        subtitle.next_to(title, DOWN, buff=0.5)",
-                        f"        self.play(FadeIn(subtitle), run_time=0.8)",
-                    ])
+                    lines.extend(
+                        [
+                            f'        subtitle = Text("{scene.description}", font_size=28, color=GRAY)',
+                            "        subtitle.next_to(title, DOWN, buff=0.5)",
+                            "        self.play(FadeIn(subtitle), run_time=0.8)",
+                        ]
+                    )
                 lines.append(f"        self.wait({scene.duration - 2.5})")
-                lines.append(f"        self.play(FadeOut(title), FadeOut(subtitle) if 'subtitle' in dir() else Wait(0))")
+                lines.append(
+                    "        self.play(FadeOut(title), FadeOut(subtitle) if 'subtitle' in dir() else Wait(0))"
+                )
             else:
                 # Feature scene with title
-                lines.extend([
-                    f'        scene_title = Text("{scene.title}", font_size=48, color=WHITE)',
-                    f"        scene_title.set_weight(BOLD)",
-                    f"        scene_title.to_edge(UP, buff=0.5)",
-                    f"        self.play(FadeIn(scene_title), run_time=0.5)",
-                ])
+                lines.extend(
+                    [
+                        f'        scene_title = Text("{scene.title}", font_size=48, color=WHITE)',
+                        "        scene_title.set_weight(BOLD)",
+                        "        scene_title.to_edge(UP, buff=0.5)",
+                        "        self.play(FadeIn(scene_title), run_time=0.5)",
+                    ]
+                )
 
                 # Add typing sequences
                 for j, ts in enumerate(scene.typing_sequences):
-                    lines.extend([
-                        f'        code_{j} = Code(',
-                        f'            code="""{ts.text}""",',
-                        f'            language="typescript",',
-                        f'            font_size=16,',
-                        f'            background="rectangle",',
-                        f'            background_stroke_color="{self.accent_color}",',
-                        f"        )",
-                        f"        self.play(Create(code_{j}), run_time={len(ts.text) * ts.typing_speed})",
-                    ])
+                    lines.extend(
+                        [
+                            f"        code_{j} = Code(",
+                            f'            code="""{ts.text}""",',
+                            '            language="typescript",',
+                            "            font_size=16,",
+                            '            background="rectangle",',
+                            f'            background_stroke_color="{self.accent_color}",',
+                            "        )",
+                            f"        self.play(Create(code_{j}), run_time={len(ts.text) * ts.typing_speed})",
+                        ]
+                    )
 
                 # Add transitions
                 for t in scene.transitions:
@@ -134,30 +150,34 @@ class DemoTemplate:
                         "slide_right": "FadeIn",
                         "zoom": "GrowFromCenter",
                     }.get(t.effect, "FadeIn")
-                    lines.extend([
-                        f'        transition_text = Text("{t.to_state}", font_size=24, color=GRAY)',
-                        f"        self.play({effect_fn}(transition_text), run_time={t.duration})",
-                    ])
+                    lines.extend(
+                        [
+                            f'        transition_text = Text("{t.to_state}", font_size=24, color=GRAY)',
+                            f"        self.play({effect_fn}(transition_text), run_time={t.duration})",
+                        ]
+                    )
 
                 remaining = scene.duration - 1.0
                 if remaining > 0:
                     lines.append(f"        self.wait({remaining:.1f})")
-                lines.append(f"        self.clear()")
+                lines.append("        self.clear()")
 
             lines.append("")
 
         # Final CTA
-        lines.extend([
-            f"        # --- Final CTA ---",
-            f'        cta = Text("Try it now", font_size=56, color=WHITE)',
-            f"        cta.set_weight(BOLD)",
-            f"        self.play(Write(cta), run_time=1.0)",
-            f"        self.wait(2)",
-        ])
+        lines.extend(
+            [
+                "        # --- Final CTA ---",
+                '        cta = Text("Try it now", font_size=56, color=WHITE)',
+                "        cta.set_weight(BOLD)",
+                "        self.play(Write(cta), run_time=1.0)",
+                "        self.wait(2)",
+            ]
+        )
 
         return "\n".join(lines) + "\n"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "product_name": self.product_name,
             "total_duration": self.total_duration,
@@ -172,8 +192,9 @@ class DemoTemplate:
         return "".join(w.capitalize() for w in self.product_name.split()) + "Demo"
 
 
-def create_quick_demo(product_name: str, features: List[str],
-                      url: str = "") -> DemoTemplate:
+def create_quick_demo(
+    product_name: str, features: list[str], url: str = ""
+) -> DemoTemplate:
     """Create a quick product demo template from a product name and feature list."""
     demo = DemoTemplate(product_name=product_name)
 

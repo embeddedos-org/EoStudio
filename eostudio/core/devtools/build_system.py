@@ -6,10 +6,10 @@ import os
 import re
 import subprocess
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
 
 
 class BuildSystem(Enum):
@@ -31,6 +31,7 @@ class BuildSystem(Enum):
     SWIFT = "swift"
     BUCK = "buck"
     BAZEL = "bazel"
+    EBUILD = "ebuild"
 
 
 @dataclass
@@ -42,7 +43,7 @@ class BuildConfig:
     test_command: str
     clean_command: str
     run_command: str
-    env: Dict[str, str] = field(default_factory=dict)
+    env: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -51,10 +52,10 @@ class BuildResult:
 
     success: bool
     output: str
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     duration_ms: int = 0
-    artifacts: List[str] = field(default_factory=list)
+    artifacts: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -79,7 +80,7 @@ class BuildTask:
 
 
 # Detection config: (marker file/dir, BuildSystem)
-_DETECTION_ORDER: List[tuple] = [
+_DETECTION_ORDER: list[tuple] = [
     ("pnpm-lock.yaml", BuildSystem.PNPM),
     ("yarn.lock", BuildSystem.YARN),
     ("package-lock.json", BuildSystem.NPM),
@@ -102,9 +103,10 @@ _DETECTION_ORDER: List[tuple] = [
     ("WORKSPACE", BuildSystem.BAZEL),
     ("BUILD.bazel", BuildSystem.BAZEL),
     ("WORKSPACE.bazel", BuildSystem.BAZEL),
+    ("board.yaml", BuildSystem.EBUILD),
 ]
 
-_DEFAULT_CONFIGS: Dict[BuildSystem, BuildConfig] = {
+_DEFAULT_CONFIGS: dict[BuildSystem, BuildConfig] = {
     BuildSystem.NPM: BuildConfig(
         system=BuildSystem.NPM,
         build_command="npm run build",
@@ -210,6 +212,13 @@ _DEFAULT_CONFIGS: Dict[BuildSystem, BuildConfig] = {
         clean_command="buck clean",
         run_command="buck run //:main",
     ),
+    BuildSystem.EBUILD: BuildConfig(
+        system=BuildSystem.EBUILD,
+        build_command="ebuild configure --board default && ebuild build",
+        test_command="ebuild test",
+        clean_command="ebuild clean",
+        run_command="ebuild run",
+    ),
     BuildSystem.BAZEL: BuildConfig(
         system=BuildSystem.BAZEL,
         build_command="bazel build //...",
@@ -243,7 +252,7 @@ class BuildSystemManager:
 
     def __init__(self, workspace_path: str = ".") -> None:
         self.workspace_path = Path(workspace_path).resolve()
-        self._detected: Optional[BuildSystem] = None
+        self._detected: BuildSystem | None = None
 
     def detect(self) -> BuildSystem:
         """Auto-detect the build system from config files in the workspace."""
@@ -307,7 +316,7 @@ class BuildSystemManager:
             env=dict(config.env),
         )
 
-    def _run(self, command: str, env_extra: Optional[Dict[str, str]] = None) -> BuildResult:
+    def _run(self, command: str, env_extra: dict[str, str] | None = None) -> BuildResult:
         """Execute a build command and capture the result."""
         start = time.monotonic_ns()
         env = os.environ.copy()
@@ -345,8 +354,8 @@ class BuildSystemManager:
 
         elapsed = (time.monotonic_ns() - start) // 1_000_000
         combined = proc.stdout + proc.stderr
-        errors: List[str] = []
-        warnings: List[str] = []
+        errors: list[str] = []
+        warnings: list[str] = []
 
         for output_line in combined.splitlines():
             lower = output_line.lower()
@@ -356,7 +365,7 @@ class BuildSystemManager:
                 warnings.append(output_line.strip())
 
         # Detect artifacts
-        artifacts: List[str] = []
+        artifacts: list[str] = []
         artifact_dirs = ["dist", "build", "target", "out", "bin"]
         for adir in artifact_dirs:
             artifact_path = self.workspace_path / adir
@@ -374,7 +383,7 @@ class BuildSystemManager:
             artifacts=artifacts,
         )
 
-    def build(self, target: Optional[str] = None) -> BuildResult:
+    def build(self, target: str | None = None) -> BuildResult:
         """Run the build command."""
         config = self.get_config()
         cmd = config.build_command
@@ -382,7 +391,7 @@ class BuildSystemManager:
             cmd = f"{cmd} {target}"
         return self._run(cmd)
 
-    def test(self, target: Optional[str] = None) -> BuildResult:
+    def test(self, target: str | None = None) -> BuildResult:
         """Run tests."""
         config = self.get_config()
         cmd = config.test_command
@@ -395,7 +404,7 @@ class BuildSystemManager:
         config = self.get_config()
         return self._run(config.clean_command)
 
-    def run(self, target: Optional[str] = None) -> BuildResult:
+    def run(self, target: str | None = None) -> BuildResult:
         """Run the project."""
         config = self.get_config()
         cmd = config.run_command
@@ -423,9 +432,9 @@ class BuildSystemManager:
         cmd = install_commands.get(system, "echo 'No install command for this build system'")
         return self._run(cmd)
 
-    def get_tasks(self) -> List[BuildTask]:
+    def get_tasks(self) -> list[BuildTask]:
         """Get available tasks from build configuration files."""
-        tasks: List[BuildTask] = []
+        tasks: list[BuildTask] = []
         system = self.detect()
 
         # Always add standard lifecycle tasks
@@ -472,9 +481,9 @@ class BuildSystemManager:
             errors=[f"Task '{task_name}' not found"],
         )
 
-    def parse_errors(self, output: str) -> List[BuildDiagnostic]:
+    def parse_errors(self, output: str) -> list[BuildDiagnostic]:
         """Parse build output into structured diagnostics."""
-        diagnostics: List[BuildDiagnostic] = []
+        diagnostics: list[BuildDiagnostic] = []
         seen = set()
 
         for output_line in output.splitlines():
@@ -513,7 +522,7 @@ class BuildSystemManager:
         """
         import hashlib
 
-        file_hashes: Dict[str, str] = {}
+        file_hashes: dict[str, str] = {}
 
         def _hash_file(path: Path) -> str:
             try:
@@ -553,7 +562,7 @@ class BuildSystemManager:
         except KeyboardInterrupt:
             pass
 
-    def get_scripts_from_package_json(self) -> Dict[str, str]:
+    def get_scripts_from_package_json(self) -> dict[str, str]:
         """Parse and return npm scripts from package.json."""
         pkg_path = self.workspace_path / "package.json"
         if not pkg_path.exists():
@@ -565,9 +574,9 @@ class BuildSystemManager:
         except (json.JSONDecodeError, OSError):
             return {}
 
-    def get_targets_from_makefile(self) -> List[str]:
+    def get_targets_from_makefile(self) -> list[str]:
         """Parse and return targets from a Makefile."""
-        targets: List[str] = []
+        targets: list[str] = []
         makefile_names = ["Makefile", "makefile", "GNUmakefile"]
 
         for mf_name in makefile_names:
