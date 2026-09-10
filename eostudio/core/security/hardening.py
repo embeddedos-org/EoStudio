@@ -383,23 +383,23 @@ class SecurityScanner:
                     text=True,
                     timeout=60,
                 )
-                if result.returncode == 0:
-                    data = json.loads(result.stdout)
-                    for dep in data.get("dependencies", []):
-                        for vuln in dep.get("vulns", []):
-                            vulns.append(
-                                Vulnerability(
-                                    id=vuln.get("id", "CVE-UNKNOWN"),
-                                    title=f"Vulnerable dependency: {dep['name']} {dep['version']}",
-                                    severity=VulnSeverity.HIGH,
-                                    category="dependency",
-                                    file=str(req_file),
-                                    line=0,
-                                    description=vuln.get("description", ""),
-                                    recommendation=f"Upgrade to {vuln.get('fix_versions', ['latest'])[0]}",
-                                    cve=vuln.get("id", ""),
-                                )
+                data = json.loads(result.stdout)
+                for dep in data.get("dependencies", []):
+                    for vuln in dep.get("vulns", []):
+                        fix_versions = vuln.get("fix_versions") or ["latest"]
+                        vulns.append(
+                            Vulnerability(
+                                id=vuln.get("id", "CVE-UNKNOWN"),
+                                title=f"Vulnerable dependency: {dep['name']} {dep['version']}",
+                                severity=VulnSeverity.HIGH,
+                                category="dependency",
+                                file=str(req_file),
+                                line=0,
+                                description=vuln.get("description", ""),
+                                recommendation=f"Upgrade to {fix_versions[0]}",
+                                cve=vuln.get("id", ""),
                             )
+                        )
             except Exception:
                 pass
 
