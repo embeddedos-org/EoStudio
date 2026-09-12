@@ -1,98 +1,57 @@
-<!-- generated: eos-ai-scaffold -->
-# Agent Responsibilities
+# Repository Guidance for Agents
 
-Each role owns a slice of the work and does only that slice. Full briefs are in
-[.ai/](./.ai/). These are responsibilities, not a required agent count — one
-agent may hold several roles on a small change. Split when the roles need
-genuinely different context, not by default.
+## Scope and architecture
 
-One rule is structural rather than stylistic: **whoever implements does not
-approve.** Review is a separate role because self-review reliably misses the
-thing the implementer already believes is correct.
+EoStudio is a Python development and design platform for the EmbeddedOS
+ecosystem. The `EoStudio` command-line entry point is implemented in
+`eostudio/cli/`. Product logic is split across `eostudio/core/`, code generators
+in `eostudio/codegen/`, import and export formats in `eostudio/formats/`, desktop
+UI code in `eostudio/gui/`, platform adapters in `eostudio/platform/`, plugins in
+`eostudio/plugins/`, and project templates in `eostudio/templates/`.
 
-## Planner — [.ai/planner.md](./.ai/planner.md)
+Follow the specialist role briefs in [`.ai/`](./.ai/) and the handoff protocol in
+[`HANDOFF.md`](./HANDOFF.md). The implementer must not act as the approving
+reviewer. Keep changes within the affected subsystem unless a shared interface
+requires a coordinated update. EoStudio drives EmbeddedOS builds through
+`ebuild`; do not duplicate ebuild's build orchestration inside this repository.
 
-- Understand the request.
-- Break work into tasks.
-- Assign work.
+## Build and validation
 
-## Architect — [.ai/architect.md](./.ai/architect.md)
+Install development dependencies with `python -m pip install -e ".[dev]"`.
+Use the narrowest pytest target that covers the change, then broaden validation
+when shared behavior is affected.
 
-- Design structure.
-- Choose patterns.
-- Own dependencies, scalability and maintainability.
+- Run the full suite with `python -m pytest tests/ -v --tb=short`.
+- Run static checks with `python -m ruff check eostudio/` and
+  `python -m ruff format --check eostudio/`.
+- Run typing checks with `python -m mypy eostudio/ --ignore-missing-imports`.
+- For CLI changes, exercise the affected command through `EoStudio` or
+  `python -m eostudio.cli.main` in addition to focused tests.
+- For GUI, rendering, hardware, simulation, AI-provider, or external-service
+  paths, record any SDK, display, device, credential, or network limitation
+  instead of claiming unavailable integration coverage.
 
-## Backend — [.ai/backend.md](./.ai/backend.md)
+The CI matrix in [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) covers
+Python 3.10 through 3.12 on Linux, Windows, and macOS. A local run on one host
+must not be described as matrix-wide validation.
 
-- APIs
-- Database
-- Business logic
+## Change discipline
 
-## Frontend — [.ai/frontend.md](./.ai/frontend.md)
+Preserve public CLI behavior, project and format compatibility, and optional
+feature boundaries. Base installations must not acquire heavyweight AI,
+database, cloud, or video dependencies unintentionally. Treat generated source,
+format exports, plugin discovery, build command construction, remote URLs,
+credentials, and file-system writes as security-sensitive boundaries.
 
-- UI
-- Components
-- Accessibility
+Do not commit virtual environments, caches, build output, credentials, generated
+media, or downloaded models unless the repository already tracks the exact
+artifact and the change intentionally updates it. Update the relevant guides in
+[`docs/`](./docs/), tests in [`tests/`](./tests/), and [`CHANGELOG.md`](./CHANGELOG.md)
+when a user-facing contract changes.
 
-## Testing — [.ai/testing.md](./.ai/testing.md)
-
-- Unit tests
-- Integration tests
-- Regression tests
-
-## Security — [.ai/security.md](./.ai/security.md)
-
-- Authentication and authorization
-- Validation
-- Secrets
-- Dependency review
-
-## Performance — [.ai/performance.md](./.ai/performance.md)
-
-- Profiling
-- Optimization
-- Scalability
-
-## Reviewer — [.ai/reviewer.md](./.ai/reviewer.md)
-
-- Final review
-- Verify requirements
-- Merge findings
-
-## Documentation — [.ai/docs.md](./.ai/docs.md)
-
-- README
-- API docs
-- Changelog
-- Migration and architecture notes
-
-## Release — [.ai/release.md](./.ai/release.md)
-
-- Release notes
-- Deployment preparation
-- Rollback guidance
-
----
-
-## Switching roles
-
-Switch when the task changes domain, when specialist knowledge is required,
-when independent review is required, or when the context has grown past what
-one agent can hold accurately. Every switch runs the protocol in
-[HANDOFF.md](./HANDOFF.md).
-
-## Finding work that is not yours
-
-You will. The rule is: **record it, do not absorb it, do not drop it.**
-
-| What you found | Do |
-|----------------|-----|
-| A defect unrelated to your task | Note it in [TASKS.md](./TASKS.md) and keep going. |
-| A defect your change would sit on top of | Stop; say it blocks you; propose fixing it as its own task. |
-| A security issue | Report immediately, whatever role you hold. This one never waits for a handoff. |
-| A design decision missing from the plan | Return to the architect rather than deciding it inside an implementation. |
-| Work that belongs to a role nobody assigned | Say so. An unowned task is how requirements go missing. |
-
-Silently fixing something outside your task makes the diff unreviewable.
-Silently ignoring it means nobody ever looks again. Neither is acceptable; the
-note is what makes the difference.
+Every human-authored pull request must use a GitHub-recognized closing keyword
+for an issue in this repository, for example `Fixes #123`. Cross-repository
+issues and plain issue mentions do not satisfy the linked-issue policy. Follow
+[`.github/PULL_REQUEST_TEMPLATE.md`](./.github/PULL_REQUEST_TEMPLATE.md), and keep
+the published Wiki snapshot in [`docs/wiki/`](./docs/wiki/) synchronized when
+Wiki content changes.
