@@ -1,15 +1,19 @@
 """Scene hierarchy tree — parent/child structure of the open document."""
 
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -46,8 +50,7 @@ class HierarchyPanel(ttk.Frame):
         super().__init__(master, **kwargs)
         self._on_select = on_select
         self._tree = ttk.Treeview(self, show="tree", selectmode="browse")
-        self._scroll = ttk.Scrollbar(self, orient="vertical",
-                                     command=self._tree.yview)
+        self._scroll = ttk.Scrollbar(self, orient="vertical", command=self._tree.yview)
         self._tree.configure(yscrollcommand=self._scroll.set)
         self._tree.pack(side="left", fill="both", expand=True)
         self._scroll.pack(side="right", fill="y")
@@ -66,8 +69,7 @@ class HierarchyPanel(ttk.Frame):
         seen: set = set()
         self._insert("", nodes, seen)
 
-    def _insert(self, parent: str, nodes: List[Dict[str, Any]],
-                seen: set) -> None:
+    def _insert(self, parent: str, nodes: List[Dict[str, Any]], seen: set) -> None:
         for node in nodes:
             node_id = str(node.get("id", ""))
             if not node_id:
@@ -75,8 +77,7 @@ class HierarchyPanel(ttk.Frame):
             if node_id in seen:
                 raise ValueError(f"duplicate hierarchy node id {node_id!r}")
             seen.add(node_id)
-            self._tree.insert(parent, "end", iid=node_id,
-                              text=str(node.get("name", node_id)), open=True)
+            self._tree.insert(parent, "end", iid=node_id, text=str(node.get("name", node_id)), open=True)
             self._insert(node_id, node.get("children", []) or [], seen)
 
     # ── selection ────────────────────────────────────────────────────────
