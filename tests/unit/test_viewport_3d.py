@@ -13,7 +13,10 @@ matters is that a world point lands on the right pixel, not how the basis is
 built.
 """
 
+import functools
 import math
+import subprocess
+import sys
 
 import pytest
 
@@ -25,9 +28,31 @@ from eostudio.gui.widgets.viewport_3d import (  # noqa: E402
 )
 
 
+@functools.lru_cache(maxsize=1)
+def _tk_can_realise_a_window() -> str:
+    """Why Tk cannot draw here, or "" when it can.
+
+    Probed in a child process. On the macOS runners' python.org builds for 3.10
+    and 3.11, Tk's update() calls abort() ("Fatal Python error: Aborted"), which
+    kills the whole pytest process. A TclError could be caught and skipped; an
+    abort cannot, so it has to happen somewhere else first.
+    """
+    probe = "import tkinter; r = tkinter.Tk(); r.update(); r.destroy()"
+    try:
+        done = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        return "Tk probe timed out"
+    if done.returncode != 0:
+        return f"Tk cannot realise a window here (exit {done.returncode}): {done.stderr.strip()[-200:]}"
+    return ""
+
+
 @pytest.fixture
 def viewport():
     """A realised 400x300 viewport, or a skip when there is no display."""
+    reason = _tk_can_realise_a_window()
+    if reason:
+        pytest.skip(reason)
     try:
         root = tk.Tk()
     except tk.TclError as exc:                      # headless CI
