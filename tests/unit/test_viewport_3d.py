@@ -17,6 +17,7 @@ import functools
 import math
 import subprocess
 import sys
+import time
 
 import pytest
 
@@ -61,6 +62,14 @@ def viewport():
     vp = Viewport3D(root, width=400, height=300)
     vp.pack(fill=tk.BOTH, expand=True)
     root.update()          # without this winfo_width() reports 1
+    # One update() is not always enough: on Windows the geometry can still be
+    # 1x1 after it, and every projection then lands near pixel 0.5. Wait,
+    # boundedly, for the requested size to take effect.
+    for _ in range(100):
+        if vp.winfo_width() > 1 and vp.winfo_height() > 1:
+            break
+        root.update()
+        time.sleep(0.01)
     yield vp
     root.destroy()
 
