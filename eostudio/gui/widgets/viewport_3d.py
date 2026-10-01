@@ -198,10 +198,25 @@ class Viewport3D(tk.Canvas):
         up = _cross(right, fwd)
         return right, up, fwd
 
+    def _canvas_size(self) -> Tuple[int, int]:
+        """Live canvas size in pixels, robust to an unrealised widget.
+
+        ``winfo_width()``/``winfo_height()`` report 1x1 until the toplevel is
+        mapped by the window manager. On headless CI the window is never
+        mapped, so sizing the projection (or pan scaling) from winfo alone
+        silently renders onto a 1x1 canvas. Fall back to the width/height the
+        widget was created with — the honest size until the window exists.
+        """
+        w, h = int(self.winfo_width()), int(self.winfo_height())
+        if w <= 1:
+            w = int(self.cget("width") or 1)
+        if h <= 1:
+            h = int(self.cget("height") or 1)
+        return max(1, w), max(1, h)
+
     def project(self, point: Vec3) -> Optional[Tuple[float, float]]:
         """Canvas coordinates for a world point, or None if it is behind the eye."""
-        w = max(1, int(self.winfo_width()))
-        h = max(1, int(self.winfo_height()))
+        w, h = self._canvas_size()
         right, up, fwd = self._basis()
         rel = _sub(point, self.camera_position())
 
@@ -281,7 +296,8 @@ class Viewport3D(tk.Canvas):
         if self._drag_mode == "pan":
             # Scale by distance so a drag moves the model by the same amount
             # on screen whether the camera is close in or far out.
-            k = self._distance / max(1, int(self.winfo_height()))
+            _, ch = self._canvas_size()
+            k = self._distance / max(1, ch)
             self.pan(-dx * k, dy * k)
         else:
             self.orbit(dx * 0.01, -dy * 0.01)
