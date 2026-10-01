@@ -543,7 +543,7 @@ class ProjectManager:
 
         result = subprocess.run(
             command,
-            shell=True,
+            shell=True,  # nosec B602 - runs the user's own tasks.json command in their IDE, by design
             cwd=path,
             capture_output=True,
             text=True,

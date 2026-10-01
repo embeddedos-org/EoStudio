@@ -351,7 +351,7 @@ class BuildSystemManager:
         try:
             proc = subprocess.run(
                 command,
-                shell=True,
+                shell=True,  # nosec B602 - IDE build task runner; commands need shell globbing and Windows .cmd shims, by design
                 capture_output=True,
                 text=True,
                 timeout=600,

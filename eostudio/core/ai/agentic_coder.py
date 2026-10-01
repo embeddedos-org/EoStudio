@@ -416,7 +416,7 @@ class AgenticCoder:
         try:
             result = subprocess.run(
                 command,
-                shell=True,
+                shell=True,  # nosec B602 - AI agent run_command step runs in the user's workspace, by design
                 cwd=str(self.workspace),
                 capture_output=True,
                 text=True,

@@ -336,6 +336,17 @@ def _build_default_tools(workspace: str) -> ToolRegistry:
         )
     )
 
+    def _run_command_tool(command: str, timeout: int = 30) -> str:
+        r = subprocess.run(
+            command,
+            shell=True,  # nosec B602 - AI agent run_command tool runs in the user's workspace, by design
+            capture_output=True,
+            text=True,
+            cwd=str(ws),
+            timeout=timeout,
+        )
+        return r.stdout + r.stderr
+
     registry.register(
         Tool(
             name="run_command",
@@ -348,24 +359,7 @@ def _build_default_tools(workspace: str) -> ToolRegistry:
                 },
                 "required": ["command"],
             },
-            handler=lambda command, timeout=30: (
-                subprocess.run(
-                    command,
-                    shell=True,
-                    capture_output=True,
-                    text=True,
-                    cwd=str(ws),
-                    timeout=timeout,
-                ).stdout
-                + subprocess.run(
-                    command,
-                    shell=True,
-                    capture_output=True,
-                    text=True,
-                    cwd=str(ws),
-                    timeout=timeout,
-                ).stderr
-            ),
+            handler=_run_command_tool,
         )
     )
 
@@ -478,15 +472,20 @@ class SelfHealingEngine:
 
             # Run the code or test command
             if test_command:
-                cmd = test_command
-            elif language == "python":
-                cmd = f"python3 -c 'import py_compile; py_compile.compile(\"{tmp_path}\", doraise=True)'"
-            elif language in ("typescript", "javascript"):
-                cmd = f"node --check {tmp_path}"
+                result = subprocess.run(test_command, shell=True, capture_output=True, text=True, timeout=30)  # nosec B602 - caller-supplied test command, by design
             else:
-                cmd = f"python3 -m py_compile {tmp_path}"
-
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+                if language == "python":
+                    argv = [
+                        "python3",
+                        "-c",
+                        "import py_compile, sys; py_compile.compile(sys.argv[1], doraise=True)",
+                        tmp_path,
+                    ]
+                elif language in ("typescript", "javascript"):
+                    argv = ["node", "--check", tmp_path]
+                else:
+                    argv = ["python3", "-m", "py_compile", tmp_path]
+                result = subprocess.run(argv, capture_output=True, text=True, timeout=30)
 
             if result.returncode == 0:
                 # Success!
