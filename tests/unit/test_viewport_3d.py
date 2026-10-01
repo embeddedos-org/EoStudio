@@ -35,7 +35,10 @@ def viewport():
     root.geometry("400x300")
     vp = Viewport3D(root, width=400, height=300)
     vp.pack(fill=tk.BOTH, expand=True)
-    root.update()          # without this winfo_width() reports 1
+    # update_idletasks() realises geometry (so winfo_width() is valid)
+    # without pumping the event loop: root.update() aborts (SIGABRT) on
+    # macOS CI runners with no window server (see #37).
+    root.update_idletasks()
     yield vp
     root.destroy()
 
