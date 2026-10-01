@@ -298,7 +298,7 @@ class TestRunner:
                     for part in p.parts
                 ):
                     try:
-                        snap[str(p)] = hashlib.md5(p.read_bytes()).hexdigest()
+                        snap[str(p)] = hashlib.md5(p.read_bytes(), usedforsecurity=False).hexdigest()
                     except OSError:
                         pass
             return snap

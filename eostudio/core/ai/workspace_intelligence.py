@@ -77,7 +77,7 @@ class SymbolIndex:
 
     def index_file(self, path: str, content: str, language: str) -> FileIndex:
         """Parse and index a single file."""
-        checksum = hashlib.md5(content.encode()).hexdigest()
+        checksum = hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()
         existing = self._by_file.get(path)
         if existing and existing.checksum == checksum:
             return existing

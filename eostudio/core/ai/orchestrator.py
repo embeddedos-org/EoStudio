@@ -577,7 +577,7 @@ class CodebaseRAG:
                             "file": rel_path,
                             "start_line": i + 1,
                             "content": "\n".join(chunk_lines),
-                            "checksum": hashlib.md5("\n".join(chunk_lines).encode()).hexdigest(),
+                            "checksum": hashlib.md5("\n".join(chunk_lines).encode(), usedforsecurity=False).hexdigest(),
                         }
                     )
             except Exception:
@@ -659,7 +659,7 @@ class AIOrchestrator:
         session_id: Optional[str] = None,
     ) -> None:
         self._workspace = workspace
-        self._session_id = session_id or hashlib.md5(workspace.encode()).hexdigest()[:8]
+        self._session_id = session_id or hashlib.md5(workspace.encode(), usedforsecurity=False).hexdigest()[:8]
 
         # Lazy-import router to avoid circular imports
         if router is None:
