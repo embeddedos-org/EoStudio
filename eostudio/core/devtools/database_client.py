@@ -6,6 +6,7 @@ import csv
 import enum
 import io
 import json
+import re
 import sqlite3
 import time
 import uuid
@@ -436,6 +437,8 @@ class DatabaseClient:
         """Get detailed metadata for a table."""
         db = self.config.db_type
         info = TableInfo(name=table)
+        if db in (DatabaseType.SQLITE, DatabaseType.POSTGRESQL, DatabaseType.MYSQL):
+            table = _ident(table)
 
         if db == DatabaseType.SQLITE:
             res = self.execute(f"PRAGMA table_info('{table}')")
@@ -449,7 +452,7 @@ class DatabaseClient:
                         default=row[4],
                     )
                 )
-            cnt = self.execute(f"SELECT COUNT(*) FROM '{table}'")
+            cnt = self.execute(f"SELECT COUNT(*) FROM '{table}'")  # nosec B608 - identifier validated by _ident()
             if cnt.rows:
                 info.row_count = cnt.rows[0][0]
 
@@ -477,7 +480,7 @@ class DatabaseClient:
                         max_length=row[4],
                     )
                 )
-            cnt = self.execute(f'SELECT COUNT(*) FROM "{table}"')
+            cnt = self.execute(f'SELECT COUNT(*) FROM "{table}"')  # nosec B608 - identifier validated by _ident()
             if cnt.rows:
                 info.row_count = cnt.rows[0][0]
 
@@ -493,7 +496,7 @@ class DatabaseClient:
                         default=row[4],
                     )
                 )
-            cnt = self.execute(f"SELECT COUNT(*) FROM `{table}`")
+            cnt = self.execute(f"SELECT COUNT(*) FROM `{table}`")  # nosec B608 - identifier validated by _ident()
             if cnt.rows:
                 info.row_count = cnt.rows[0][0]
 
@@ -531,16 +534,17 @@ class DatabaseClient:
                 return ""
             lines: list[str] = []
             table = "exported_data"
+            cols = ", ".join(_ident(c) for c in result.columns)
             for row in result.rows:
-                vals = ", ".join(f"'{v}'" if isinstance(v, str) else "NULL" if v is None else str(v) for v in row)
-                cols = ", ".join(result.columns)
-                lines.append(f"INSERT INTO {table} ({cols}) VALUES ({vals});")
+                vals = ", ".join(_sql_literal(v) for v in row)
+                lines.append(f"INSERT INTO {table} ({cols}) VALUES ({vals});")  # nosec B608 - identifier validated by _ident()
             return "\n".join(lines)
 
         raise ValueError(f"Unsupported format: {fmt}")
 
     def import_data(self, table: str, path: str, fmt: str = "csv") -> int:
         """Import data from a file into a table. Returns number of rows imported."""
+        table = _ident(table)
         content = Path(path).read_text()
 
         if fmt == "csv":
@@ -548,11 +552,11 @@ class DatabaseClient:
             headers = next(reader, None)
             if not headers:
                 return 0
+            cols = ", ".join(_ident(h) for h in headers)
             count = 0
             for row in reader:
                 placeholders = ", ".join(["?" if self.config.db_type == DatabaseType.SQLITE else "%s"] * len(row))
-                cols = ", ".join(headers)
-                self.execute(f"INSERT INTO {table} ({cols}) VALUES ({placeholders})", tuple(row))
+                self.execute(f"INSERT INTO {table} ({cols}) VALUES ({placeholders})", tuple(row))  # nosec B608 - identifier validated by _ident()
                 count += 1
             if self.config.db_type == DatabaseType.SQLITE:
                 self._conn.commit()
@@ -567,8 +571,8 @@ class DatabaseClient:
                 keys = list(rec.keys())
                 vals = [rec[k] for k in keys]
                 placeholders = ", ".join(["?" if self.config.db_type == DatabaseType.SQLITE else "%s"] * len(keys))
-                cols = ", ".join(keys)
-                self.execute(f"INSERT INTO {table} ({cols}) VALUES ({placeholders})", tuple(vals))
+                cols = ", ".join(_ident(k) for k in keys)
+                self.execute(f"INSERT INTO {table} ({cols}) VALUES ({placeholders})", tuple(vals))  # nosec B608 - identifier validated by _ident()
                 count += 1
             if self.config.db_type == DatabaseType.SQLITE:
                 self._conn.commit()
@@ -620,6 +624,24 @@ class DatabaseClient:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _ident(name: str) -> str:
+    """Return *name* if it is a plain SQL identifier, else raise ValueError."""
+    if not isinstance(name, str) or not _IDENT_RE.fullmatch(name):
+        raise ValueError(f"Invalid SQL identifier: {name!r}")
+    return name
+
+
+def _sql_literal(value: Any) -> str:
+    if value is None:
+        return "NULL"
+    if isinstance(value, str):
+        return "'" + value.replace("'", "''") + "'"
+    return str(value)
 
 
 def _lazy_import(module_name: str, pip_name: str) -> Any:
