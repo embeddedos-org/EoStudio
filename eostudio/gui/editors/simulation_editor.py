@@ -20,7 +20,9 @@ if not _TKINTER_OK:
     raise ImportError(f"tkinter not available — {__name__} requires a display environment")
 GUI_AVAILABLE = True
 
+import ast
 import math
+import operator
 import tkinter as tk
 import tkinter.ttk as ttk
 from typing import Any, Dict, List, Optional, Tuple
@@ -51,6 +53,69 @@ BLOCK_CATALOG = [
     ("lookup", "Lookup Table", "Misc", "#b4befe", {"x": "0 1 2", "y": "0 1 4"}),
 ]
 _CAT_ORDER = ["Source", "Math", "Logic", "Limit", "Sink", "Misc"]
+
+
+_CONSOLE_NAMES: Dict[str, Any] = {
+    "abs": abs,
+    "round": round,
+    "min": min,
+    "max": max,
+    "sum": sum,
+    "len": len,
+    "range": range,
+    "list": list,
+    "sin": math.sin,
+    "cos": math.cos,
+    "sqrt": math.sqrt,
+    "pi": math.pi,
+    "e": math.e,
+    "log": math.log,
+    "exp": math.exp,
+}
+_BIN_OPS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.FloorDiv: operator.floordiv,
+    ast.Mod: operator.mod,
+    ast.Pow: operator.pow,
+}
+_UNARY_OPS = {ast.UAdd: operator.pos, ast.USub: operator.neg}
+
+
+def _safe_eval(expr: str) -> Any:
+    """Evaluate a console expression: arithmetic, literals and whitelisted names only."""
+
+    def ev(node: ast.AST) -> Any:
+        if isinstance(node, ast.Expression):
+            return ev(node.body)
+        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float, complex, str)):
+            return node.value
+        if isinstance(node, ast.BinOp) and type(node.op) in _BIN_OPS:
+            return _BIN_OPS[type(node.op)](ev(node.left), ev(node.right))
+        if isinstance(node, ast.UnaryOp) and type(node.op) in _UNARY_OPS:
+            return _UNARY_OPS[type(node.op)](ev(node.operand))
+        if isinstance(node, (ast.List, ast.Tuple)):
+            items = [ev(elt) for elt in node.elts]
+            return items if isinstance(node, ast.List) else tuple(items)
+        if isinstance(node, ast.Name):
+            if node.id in _CONSOLE_NAMES:
+                return _CONSOLE_NAMES[node.id]
+            raise ValueError(f"name {node.id!r} is not defined")
+        if (
+            isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.value.id == "math"
+            and not node.attr.startswith("_")
+            and hasattr(math, node.attr)
+        ):
+            return getattr(math, node.attr)
+        if isinstance(node, ast.Call) and all(kw.arg is not None for kw in node.keywords):
+            return ev(node.func)(*[ev(a) for a in node.args], **{kw.arg: ev(kw.value) for kw in node.keywords})
+        raise ValueError(f"unsupported expression: {type(node).__name__}")
+
+    return ev(ast.parse(expr, mode="eval"))
 
 
 class SimulationEditor(tk.Frame):
@@ -535,31 +600,7 @@ class SimulationEditor(tk.Frame):
             elif line.startswith("solve_ode"):
                 result = "[solve_ode requires scipy — not available in pure tkinter mode]"
             else:
-                result = str(
-                    eval(
-                        line,
-                        {
-                            "__builtins__": {
-                                "abs": abs,
-                                "round": round,
-                                "min": min,
-                                "max": max,
-                                "sum": sum,
-                                "len": len,
-                                "range": range,
-                                "list": list,
-                                "math": math,
-                                "sin": math.sin,
-                                "cos": math.cos,
-                                "sqrt": math.sqrt,
-                                "pi": math.pi,
-                                "e": math.e,
-                                "log": math.log,
-                                "exp": math.exp,
-                            }
-                        },
-                    )
-                )
+                result = str(_safe_eval(line))
         except Exception as exc:
             result = f"Error: {exc}"
         self._console.insert(tk.END, f"\n{result}\n>> ")
