@@ -416,7 +416,7 @@ class AgenticCoder:
         try:
             result = subprocess.run(
                 command,
-                shell=True,
+                shell=True,  # nosec B602 -- intentional: this IS the agent's shell tool
                 cwd=str(self.workspace),
                 capture_output=True,
                 text=True,

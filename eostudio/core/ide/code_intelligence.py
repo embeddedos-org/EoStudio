@@ -718,7 +718,7 @@ class PerformanceProfiler:
             with open(file_path) as f:
                 code = compile(f.read(), file_path, "exec")
             profiler.enable()
-            exec(code, {"__name__": "__main__"})
+            exec(code, {"__name__": "__main__"})  # nosec B102 -- intentional: profiling executes the user's chosen file
             profiler.disable()
         except SystemExit:
             profiler.disable()

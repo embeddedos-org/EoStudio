@@ -595,8 +595,7 @@ class ReleaseVideoGenerator:
     ) -> str:
         if edge_tts is None:
             raise RuntimeError(
-                "Narration was requested but edge-tts is not installed. "
-                "Install it with:  pip install 'EoStudio[video]'"
+                "Narration was requested but edge-tts is not installed. Install it with:  pip install 'EoStudio[video]'"
             )
 
         cfg = self.config

@@ -56,10 +56,7 @@ class GLTFExporter:
         for f in mesh.faces:
             for idx in (f.v0, f.v1, f.v2):
                 if not 0 <= idx < n_verts:
-                    raise ValueError(
-                        f"face references vertex {idx}, outside the mesh's "
-                        f"{n_verts} vertices"
-                    )
+                    raise ValueError(f"face references vertex {idx}, outside the mesh's {n_verts} vertices")
 
         positions = bytearray()
         for v in mesh.vertices:
@@ -83,12 +80,16 @@ class GLTFExporter:
                 "type": "VEC3",
                 # min/max on POSITION is required by the spec — viewers use it
                 # to frame the model without walking every vertex.
-                "min": [min(float(v.x) for v in mesh.vertices),
-                        min(float(v.y) for v in mesh.vertices),
-                        min(float(v.z) for v in mesh.vertices)],
-                "max": [max(float(v.x) for v in mesh.vertices),
-                        max(float(v.y) for v in mesh.vertices),
-                        max(float(v.z) for v in mesh.vertices)],
+                "min": [
+                    min(float(v.x) for v in mesh.vertices),
+                    min(float(v.y) for v in mesh.vertices),
+                    min(float(v.z) for v in mesh.vertices),
+                ],
+                "max": [
+                    max(float(v.x) for v in mesh.vertices),
+                    max(float(v.y) for v in mesh.vertices),
+                    max(float(v.z) for v in mesh.vertices),
+                ],
             },
             {
                 "bufferView": 1,
@@ -100,10 +101,8 @@ class GLTFExporter:
 
         attributes: Dict[str, int] = {"POSITION": 0}
         buffer_views: List[Dict[str, Any]] = [
-            {"buffer": 0, "byteOffset": 0, "byteLength": len(positions),
-             "target": _ARRAY_BUFFER},
-            {"buffer": 0, "byteOffset": index_offset, "byteLength": len(indices),
-             "target": _ELEMENT_ARRAY_BUFFER},
+            {"buffer": 0, "byteOffset": 0, "byteLength": len(positions), "target": _ARRAY_BUFFER},
+            {"buffer": 0, "byteOffset": index_offset, "byteLength": len(indices), "target": _ELEMENT_ARRAY_BUFFER},
         ]
 
         if mesh.normals and len(mesh.normals) == n_verts:
@@ -112,11 +111,10 @@ class GLTFExporter:
                 normals += struct.pack("<3f", float(nv.x), float(nv.y), float(nv.z))
             normal_offset = len(blob) + ((-len(blob)) % _ALIGNMENT)
             blob = blob + b"\x00" * (normal_offset - len(blob)) + bytes(normals)
-            buffer_views.append({"buffer": 0, "byteOffset": normal_offset,
-                                 "byteLength": len(normals),
-                                 "target": _ARRAY_BUFFER})
-            accessors.append({"bufferView": 2, "componentType": _FLOAT,
-                              "count": n_verts, "type": "VEC3"})
+            buffer_views.append(
+                {"buffer": 0, "byteOffset": normal_offset, "byteLength": len(normals), "target": _ARRAY_BUFFER}
+            )
+            accessors.append({"bufferView": 2, "componentType": _FLOAT, "count": n_verts, "type": "VEC3"})
             attributes["NORMAL"] = 2
 
         mesh_name = name or mesh.name or "mesh"
@@ -125,25 +123,29 @@ class GLTFExporter:
             "scene": 0,
             "scenes": [{"nodes": [0]}],
             "nodes": [{"mesh": 0, "name": mesh_name}],
-            "meshes": [{
-                "name": mesh_name,
-                "primitives": [{
-                    "attributes": attributes,
-                    "indices": 1,
-                    "mode": _TRIANGLES,
-                }],
-            }],
+            "meshes": [
+                {
+                    "name": mesh_name,
+                    "primitives": [
+                        {
+                            "attributes": attributes,
+                            "indices": 1,
+                            "mode": _TRIANGLES,
+                        }
+                    ],
+                }
+            ],
             "accessors": accessors,
             "bufferViews": buffer_views,
-            "buffers": [{
-                "byteLength": len(blob),
-                "uri": "data:application/octet-stream;base64,"
-                       + base64.b64encode(blob).decode("ascii"),
-            }],
+            "buffers": [
+                {
+                    "byteLength": len(blob),
+                    "uri": "data:application/octet-stream;base64," + base64.b64encode(blob).decode("ascii"),
+                }
+            ],
         }
 
-    def export_to_file(self, mesh: Mesh, filepath: str,
-                       name: str | None = None) -> None:
+    def export_to_file(self, mesh: Mesh, filepath: str, name: str | None = None) -> None:
         os.makedirs(os.path.dirname(filepath) or ".", exist_ok=True)
         with open(filepath, "w", encoding="utf-8") as fh:
             fh.write(self.export(mesh, name))

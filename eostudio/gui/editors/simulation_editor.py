@@ -536,7 +536,7 @@ class SimulationEditor(tk.Frame):
                 result = "[solve_ode requires scipy — not available in pure tkinter mode]"
             else:
                 result = str(
-                    eval(
+                    eval(  # nosec B307 -- intentional: console eval with restricted __builtins__
                         line,
                         {
                             "__builtins__": {

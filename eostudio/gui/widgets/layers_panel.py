@@ -1,15 +1,19 @@
 """Layers panel — visibility, lock state, and z-order for a document."""
 
 from __future__ import annotations
+
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -73,12 +77,11 @@ class LayersPanel(ttk.Frame):
         self._layers = list(layers)
         self._refresh()
 
-    def add_layer(self, name: str, visible: bool = True,
-                  locked: bool = False) -> Layer:
+    def add_layer(self, name: str, visible: bool = True, locked: bool = False) -> Layer:
         if any(l.name == name for l in self._layers):
             raise ValueError(f"a layer named {name!r} already exists")
         layer = Layer(name=name, visible=visible, locked=locked)
-        self._layers.insert(0, layer)     # new layers go on top
+        self._layers.insert(0, layer)  # new layers go on top
         self._refresh()
         return layer
 

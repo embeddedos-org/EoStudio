@@ -351,7 +351,7 @@ def _build_default_tools(workspace: str) -> ToolRegistry:
             handler=lambda command, timeout=30: (
                 subprocess.run(
                     command,
-                    shell=True,
+                    shell=True,  # nosec B602 -- intentional: this IS the agent's shell tool
                     capture_output=True,
                     text=True,
                     cwd=str(ws),
@@ -359,7 +359,7 @@ def _build_default_tools(workspace: str) -> ToolRegistry:
                 ).stdout
                 + subprocess.run(
                     command,
-                    shell=True,
+                    shell=True,  # nosec B602 -- intentional: this IS the agent's shell tool
                     capture_output=True,
                     text=True,
                     cwd=str(ws),
@@ -476,17 +476,23 @@ class SelfHealingEngine:
                 f.write(current_code)
                 tmp_path = f.name
 
-            # Run the code or test command
+            # Run the code or test command. The self-heal commands below are
+            # built internally (no shell metacharacters needed); only an
+            # explicit caller-supplied test_command keeps shell=True.
             if test_command:
-                cmd = test_command
-            elif language == "python":
-                cmd = f"python3 -c 'import py_compile; py_compile.compile(\"{tmp_path}\", doraise=True)'"
-            elif language in ("typescript", "javascript"):
-                cmd = f"node --check {tmp_path}"
+                result = subprocess.run(
+                    test_command,
+                    shell=True,  # nosec B602 -- caller-supplied project test command
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
             else:
-                cmd = f"python3 -m py_compile {tmp_path}"
-
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+                if language in ("typescript", "javascript"):
+                    argv = ["node", "--check", tmp_path]
+                else:
+                    argv = ["python3", "-m", "py_compile", tmp_path]
+                result = subprocess.run(argv, capture_output=True, text=True, timeout=30)
 
             if result.returncode == 0:
                 # Success!
@@ -577,7 +583,7 @@ class CodebaseRAG:
                             "file": rel_path,
                             "start_line": i + 1,
                             "content": "\n".join(chunk_lines),
-                            "checksum": hashlib.md5("\n".join(chunk_lines).encode()).hexdigest(),
+                            "checksum": hashlib.md5("\n".join(chunk_lines).encode(), usedforsecurity=False).hexdigest(),
                         }
                     )
             except Exception:
@@ -659,7 +665,7 @@ class AIOrchestrator:
         session_id: Optional[str] = None,
     ) -> None:
         self._workspace = workspace
-        self._session_id = session_id or hashlib.md5(workspace.encode()).hexdigest()[:8]
+        self._session_id = session_id or hashlib.md5(workspace.encode(), usedforsecurity=False).hexdigest()[:8]
 
         # Lazy-import router to avoid circular imports
         if router is None:

@@ -1814,7 +1814,12 @@ class IDEEditor(tk.Frame):
         def run() -> None:
             try:
                 result = subprocess.run(
-                    cmd, shell=True, cwd=self._workspace, capture_output=True, text=True, timeout=30
+                    cmd,
+                    shell=True,  # nosec B602 -- intentional: this is the embedded terminal
+                    cwd=self._workspace,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
                 )
                 output = result.stdout + result.stderr
             except subprocess.TimeoutExpired:
@@ -2245,17 +2250,17 @@ class IDEEditor(tk.Frame):
         self.save()
         lang = tab.language
         if lang == "Python":
-            cmd = f'python "{tab.path}"'
+            argv = ["python", tab.path]
         elif lang in ("JavaScript", "TypeScript"):
-            cmd = f'node "{tab.path}"'
+            argv = ["node", tab.path]
         else:
             self._append_output(f"No run configuration for {lang}\n")
             return
-        self._append_output(f"$ {cmd}\n")
+        self._append_output(f"$ {' '.join(argv)}\n")
 
         def run() -> None:
             try:
-                r = subprocess.run(cmd, shell=True, cwd=self._workspace, capture_output=True, text=True, timeout=60)
+                r = subprocess.run(argv, cwd=self._workspace, capture_output=True, text=True, timeout=60)
                 out = r.stdout + r.stderr
             except subprocess.TimeoutExpired:
                 out = "[timeout]\n"
