@@ -935,17 +935,14 @@ class TestE2EWithRealisticMocks:
         router = _SubprocessRouter(output_dir)
         mock_run.side_effect = router
 
-        # `_generate_narration_async` does `import edge_tts` inside the function
-        # body, because edge_tts is an optional dependency (the `video` extra).
-        # A function-local import resolves through sys.modules and never reads a
-        # patched module attribute, so patching
-        # `release_video.edge_tts` was a no-op and the test failed with
-        # ModuleNotFoundError wherever edge_tts was not actually installed.
-        # Injecting the stub into sys.modules is what that import really reads.
+        # edge_tts is an optional dependency (the `video` extra), imported
+        # at module level in release_video (None when not installed).
+        # Patch the module attribute -- the sys.modules injection this test
+        # used to do no longer reaches the module global.
         mock_edge_tts = MagicMock()
         mock_edge_tts.Communicate = _MockCommunicate
 
-        with patch.dict(sys.modules, {"edge_tts": mock_edge_tts}):
+        with patch("eostudio.core.video.release_video.edge_tts", mock_edge_tts):
 
             config = ReleaseVideoConfig(
                 version="2.1.0",

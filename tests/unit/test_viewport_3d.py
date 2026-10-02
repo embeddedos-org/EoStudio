@@ -14,6 +14,8 @@ built.
 """
 
 import math
+import os
+import sys
 
 import pytest
 
@@ -28,6 +30,11 @@ from eostudio.gui.widgets.viewport_3d import (  # noqa: E402
 @pytest.fixture
 def viewport():
     """A realised 400x300 viewport, or a skip when there is no display."""
+    if sys.platform == "darwin" and os.environ.get("CI"):
+        # macOS CI runners have no window server: tk.Tk() succeeds but the
+        # first GUI call aborts the process (SIGABRT), which no try/except
+        # can catch. See #41.
+        pytest.skip("no window server on macOS CI runners")
     try:
         root = tk.Tk()
     except tk.TclError as exc:                      # headless CI
@@ -35,7 +42,10 @@ def viewport():
     root.geometry("400x300")
     vp = Viewport3D(root, width=400, height=300)
     vp.pack(fill=tk.BOTH, expand=True)
-    root.update()          # without this winfo_width() reports 1
+    # update_idletasks() realises geometry (so winfo_width() is valid)
+    # without pumping the event loop: root.update() aborts (SIGABRT) on
+    # macOS CI runners with no window server (see #37).
+    root.update_idletasks()
     yield vp
     root.destroy()
 

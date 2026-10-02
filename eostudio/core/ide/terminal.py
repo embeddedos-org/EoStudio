@@ -629,7 +629,7 @@ class TerminalManager:
         cols: int = 80,
     ) -> TerminalSession:
         """Create and register a new terminal session."""
-        session = TerminalSession(shell=shell, cwd=cwd, env=env, rows=rows, cols=cols)
+        session = TerminalSession(shell=shell, cwd=cwd, env=env, rows=rows, cols=cols)  # nosec B604 -- `shell` is a shell path, not shell=True
         with self._lock:
             self._sessions[session.id] = session
             if self._active_id is None:
@@ -705,7 +705,7 @@ class TerminalEmulator:
     ) -> None:
         self._manager = TerminalManager()
         self._default_session = self._manager.create_session(
-            shell=shell,
+            shell=shell,  # nosec B604 -- `shell` is a shell path, not shell=True
             cwd=cwd,
             rows=rows,
             cols=cols,

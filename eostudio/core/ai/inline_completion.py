@@ -67,7 +67,7 @@ class CompletionCache:
 
     def _key(self, ctx: CompletionContext) -> str:
         raw = f"{ctx.language}|{ctx.filename}|{ctx.prefix[-200:]}"
-        return hashlib.md5(raw.encode()).hexdigest()
+        return hashlib.md5(raw.encode(), usedforsecurity=False).hexdigest()
 
     def get(self, ctx: CompletionContext, ttl: float = 30.0) -> Optional[CompletionResult]:
         key = self._key(ctx)

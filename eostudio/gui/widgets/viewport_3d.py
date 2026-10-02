@@ -14,13 +14,16 @@ from __future__ import annotations
 
 # GUI_AVAILABLE guard — headless/server compatibility
 import sys as _sys
+
 try:
     import tkinter as _tkinter_check
+
     _TKINTER_OK = True
 except ImportError:
     _TKINTER_OK = False
 if not _TKINTER_OK:
     import types as _types
+
     _mod = _types.ModuleType(__name__)
     _mod.GUI_AVAILABLE = False
     _sys.modules[__name__] = _mod
@@ -68,8 +71,7 @@ class Viewport3D(tk.Canvas):
         axes: bool = True,
         **kwargs: Any,
     ) -> None:
-        super().__init__(master, bg=bg, width=width, height=height,
-                         highlightthickness=0, **kwargs)
+        super().__init__(master, bg=bg, width=width, height=height, highlightthickness=0, **kwargs)
 
         self._meshes: List[Tuple[List[Vec3], List[Edge], str]] = []
         self._show_grid = grid
@@ -90,15 +92,14 @@ class Viewport3D(tk.Canvas):
         self.bind("<ButtonPress-2>", self._on_press_pan)
         self.bind("<B2-Motion>", self._on_drag)
         self.bind("<ButtonRelease-2>", self._on_release)
-        self.bind("<MouseWheel>", self._on_wheel)          # Windows / macOS
+        self.bind("<MouseWheel>", self._on_wheel)  # Windows / macOS
         self.bind("<Button-4>", lambda e: self._dolly(0.9))  # X11 wheel up
         self.bind("<Button-5>", lambda e: self._dolly(1.1))  # X11 wheel down
         self.bind("<Configure>", lambda e: self.render())
 
     # ── model ────────────────────────────────────────────────────────────
 
-    def add_mesh(self, vertices: Sequence[Vec3], edges: Sequence[Edge],
-                 color: str = "#89b4fa") -> None:
+    def add_mesh(self, vertices: Sequence[Vec3], edges: Sequence[Edge], color: str = "#89b4fa") -> None:
         """Add a wireframe mesh.
 
         Edges referencing a vertex that does not exist are rejected here
@@ -113,15 +114,11 @@ class Viewport3D(tk.Canvas):
         clean: List[Edge] = []
         for a, b in edges:
             if not (0 <= a < n and 0 <= b < n):
-                raise ValueError(
-                    f"edge ({a}, {b}) references a vertex outside the mesh's "
-                    f"{n} vertices"
-                )
+                raise ValueError(f"edge ({a}, {b}) references a vertex outside the mesh's {n} vertices")
             clean.append((int(a), int(b)))
         self._meshes.append((verts, clean, color))  # type: ignore[arg-type]
 
-    def set_mesh(self, vertices: Sequence[Vec3], edges: Sequence[Edge],
-                 color: str = "#89b4fa") -> None:
+    def set_mesh(self, vertices: Sequence[Vec3], edges: Sequence[Edge], color: str = "#89b4fa") -> None:
         """Replace everything with one mesh."""
         self._meshes.clear()
         self.add_mesh(vertices, edges, color)
@@ -138,8 +135,7 @@ class Viewport3D(tk.Canvas):
 
     def orbit(self, d_azimuth: float, d_elevation: float) -> None:
         self._azimuth = (self._azimuth + d_azimuth) % (2.0 * math.pi)
-        self._elevation = max(-_MAX_ELEVATION,
-                              min(_MAX_ELEVATION, self._elevation + d_elevation))
+        self._elevation = max(-_MAX_ELEVATION, min(_MAX_ELEVATION, self._elevation + d_elevation))
 
     def dolly(self, factor: float) -> None:
         """Move the eye toward or away from the target.
@@ -153,9 +149,11 @@ class Viewport3D(tk.Canvas):
         """Slide the target across the view plane, in world units."""
         right, up, _ = self._basis()
         tx, ty, tz = self._target
-        self._target = (tx + right[0] * dx + up[0] * dy,
-                        ty + right[1] * dx + up[1] * dy,
-                        tz + right[2] * dx + up[2] * dy)
+        self._target = (
+            tx + right[0] * dx + up[0] * dy,
+            ty + right[1] * dx + up[1] * dy,
+            tz + right[2] * dx + up[2] * dy,
+        )
 
     def fit_view(self, margin: float = 1.4) -> None:
         """Frame every mesh: centre the target and back the eye off far enough.
@@ -170,23 +168,22 @@ class Viewport3D(tk.Canvas):
         lo = [min(p[i] for p in pts) for i in range(3)]
         hi = [max(p[i] for p in pts) for i in range(3)]
         self._target = tuple((lo[i] + hi[i]) / 2.0 for i in range(3))  # type: ignore[assignment]
-        radius = max(
-            math.dist(self._target, p) for p in pts
-        )
+        radius = max(math.dist(self._target, p) for p in pts)
         if radius <= 0.0:
             # A single point, or every vertex coincident: there is no extent to
             # frame, so keep a usable distance rather than collapsing to zero.
             self._distance = 1.0
             return
-        self._distance = max(_NEAR_PLANE,
-                             margin * radius / math.sin(self._fov / 2.0))
+        self._distance = max(_NEAR_PLANE, margin * radius / math.sin(self._fov / 2.0))
 
     def camera_position(self) -> Vec3:
         ce = math.cos(self._elevation)
         tx, ty, tz = self._target
-        return (tx + self._distance * ce * math.cos(self._azimuth),
-                ty + self._distance * math.sin(self._elevation),
-                tz + self._distance * ce * math.sin(self._azimuth))
+        return (
+            tx + self._distance * ce * math.cos(self._azimuth),
+            ty + self._distance * math.sin(self._elevation),
+            tz + self._distance * ce * math.sin(self._azimuth),
+        )
 
     # ── projection ───────────────────────────────────────────────────────
 
@@ -198,10 +195,25 @@ class Viewport3D(tk.Canvas):
         up = _cross(right, fwd)
         return right, up, fwd
 
+    def _canvas_size(self) -> Tuple[int, int]:
+        """Live canvas size in pixels, robust to an unrealised widget.
+
+        ``winfo_width()``/``winfo_height()`` report 1x1 until the toplevel is
+        mapped by the window manager. On headless CI the window is never
+        mapped, so sizing the projection (or pan scaling) from winfo alone
+        silently renders onto a 1x1 canvas. Fall back to the width/height the
+        widget was created with — the honest size until the window exists.
+        """
+        w, h = int(self.winfo_width()), int(self.winfo_height())
+        if w <= 1:
+            w = int(self.cget("width") or 1)
+        if h <= 1:
+            h = int(self.cget("height") or 1)
+        return max(1, w), max(1, h)
+
     def project(self, point: Vec3) -> Optional[Tuple[float, float]]:
         """Canvas coordinates for a world point, or None if it is behind the eye."""
-        w = max(1, int(self.winfo_width()))
-        h = max(1, int(self.winfo_height()))
+        w, h = self._canvas_size()
         right, up, fwd = self._basis()
         rel = _sub(point, self.camera_position())
 
@@ -210,8 +222,7 @@ class Viewport3D(tk.Canvas):
             return None
 
         scale = (h / 2.0) / math.tan(self._fov / 2.0)
-        return (w / 2.0 + _dot(rel, right) * scale / depth,
-                h / 2.0 - _dot(rel, up) * scale / depth)
+        return (w / 2.0 + _dot(rel, right) * scale / depth, h / 2.0 - _dot(rel, up) * scale / depth)
 
     # ── rendering ────────────────────────────────────────────────────────
 
@@ -232,13 +243,11 @@ class Viewport3D(tk.Canvas):
                     continue
                 self.create_line(pa[0], pa[1], pb[0], pb[1], fill=color, width=1)
 
-    def _draw_grid(self, half: int = 5, step: float = 1.0,
-                   color: str = "#313244") -> None:
+    def _draw_grid(self, half: int = 5, step: float = 1.0, color: str = "#313244") -> None:
         extent = half * step
         for i in range(-half, half + 1):
             d = i * step
-            for a, b in (((-extent, 0.0, d), (extent, 0.0, d)),
-                         ((d, 0.0, -extent), (d, 0.0, extent))):
+            for a, b in (((-extent, 0.0, d), (extent, 0.0, d)), ((d, 0.0, -extent), (d, 0.0, extent))):
                 pa, pb = self.project(a), self.project(b)
                 if pa and pb:
                     self.create_line(pa[0], pa[1], pb[0], pb[1], fill=color)
@@ -247,13 +256,14 @@ class Viewport3D(tk.Canvas):
         origin = self.project((0.0, 0.0, 0.0))
         if origin is None:
             return
-        for vec, color in (((length, 0.0, 0.0), "#f38ba8"),
-                           ((0.0, length, 0.0), "#a6e3a1"),
-                           ((0.0, 0.0, length), "#89b4fa")):
+        for vec, color in (
+            ((length, 0.0, 0.0), "#f38ba8"),
+            ((0.0, length, 0.0), "#a6e3a1"),
+            ((0.0, 0.0, length), "#89b4fa"),
+        ):
             tip = self.project(vec)
             if tip:
-                self.create_line(origin[0], origin[1], tip[0], tip[1],
-                                 fill=color, width=2)
+                self.create_line(origin[0], origin[1], tip[0], tip[1], fill=color, width=2)
 
     # ── interaction ──────────────────────────────────────────────────────
 
@@ -281,7 +291,8 @@ class Viewport3D(tk.Canvas):
         if self._drag_mode == "pan":
             # Scale by distance so a drag moves the model by the same amount
             # on screen whether the camera is close in or far out.
-            k = self._distance / max(1, int(self.winfo_height()))
+            _, ch = self._canvas_size()
+            k = self._distance / max(1, ch)
             self.pan(-dx * k, dy * k)
         else:
             self.orbit(dx * 0.01, -dy * 0.01)
@@ -297,6 +308,7 @@ class Viewport3D(tk.Canvas):
 
 # ── vector helpers ───────────────────────────────────────────────────────
 
+
 def _sub(a: Vec3, b: Vec3) -> Vec3:
     return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
 
@@ -306,9 +318,7 @@ def _dot(a: Vec3, b: Vec3) -> float:
 
 
 def _cross(a: Vec3, b: Vec3) -> Vec3:
-    return (a[1] * b[2] - a[2] * b[1],
-            a[2] * b[0] - a[0] * b[2],
-            a[0] * b[1] - a[1] * b[0])
+    return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
 
 
 def _normalise(v: Vec3) -> Vec3:
@@ -323,12 +333,8 @@ def _normalise(v: Vec3) -> Vec3:
 
 def unit_cube() -> Tuple[List[Vec3], List[Edge]]:
     """A 1x1x1 wireframe cube centred on the origin — handy as a placeholder."""
-    verts: List[Vec3] = [(x, y, z)
-                         for x in (-0.5, 0.5)
-                         for y in (-0.5, 0.5)
-                         for z in (-0.5, 0.5)]
-    edges: List[Edge] = [(i, j)
-                         for i in range(8) for j in range(i + 1, 8)
-                         if sum(1 for k in range(3)
-                                if verts[i][k] != verts[j][k]) == 1]
+    verts: List[Vec3] = [(x, y, z) for x in (-0.5, 0.5) for y in (-0.5, 0.5) for z in (-0.5, 0.5)]
+    edges: List[Edge] = [
+        (i, j) for i in range(8) for j in range(i + 1, 8) if sum(1 for k in range(3) if verts[i][k] != verts[j][k]) == 1
+    ]
     return verts, edges

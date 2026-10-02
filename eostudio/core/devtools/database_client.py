@@ -155,6 +155,19 @@ class DatabaseClient:
         self._history: list[QueryResult] = []
         self._saved_queries: list[_SavedQuery] = []
 
+    def _quote_ident(self, name: str) -> str:
+        """Quote a table/column identifier for the configured dialect.
+
+        Identifiers cannot be bound as query parameters, so interpolate them
+        only through this quoting helper: any quote character inside the name
+        is escaped, which keeps a hostile table/column name from breaking out
+        of the identifier.
+        """
+        if self.config.db_type == DatabaseType.MYSQL:
+            return "`" + name.replace("`", "``") + "`"
+        # SQLite and PostgreSQL: double-quoted identifier, "" is an escaped quote
+        return '"' + name.replace('"', '""') + '"'
+
     # ------------------------------------------------------------------
     # Connection management
     # ------------------------------------------------------------------
@@ -438,7 +451,7 @@ class DatabaseClient:
         info = TableInfo(name=table)
 
         if db == DatabaseType.SQLITE:
-            res = self.execute(f"PRAGMA table_info('{table}')")
+            res = self.execute(f"PRAGMA table_info({self._quote_ident(table)})")
             for row in res.rows:
                 info.columns.append(
                     ColumnInfo(
@@ -449,7 +462,9 @@ class DatabaseClient:
                         default=row[4],
                     )
                 )
-            cnt = self.execute(f"SELECT COUNT(*) FROM '{table}'")
+            cnt = self.execute(
+                f"SELECT COUNT(*) FROM {self._quote_ident(table)}"  # nosec B608 -- ident via _quote_ident()
+            )
             if cnt.rows:
                 info.row_count = cnt.rows[0][0]
 
@@ -477,12 +492,14 @@ class DatabaseClient:
                         max_length=row[4],
                     )
                 )
-            cnt = self.execute(f'SELECT COUNT(*) FROM "{table}"')
+            cnt = self.execute(
+                f"SELECT COUNT(*) FROM {self._quote_ident(table)}"  # nosec B608 -- ident via _quote_ident()
+            )
             if cnt.rows:
                 info.row_count = cnt.rows[0][0]
 
         elif db == DatabaseType.MYSQL:
-            res = self.execute(f"DESCRIBE `{table}`")
+            res = self.execute(f"DESCRIBE {self._quote_ident(table)}")
             for row in res.rows:
                 info.columns.append(
                     ColumnInfo(
@@ -493,7 +510,9 @@ class DatabaseClient:
                         default=row[4],
                     )
                 )
-            cnt = self.execute(f"SELECT COUNT(*) FROM `{table}`")
+            cnt = self.execute(
+                f"SELECT COUNT(*) FROM {self._quote_ident(table)}"  # nosec B608 -- ident via _quote_ident()
+            )
             if cnt.rows:
                 info.row_count = cnt.rows[0][0]
 
@@ -531,10 +550,16 @@ class DatabaseClient:
                 return ""
             lines: list[str] = []
             table = "exported_data"
+            qt = self._quote_ident(table)
+            qcols = ", ".join(self._quote_ident(c) for c in result.columns)
             for row in result.rows:
-                vals = ", ".join(f"'{v}'" if isinstance(v, str) else "NULL" if v is None else str(v) for v in row)
-                cols = ", ".join(result.columns)
-                lines.append(f"INSERT INTO {table} ({cols}) VALUES ({vals});")
+                vals = ", ".join(
+                    "'" + v.replace("'", "''") + "'" if isinstance(v, str) else "NULL" if v is None else str(v)
+                    for v in row
+                )
+                lines.append(
+                    f"INSERT INTO {qt} ({qcols}) VALUES ({vals});"  # nosec B608 -- idents quoted, literals escaped
+                )
             return "\n".join(lines)
 
         raise ValueError(f"Unsupported format: {fmt}")
@@ -551,8 +576,11 @@ class DatabaseClient:
             count = 0
             for row in reader:
                 placeholders = ", ".join(["?" if self.config.db_type == DatabaseType.SQLITE else "%s"] * len(row))
-                cols = ", ".join(headers)
-                self.execute(f"INSERT INTO {table} ({cols}) VALUES ({placeholders})", tuple(row))
+                cols = ", ".join(self._quote_ident(h) for h in headers)
+                self.execute(
+                    f"INSERT INTO {self._quote_ident(table)} ({cols}) VALUES ({placeholders})",  # nosec B608
+                    tuple(row),
+                )
                 count += 1
             if self.config.db_type == DatabaseType.SQLITE:
                 self._conn.commit()
@@ -567,8 +595,11 @@ class DatabaseClient:
                 keys = list(rec.keys())
                 vals = [rec[k] for k in keys]
                 placeholders = ", ".join(["?" if self.config.db_type == DatabaseType.SQLITE else "%s"] * len(keys))
-                cols = ", ".join(keys)
-                self.execute(f"INSERT INTO {table} ({cols}) VALUES ({placeholders})", tuple(vals))
+                cols = ", ".join(self._quote_ident(k) for k in keys)
+                self.execute(
+                    f"INSERT INTO {self._quote_ident(table)} ({cols}) VALUES ({placeholders})",  # nosec B608
+                    tuple(vals),
+                )
                 count += 1
             if self.config.db_type == DatabaseType.SQLITE:
                 self._conn.commit()

@@ -543,7 +543,7 @@ class ProjectManager:
 
         result = subprocess.run(
             command,
-            shell=True,
+            shell=True,  # nosec B602 -- intentional: project tasks are user-defined shell commands
             cwd=path,
             capture_output=True,
             text=True,

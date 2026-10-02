@@ -351,7 +351,7 @@ class BuildSystemManager:
         try:
             proc = subprocess.run(
                 command,
-                shell=True,
+                shell=True,  # nosec B602 -- intentional: build commands need shell features
                 capture_output=True,
                 text=True,
                 timeout=600,
