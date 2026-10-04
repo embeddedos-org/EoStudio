@@ -35,7 +35,8 @@ jobs:
   test:
     name: Test (${{ matrix.os }} / Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
-    needs: lint
+    # NB: intentionally no `needs: lint` — test results must be reported even
+    # when formatting is red (eostudio#34). Lint remains its own job.
     strategy:
       fail-fast: false
       matrix:
@@ -56,7 +57,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
-    needs: lint
+    # NB: intentionally no `needs: lint` — see Test job above (eostudio#34).
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
