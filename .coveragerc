@@ -13,4 +13,6 @@ show_missing = True
 precision = 2
 # Ratchet, not target: the measured floor when the gate first ran (34.61%, #36).
 # Raise it as coverage grows; never lower it.
-fail_under = 34
+# 2026-10-05: 35 — tests/unit/test_code_quality.py covers code_quality.py at
+# 99% (~140 newly covered statements, est. total ~35.2%); CI measures the rest.
+fail_under = 35
