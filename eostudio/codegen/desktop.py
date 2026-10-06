@@ -394,7 +394,7 @@ class DesktopAppGenerator:
                 {
                     "name": self._kebab(app_name),
                     "version": "1.0.0",
-                    "description": f"{app_name} â€” built with EoStudio",
+                    "description": f"{app_name} — built with EoStudio",
                     "main": "main.js",
                     "scripts": {
                         "start": "electron .",
@@ -600,7 +600,7 @@ class DesktopAppGenerator:
             screen_build.append(f"        self._screens['{sn}'] = self._build_{sn}(self._container)")
 
         return (
-            '"""' + app_name + ' â€” tkinter desktop application."""\n\n'
+            '"""' + app_name + ' — tkinter desktop application."""\n\n'
             "import tkinter as tk\n"
             "from tkinter import ttk, messagebox\n\n\n"
             "class App(tk.Tk):\n"
@@ -803,7 +803,7 @@ class DesktopAppGenerator:
             )
 
         return (
-            '"""' + app_name + ' â€” Qt desktop application."""\n\n'
+            '"""' + app_name + ' — Qt desktop application."""\n\n'
             "import sys\n"
             "from PySide6.QtWidgets import (\n"
             "    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,\n"
