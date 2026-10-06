@@ -713,7 +713,7 @@ class MobileAppGenerator:
             "}\n"
         )
 
-        files[f"{app_name}App.swift"] = (
+        files[f"{self._pascal(app_name)}App.swift"] = (
             "import SwiftUI\n\n"
             "@main\n"
             f"struct {self._pascal(app_name)}App: App {{\n"
