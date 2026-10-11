@@ -120,16 +120,22 @@ _DETECTION_ORDER: List[tuple] = [
     ("WORKSPACE.bazel", BuildSystem.BAZEL),
 ]
 
+
+def _ebuild_backend():
+    # Local import: ebuild_backend imports this module for BuildConfig,
+    # BuildResult and BuildSystem, so a top-level import would be circular.
+    from eostudio.core.devtools.ebuild_backend import EbuildBackend
+
+    return EbuildBackend
+
+
 _DEFAULT_CONFIGS: Dict[BuildSystem, BuildConfig] = {
     # These are ebuild's actual verbs, checked against `ebuild --help`. The one
     # place this repository previously named the tool it is a front end for, it
-    # named an invocation that does not exist:
-    #
-    #     f"ebuild --platform {platform} --config board.yaml {source_dir}"
-    #
-    # ebuild has no top-level --platform or --config; the board is selected by
-    # `ebuild configure --board <board>`. That string was stored in a dict and
-    # never executed, so nothing ever found out.
+    # named an invocation that does not exist: ebuild has no top-level
+    # --platform flag and no top-level --config flag; the board is selected by
+    # the separate `ebuild configure --board <board>` step. That string was
+    # stored in a dict and never executed, so nothing ever found out.
     BuildSystem.EBUILD: BuildConfig(
         system=BuildSystem.EBUILD,
         build_command="ebuild build",
@@ -341,9 +347,14 @@ class BuildSystemManager:
 
     def _run(self, command: str, env_extra: Optional[Dict[str, str]] = None) -> BuildResult:
         """Execute a build command and capture the result."""
+        config = self.get_config()
+        if config.system is BuildSystem.EBUILD:
+            # ebuild-typed commands go through the backend, which translates
+            # the BuildConfig into a real ebuild argv and fails closed on
+            # anything that is not one — never shelled out as a string.
+            return _ebuild_backend()(self.workspace_path).execute(command, config, env_extra=env_extra)
         start = time.monotonic_ns()
         env = os.environ.copy()
-        config = self.get_config()
         env.update(config.env)
         if env_extra:
             env.update(env_extra)
@@ -409,6 +420,8 @@ class BuildSystemManager:
     def build(self, target: Optional[str] = None) -> BuildResult:
         """Run the build command."""
         config = self.get_config()
+        if config.system is BuildSystem.EBUILD:
+            return _ebuild_backend()(self.workspace_path).build(config, target=target)
         cmd = config.build_command
         if target:
             cmd = f"{cmd} {target}"
@@ -417,6 +430,8 @@ class BuildSystemManager:
     def test(self, target: Optional[str] = None) -> BuildResult:
         """Run tests."""
         config = self.get_config()
+        if config.system is BuildSystem.EBUILD:
+            return _ebuild_backend()(self.workspace_path).test(config, target=target)
         cmd = config.test_command
         if target:
             cmd = f"{cmd} {target}"
@@ -425,11 +440,15 @@ class BuildSystemManager:
     def clean(self) -> BuildResult:
         """Clean build artifacts."""
         config = self.get_config()
+        if config.system is BuildSystem.EBUILD:
+            return _ebuild_backend()(self.workspace_path).clean(config)
         return self._run(config.clean_command)
 
     def run(self, target: Optional[str] = None) -> BuildResult:
         """Run the project."""
         config = self.get_config()
+        if config.system is BuildSystem.EBUILD:
+            return _ebuild_backend()(self.workspace_path).run(config, target=target)
         cmd = config.run_command
         if target:
             cmd = f"{cmd} {target}"

@@ -235,13 +235,10 @@ class EoSimPlugin(Plugin):
             return {"success": result.get("success", False), "output": result.get("output", "")}
 
         # The fallback tells the developer what to run by hand, so it has to be
-        # something that runs. The previous text — "ebuild --platform {p}
-        # --config board.yaml {dir}" — used two flags ebuild does not have:
-        #
-        #     $ ebuild --platform stm32f4 --config board.yaml .
-        #     Usage: ebuild [OPTIONS] COMMAND [ARGS]...
-        #
-        # It was stored in a dict and never executed, so nothing found out. The
+        # something that runs. The previous text used two flags ebuild does not
+        # define at the top level — a board-selection flag and a config-file
+        # flag — so pasting it into a terminal only printed ebuild's usage. It
+        # was stored in a dict and never executed, so nothing found out. The
         # board is selected by `ebuild configure --board`, which is a separate
         # step from the build.
         commands = [

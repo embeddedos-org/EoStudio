@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- **EoStudio builds now go through ebuild's real CLI** (#24): new
+  `eostudio/core/devtools/ebuild_backend.py` (`EbuildBackend`) translates the
+  `EBUILD` `BuildConfig` into a real `ebuild` argv — `ebuild build`, `ebuild
+  test`, `ebuild clean`, `ebuild monitor`, and `ebuild configure --board` for
+  board selection — per ebuild's actual CLI contract, and
+  `BuildSystemManager` routes ebuild-typed builds through it instead of
+  shelling out command strings. Anything that cannot be translated, including
+  previously emitted invalid invocations, now raises `EbuildBackendError`
+  fail-closed instead of running a guessed command.
+
 ## [3.1.0] - 2026-05-27
 
 ### Added
