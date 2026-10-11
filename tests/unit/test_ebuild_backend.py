@@ -139,24 +139,25 @@ class TestEbuildBackendArgv(unittest.TestCase):
         return BuildConfig(**base)
 
     def _install_stub_ebuild(self, bindir: Path) -> Path:
-        """Write a stub `ebuild` that records its argv as JSON lines."""
+        """Write a stub `ebuild` that records its argv as JSON lines.
+
+        POSIX-only: Windows' CreateProcess resolves a bare name to ``.exe``
+        only, never ``.cmd``/``.bat`` (PATHEXT is a cmd.exe feature), so a
+        PATH-resolved stub cannot execute there. The tests that execute the
+        stub are skipped on Windows; the argv-construction tests run
+        everywhere.
+        """
         record = bindir / "argv.jsonl"
-        helper_src = (
+        stub = bindir / "ebuild"
+        stub.write_text(
+            "#!/usr/bin/env python3\n"
             "import json, os, sys\n"
             f"open(os.environ[{_STUB_RECORD_ENV!r}], 'a')"
             ".write(json.dumps(sys.argv) + chr(10))\n"
-            "print('stub ebuild ok')\n"
+            "print('stub ebuild ok')\n",
+            encoding="utf-8",
         )
-        if os.name == "nt":
-            helper = bindir / "_ebuild_stub.py"
-            helper.write_text(helper_src, encoding="utf-8")
-            (bindir / "ebuild.cmd").write_text(
-                f'@echo off\npython "{helper}" %*\n', encoding="utf-8"
-            )
-        else:
-            stub = bindir / "ebuild"
-            stub.write_text("#!/usr/bin/env python3\n" + helper_src, encoding="utf-8")
-            stub.chmod(0o755)
+        stub.chmod(0o755)
         return record
 
     def _with_stub_on_path(self, fn):
@@ -210,14 +211,16 @@ class TestEbuildBackendArgv(unittest.TestCase):
             # clean takes no --config; monitor takes neither flag.
             self.assertEqual(backend.run_argv(config), ["ebuild", "monitor"])
 
+    @unittest.skipIf(os.name == "nt",
+                     "stub executes via PATH shebang lookup, which Windows' "
+                     "CreateProcess does not do (bare names resolve to .exe only)")
     def test_build_runs_the_stub_with_the_exact_argv(self):
         def check(tmpdir, record):
             result = EbuildBackend(tmpdir).build(self._config())
             self.assertTrue(result.success, result.errors)
             recorded = self._recorded_argvs(record)
             self.assertEqual(len(recorded), 1)
-            self.assertIn(os.path.basename(recorded[0][0]),
-                          ("ebuild", "ebuild.exe", "_ebuild_stub.py"))
+            self.assertEqual(os.path.basename(recorded[0][0]), "ebuild")
             self.assertEqual(
                 recorded[0][1:],
                 ["build",
@@ -320,6 +323,9 @@ class TestEbuildBackendFailsClosed(unittest.TestCase):
             with self.assertRaises(EbuildBackendError):
                 backend.execute("make", config)
 
+    @unittest.skipIf(os.name == "nt",
+                     "stub executes via PATH shebang lookup, which Windows' "
+                     "CreateProcess does not do (bare names resolve to .exe only)")
     def test_manager_routes_ebuild_builds_through_the_backend(self):
         def check(tmpdir, record):
             (tmpdir / "build.yaml").write_text("project:\n  name: x\n", encoding="utf-8")
@@ -350,6 +356,9 @@ class TestEbuildBackendFailsClosed(unittest.TestCase):
 
         TestEbuildBackendArgv()._with_stub_on_path(check)
 
+    @unittest.skipIf(os.name == "nt",
+                     "stub executes via PATH shebang lookup, which Windows' "
+                     "CreateProcess does not do (bare names resolve to .exe only)")
     def test_manager_execute_dispatches_lifecycle_strings(self):
         def check(tmpdir, record):
             (tmpdir / "build.yaml").write_text("project:\n  name: x\n", encoding="utf-8")
