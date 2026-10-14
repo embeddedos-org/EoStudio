@@ -377,6 +377,55 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
             "estimated_time": "45 minutes",
         },
     ),
+    "uno-q-dual-brain": ProjectTemplate(
+        name="uno-q-dual-brain",
+        description="Arduino UNO Q Dual-Brain — Linux app (agents, networking) + MCU sketch (real-time I/O) joined by one RPC bridge contract",
+        category="embedded",
+        editor_type="simulation",
+        components=[
+            {
+                "type": "bridge_contract",
+                "name": "router_bridge",
+                "description": "The ONLY crossing between the two processors. Declared methods with typed payloads; no shared memory, no raw pointers — handles and declared capabilities only (the Track-1 bridge-contract rule).",
+                "methods": [
+                    {"name": "pin_write", "args": {"pin": "int", "value": "int"}, "returns": "bool"},
+                    {"name": "pin_read", "args": {"pin": "int"}, "returns": "int"},
+                    {"name": "analog_read", "args": {"channel": "int"}, "returns": "float"},
+                    {"name": "sensor_snapshot", "args": {}, "returns": "object"},
+                ],
+            },
+            {
+                "type": "linux_app",
+                "name": "agent_app",
+                "runtime": "Debian Linux (QRB2210-class application processor)",
+                "owns": ["networking", "apps", "ai-agents", "mqtt/home-assistant integration"],
+                "calls": ["router_bridge.pin_write", "router_bridge.sensor_snapshot"],
+            },
+            {
+                "type": "mcu_sketch",
+                "name": "realtime_io",
+                "runtime": "STM32-class microcontroller (bare-metal / RTOS)",
+                "owns": ["gpio", "pwm", "adc", "real-time loops"],
+                "serves": ["router_bridge.pin_write", "router_bridge.pin_read", "router_bridge.analog_read", "router_bridge.sensor_snapshot"],
+            },
+        ],
+        screens=[
+            {
+                "name": "Bridge Monitor",
+                "components": [
+                    {"type": "Navbar", "label": "UNO Q Dual-Brain"},
+                    {"type": "Table", "label": "Bridge calls", "columns": ["method", "direction", "latency_ms", "status"]},
+                    {"type": "Text", "label": "Linux side owns networking, apps and agents. The MCU owns pins and real-time I/O. If a feature needs both, it crosses the bridge as a declared method — never as shared state.", "style": {"fontSize": 14}},
+                ],
+            },
+        ],
+        metadata={
+            "frameworks": ["arduino-uno-q", "router-bridge-rpc"],
+            "difficulty": "intermediate",
+            "estimated_time": "30 minutes",
+            "pattern_source": "Arduino UNO Q dual-brain pattern (Linux application processor + STM32 MCU over an RPC/Router Bridge), Oct 2026",
+        },
+    ),
     "simulation-pid": ProjectTemplate(
         name="simulation-pid",
         description="PID Controller — Simulation Editor → analyse step response",

@@ -18,7 +18,7 @@ from eostudio.templates.samples import (
 class TestTemplateScaffolding(unittest.TestCase):
     def test_list_all_templates(self) -> None:
         templates = list_templates()
-        self.assertEqual(len(templates), 5)
+        self.assertEqual(len(templates), 6)
 
     def test_list_by_category(self) -> None:
         ui_templates = list_templates(category="ui")
