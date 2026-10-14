@@ -50,7 +50,11 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
         category="ui",
         editor_type="ui",
         components=[
-            {"type": "Heading", "label": "My Todo List", "style": {"fontSize": 24, "fontWeight": "bold"}},
+            {
+                "type": "Heading",
+                "label": "My Todo List",
+                "style": {"fontSize": 24, "fontWeight": "bold"},
+            },
             {
                 "type": "Container",
                 "direction": "row",
@@ -92,13 +96,21 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                         "label": "Read a book",
                         "children": [
                             {"type": "Checkbox", "label": "", "checked": True},
-                            {"type": "Text", "label": "Read a book", "style": {"textDecoration": "line-through"}},
+                            {
+                                "type": "Text",
+                                "label": "Read a book",
+                                "style": {"textDecoration": "line-through"},
+                            },
                             {"type": "Button", "label": "×", "variant": "text"},
                         ],
                     },
                 ],
             },
-            {"type": "Text", "label": "2 items left", "style": {"color": "#888", "marginTop": 16}},
+            {
+                "type": "Text",
+                "label": "2 items left",
+                "style": {"color": "#888", "marginTop": 16},
+            },
         ],
         screens=[
             {
@@ -119,8 +131,16 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                 "components": [
                     {"type": "Heading", "label": "Settings"},
                     {"type": "Toggle", "label": "Dark Mode"},
-                    {"type": "Select", "label": "Sort By", "options": ["Date Created", "Priority", "Alphabetical"]},
-                    {"type": "Button", "label": "Clear Completed Tasks", "variant": "outlined"},
+                    {
+                        "type": "Select",
+                        "label": "Sort By",
+                        "options": ["Date Created", "Priority", "Alphabetical"],
+                    },
+                    {
+                        "type": "Button",
+                        "label": "Clear Completed Tasks",
+                        "variant": "outlined",
+                    },
                 ],
             },
         ],
@@ -136,8 +156,20 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
         category="cad",
         editor_type="cad",
         components=[
-            {"type": "cube", "size": [60, 40, 5], "position": [0, 0, 0], "color": "#A0A0A0", "label": "base_plate"},
-            {"type": "cube", "size": [5, 40, 50], "position": [0, 0, 0], "color": "#A0A0A0", "label": "vertical_plate"},
+            {
+                "type": "cube",
+                "size": [60, 40, 5],
+                "position": [0, 0, 0],
+                "color": "#A0A0A0",
+                "label": "base_plate",
+            },
+            {
+                "type": "cube",
+                "size": [5, 40, 50],
+                "position": [0, 0, 0],
+                "color": "#A0A0A0",
+                "label": "vertical_plate",
+            },
             {
                 "type": "cylinder",
                 "radius": 3,
@@ -170,7 +202,12 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                 "label": "mount_hole_4",
                 "operation": "subtract",
             },
-            {"type": "fillet", "radius": 3, "edges": ["base_vertical_junction"], "label": "structural_fillet"},
+            {
+                "type": "fillet",
+                "radius": 3,
+                "edges": ["base_vertical_junction"],
+                "label": "structural_fillet",
+            },
         ],
         screens=[],
         metadata={
@@ -214,7 +251,12 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                 "position": [64, 384],
                 "components": {
                     "physics": {"gravity": 980, "max_speed": 200, "jump_force": 400},
-                    "animation": {"idle": "hero_idle", "run": "hero_run", "jump": "hero_jump", "fall": "hero_fall"},
+                    "animation": {
+                        "idle": "hero_idle",
+                        "run": "hero_run",
+                        "jump": "hero_jump",
+                        "fall": "hero_fall",
+                    },
                     "collision": {"shape": "rectangle", "size": [24, 32]},
                     "input": {"left": "A", "right": "D", "jump": "Space"},
                 },
@@ -277,31 +319,62 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                 "type": "table",
                 "name": "sensors",
                 "columns": [
-                    {"name": "id", "type": "INTEGER", "primary_key": True, "auto_increment": True},
+                    {
+                        "name": "id",
+                        "type": "INTEGER",
+                        "primary_key": True,
+                        "auto_increment": True,
+                    },
                     {"name": "name", "type": "VARCHAR(100)", "not_null": True},
                     {"name": "type", "type": "VARCHAR(50)", "not_null": True},
                     {"name": "location", "type": "VARCHAR(200)"},
                     {"name": "status", "type": "VARCHAR(20)", "default": "'active'"},
-                    {"name": "created_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"},
+                    {
+                        "name": "created_at",
+                        "type": "TIMESTAMP",
+                        "default": "CURRENT_TIMESTAMP",
+                    },
                 ],
             },
             {
                 "type": "table",
                 "name": "readings",
                 "columns": [
-                    {"name": "id", "type": "INTEGER", "primary_key": True, "auto_increment": True},
-                    {"name": "sensor_id", "type": "INTEGER", "foreign_key": "sensors.id"},
+                    {
+                        "name": "id",
+                        "type": "INTEGER",
+                        "primary_key": True,
+                        "auto_increment": True,
+                    },
+                    {
+                        "name": "sensor_id",
+                        "type": "INTEGER",
+                        "foreign_key": "sensors.id",
+                    },
                     {"name": "value", "type": "FLOAT", "not_null": True},
                     {"name": "unit", "type": "VARCHAR(20)", "not_null": True},
-                    {"name": "timestamp", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"},
+                    {
+                        "name": "timestamp",
+                        "type": "TIMESTAMP",
+                        "default": "CURRENT_TIMESTAMP",
+                    },
                 ],
             },
             {
                 "type": "table",
                 "name": "alerts",
                 "columns": [
-                    {"name": "id", "type": "INTEGER", "primary_key": True, "auto_increment": True},
-                    {"name": "sensor_id", "type": "INTEGER", "foreign_key": "sensors.id"},
+                    {
+                        "name": "id",
+                        "type": "INTEGER",
+                        "primary_key": True,
+                        "auto_increment": True,
+                    },
+                    {
+                        "name": "sensor_id",
+                        "type": "INTEGER",
+                        "foreign_key": "sensors.id",
+                    },
                     {"name": "rule", "type": "VARCHAR(200)", "not_null": True},
                     {"name": "threshold", "type": "FLOAT", "not_null": True},
                     {"name": "triggered_at", "type": "TIMESTAMP"},
@@ -328,7 +401,11 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                                         "data_source": "readings",
                                         "filter": "type=temperature",
                                     },
-                                    {"type": "Text", "label": "24.5°C", "style": {"fontSize": 32}},
+                                    {
+                                        "type": "Text",
+                                        "label": "24.5°C",
+                                        "style": {"fontSize": 32},
+                                    },
                                 ],
                             },
                             {
@@ -341,7 +418,11 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                                         "data_source": "readings",
                                         "filter": "type=humidity",
                                     },
-                                    {"type": "Text", "label": "65%", "style": {"fontSize": 32}},
+                                    {
+                                        "type": "Text",
+                                        "label": "65%",
+                                        "style": {"fontSize": 32},
+                                    },
                                 ],
                             },
                             {
@@ -388,9 +469,17 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                 "name": "router_bridge",
                 "description": "The ONLY crossing between the two processors. Declared methods with typed payloads; no shared memory, no raw pointers — handles and declared capabilities only (the Track-1 bridge-contract rule).",
                 "methods": [
-                    {"name": "pin_write", "args": {"pin": "int", "value": "int"}, "returns": "bool"},
+                    {
+                        "name": "pin_write",
+                        "args": {"pin": "int", "value": "int"},
+                        "returns": "bool",
+                    },
                     {"name": "pin_read", "args": {"pin": "int"}, "returns": "int"},
-                    {"name": "analog_read", "args": {"channel": "int"}, "returns": "float"},
+                    {
+                        "name": "analog_read",
+                        "args": {"channel": "int"},
+                        "returns": "float",
+                    },
                     {"name": "sensor_snapshot", "args": {}, "returns": "object"},
                 ],
             },
@@ -398,7 +487,12 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                 "type": "linux_app",
                 "name": "agent_app",
                 "runtime": "Debian Linux (QRB2210-class application processor)",
-                "owns": ["networking", "apps", "ai-agents", "mqtt/home-assistant integration"],
+                "owns": [
+                    "networking",
+                    "apps",
+                    "ai-agents",
+                    "mqtt/home-assistant integration",
+                ],
                 "calls": ["router_bridge.pin_write", "router_bridge.sensor_snapshot"],
             },
             {
@@ -406,7 +500,12 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                 "name": "realtime_io",
                 "runtime": "STM32-class microcontroller (bare-metal / RTOS)",
                 "owns": ["gpio", "pwm", "adc", "real-time loops"],
-                "serves": ["router_bridge.pin_write", "router_bridge.pin_read", "router_bridge.analog_read", "router_bridge.sensor_snapshot"],
+                "serves": [
+                    "router_bridge.pin_write",
+                    "router_bridge.pin_read",
+                    "router_bridge.analog_read",
+                    "router_bridge.sensor_snapshot",
+                ],
             },
         ],
         screens=[
@@ -414,8 +513,16 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                 "name": "Bridge Monitor",
                 "components": [
                     {"type": "Navbar", "label": "UNO Q Dual-Brain"},
-                    {"type": "Table", "label": "Bridge calls", "columns": ["method", "direction", "latency_ms", "status"]},
-                    {"type": "Text", "label": "Linux side owns networking, apps and agents. The MCU owns pins and real-time I/O. If a feature needs both, it crosses the bridge as a declared method — never as shared state.", "style": {"fontSize": 14}},
+                    {
+                        "type": "Table",
+                        "label": "Bridge calls",
+                        "columns": ["method", "direction", "latency_ms", "status"],
+                    },
+                    {
+                        "type": "Text",
+                        "label": "Linux side owns networking, apps and agents. The MCU owns pins and real-time I/O. If a feature needs both, it crosses the bridge as a declared method — never as shared state.",
+                        "style": {"fontSize": 14},
+                    },
                 ],
             },
         ],
@@ -441,7 +548,13 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                 "step_time": 1.0,
                 "position": [50, 150],
             },
-            {"type": "sum", "id": "error_sum", "name": "Error", "inputs": ["+", "-"], "position": [200, 150]},
+            {
+                "type": "sum",
+                "id": "error_sum",
+                "name": "Error",
+                "inputs": ["+", "-"],
+                "position": [200, 150],
+            },
             {
                 "type": "pid",
                 "id": "pid_controller",
@@ -459,8 +572,18 @@ BUILTIN_TEMPLATES: Dict[str, ProjectTemplate] = {
                 "time_constant": 0.5,
                 "position": [500, 150],
             },
-            {"type": "scope", "id": "output_scope", "name": "Output", "position": [650, 150]},
-            {"type": "scope", "id": "error_scope", "name": "Error Signal", "position": [200, 300]},
+            {
+                "type": "scope",
+                "id": "output_scope",
+                "name": "Output",
+                "position": [650, 150],
+            },
+            {
+                "type": "scope",
+                "id": "error_scope",
+                "name": "Error Signal",
+                "position": [200, 300],
+            },
         ],
         screens=[],
         metadata={

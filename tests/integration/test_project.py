@@ -11,7 +11,10 @@ from click.testing import CliRunner
 
 from eostudio.cli.main import cli
 from eostudio.templates.samples import (
-    BUILTIN_TEMPLATES, get_template, list_templates, create_project_from_template,
+    BUILTIN_TEMPLATES,
+    get_template,
+    list_templates,
+    create_project_from_template,
 )
 
 
