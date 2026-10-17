@@ -1,0 +1,28 @@
+# EoStudio
+
+> llms.txt for the EoStudio repository (embeddedos-org/EoStudio).
+> Status: the visual design IDE for EmbeddedOS — UI, 3D, CAD,
+> games and hardware design surfaces, with an Agent Skills
+> catalog and AI-assisted workflows.
+
+EoStudio is the developer-tooling face of the EmbeddedOS
+ecosystem: the environment in which EoS applications, boards
+and interfaces are designed, with project templates, editors,
+code generation and plugin surfaces.
+
+## Docs
+
+- [Getting Started with EoStudio](docs/getting-started.md)
+- [EoStudio Architecture](docs/architecture.md)
+- [EoStudio API Reference](docs/api-reference.md)
+- [EoStudio AI & LLM Guide](docs/ai-guide.md)
+- [Agent Skills catalog (org-wide)](docs/agent-skills-catalog.md)
+- [EoStudio Editors Guide](docs/editors-guide.md)
+- [EoStudio Code Generation Guide](docs/codegen-guide.md)
+- [EoStudio Plugin Development Guide](docs/plugin-guide.md)
+- [EoStudio Integration Guide](docs/integration-guide.md)
+
+## Machine-readable
+
+- [llms.txt](llms.txt) — this file
+- [llms-full.txt](llms-full.txt) — the docs above concatenated as one document
