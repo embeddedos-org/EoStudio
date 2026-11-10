@@ -409,37 +409,57 @@ def init(path: str, name: str):
 
 
 @cli.command()
-@click.argument("path", type=click.Path(), default=".")
+@click.argument("path", type=click.Path(exists=True, file_okay=False), default=".")
 @click.option("--coverage", is_flag=True, help="Collect code-coverage metrics.")
 @click.option("--watch", is_flag=True, help="Re-run tests on file changes.")
 @click.option("--file", "test_file", default=None, help="Run a single test file.")
 def test(path: str, coverage: bool, watch: bool, test_file: str):
     """Run tests with auto-detected framework."""
-    from eostudio.core.devtools.testing import TestRunner
+    import subprocess
 
-    runner = TestRunner()
-    framework = runner.detect_framework(path)
-    click.echo(f"Test framework: {framework}")
+    from eostudio.core.devtools.testing import TestRunner, TestSuite
 
-    if watch:
-        click.echo("Watching for changes... (Ctrl+C to stop)")
-        runner.watch(path)
-        return
+    # TestRunner is bound to its workspace; its methods take no path argument.
+    runner = TestRunner(path)
+    framework = runner.detect_framework()
+    if framework is None:
+        click.echo(f"Error: no supported test framework detected in {path}", err=True)
+        raise SystemExit(1)
+    click.echo(f"Test framework: {framework.value}")
 
-    if test_file:
-        result = runner.run_file(test_file)
-    elif coverage:
-        result = runner.run_with_coverage(path)
-    else:
-        result = runner.run_all(path)
+    def _summary(result: TestSuite) -> None:
+        click.echo(f"Passed : {result.passed}")
+        click.echo(f"Failed : {result.failed}")
+        click.echo(f"Errors : {result.errors}")
+        click.echo(f"Skipped: {result.skipped}")
 
-    click.echo(f"Passed : {result.passed}")
-    click.echo(f"Failed : {result.failed}")
-    click.echo(f"Errors : {result.errors}")
-    click.echo(f"Skipped: {result.skipped}")
+    cov_result = None
+    try:
+        if watch:
+            click.echo("Watching for changes... (Ctrl+C to stop)")
+            runner.watch(callback=_summary)
+            return
+        if test_file:
+            result = runner.run_file(test_file)
+        elif coverage:
+            result, cov_result = runner.run_with_coverage()
+        else:
+            result = runner.run_all()
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        # The runner starts the framework's own tool (python -m pytest, npx jest,
+        # cargo, ...); report a missing tool or a timeout instead of a traceback.
+        click.echo(f"Error: could not run {framework.value} tests: {exc}", err=True)
+        raise SystemExit(1)
 
-    if coverage and hasattr(result, "coverage"):
-        click.echo(f"Coverage: {result.coverage:.1f}%")
+    _summary(result)
+
+    if cov_result is not None:
+        # The runner only reads coverage data for some frameworks (pytest's
+        # coverage.json, go's coverage.out); an empty result means none was read.
+        if cov_result.total_lines > 0:
+            click.echo(f"Coverage: {cov_result.percentage:.1f}%")
+        else:
+            click.echo(f"Coverage: not available for {framework.value}")
 
     raise SystemExit(0 if result.failed == 0 and result.errors == 0 else 1)
 
