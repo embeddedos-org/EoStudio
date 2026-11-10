@@ -12,6 +12,17 @@
   shelling out command strings. Anything that cannot be translated, including
   previously emitted invalid invocations, now raises `EbuildBackendError`
   fail-closed instead of running a guessed command.
+- **`EoStudio test` no longer crashes on start**: it called
+  `TestRunner().detect_framework(path)`, `run_all(path)` and
+  `run_with_coverage(path)`, but `TestRunner` takes the workspace in its
+  constructor and those methods take no path, so every invocation raised
+  `TypeError`. The command now builds `TestRunner(path)` and prints the
+  coverage percentage from the `CoverageResult` that `run_with_coverage()`
+  returns, or `Coverage: not available for <framework>` when the runner read no
+  coverage data. A missing test tool (for example no `python` on `PATH`) or a
+  timeout prints `Error: could not run <framework> tests: ...` and exits 1, as
+  does a directory with no supported test framework. A path that does not
+  exist is rejected by the argument check.
 
 ## [3.1.0] - 2026-05-27
 
