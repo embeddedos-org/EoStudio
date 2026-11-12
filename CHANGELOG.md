@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Fixed
+- **Binary STL files whose header starts with `solid` import again**:
+  `import_stl()` read only the 80-byte header, so the triangle count that
+  rules out the ASCII format was always read as 0, and such files went to
+  the ASCII parser and failed with `UnicodeDecodeError`. It now reads the
+  84-byte prefix (`eostudio/formats/stl.py`).
 - **Design-token colors keep their hex alpha**: `ColorToken.rgba` read only
   `#RGB` and `#RRGGBB`, so a token written as `#RRGGBBAA` or `#RGBA` (valid
   CSS) came back as opaque black `(0, 0, 0, 1.0)`. Both forms are now parsed,
