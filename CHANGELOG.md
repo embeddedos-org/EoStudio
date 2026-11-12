@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 ### Fixed
+- **`Transform.apply_to_point()` applies the rotation**: it used the scale
+  and the position and ignored `rotation`, so a point turned 90 degrees about
+  Z came back unrotated. Points are now scaled, rotated, then translated;
+  `Quaternion.rotate()` is new (`eostudio/core/geometry/transforms.py`).
 - **EoStudio builds now go through ebuild's real CLI** (#24): new
   `eostudio/core/devtools/ebuild_backend.py` (`EbuildBackend`) translates the
   `EBUILD` `BuildConfig` into a real `ebuild` argv — `ebuild build`, `ebuild
