@@ -31,6 +31,14 @@ class Quaternion:
         s = math.sin(half)
         return cls(a.x * s, a.y * s, a.z * s, math.cos(half))
 
+    def rotate(self, v: Vec3) -> Vec3:
+        """Rotate ``v`` by this quaternion (normalised first; zero rotates nothing)."""
+        q = self.normalized()
+        u = Vec3(q.x, q.y, q.z)
+        # v' = v + 2w(u x v) + 2u x (u x v), the expanded form of q v q*.
+        t = u.cross(v) * 2.0
+        return v + t * q.w + u.cross(t)
+
     def __mul__(self, other: Quaternion) -> Quaternion:
         return Quaternion(
             self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y,
@@ -47,5 +55,6 @@ class Transform:
     scale: Vec3 = field(default_factory=lambda: Vec3(1.0, 1.0, 1.0))
 
     def apply_to_point(self, point: Vec3) -> Vec3:
+        """Scale, then rotate, then translate ``point``."""
         scaled = Vec3(point.x * self.scale.x, point.y * self.scale.y, point.z * self.scale.z)
-        return scaled + self.position
+        return self.rotation.rotate(scaled) + self.position
