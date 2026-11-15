@@ -169,6 +169,59 @@ class TestMeshCreation(unittest.TestCase):
         self.assertGreater(len(mesh.vertices), 0)
 
 
+def _face_normals_and_centroids(mesh: Mesh):
+    for face in mesh.faces:
+        a, b, c = mesh.vertices[face.v0], mesh.vertices[face.v1], mesh.vertices[face.v2]
+        n = (b - a).cross(c - a)
+        if n.length() < 1e-12:
+            continue
+        yield n, Vec3((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3)
+
+
+class TestPrimitiveWinding(unittest.TestCase):
+    """Faces are counter-clockwise seen from outside, so normals point outward."""
+
+    def assert_outward(self, mesh: Mesh, outward) -> None:
+        for n, centroid in _face_normals_and_centroids(mesh):
+            self.assertGreater(n.dot(outward(centroid)), 0, f"{mesh.name}: inward face at {centroid}")
+
+    def test_cube_faces_point_outward(self) -> None:
+        self.assert_outward(create_cube(2.0), lambda c: c)
+
+    def test_cube_signed_volume_is_positive(self) -> None:
+        mesh = create_cube(2.0)
+        volume = 0.0
+        for face in mesh.faces:
+            a, b, c = mesh.vertices[face.v0], mesh.vertices[face.v1], mesh.vertices[face.v2]
+            volume += a.dot(b.cross(c)) / 6.0
+        self.assertAlmostEqual(volume, 8.0)
+
+    def test_cube_vertex_normal_points_away_from_center(self) -> None:
+        mesh = create_cube(2.0)
+        mesh.compute_normals()
+        corner = mesh.vertices.index(Vec3(1.0, 1.0, 1.0))
+        n = mesh.normals[corner]
+        self.assertGreater(n.x, 0)
+        self.assertGreater(n.y, 0)
+        self.assertGreater(n.z, 0)
+
+    def test_cylinder_faces_point_outward(self) -> None:
+        self.assert_outward(create_cylinder(1.0, 2.0, segments=12), lambda c: Vec3(c.x, 0.0, c.z))
+
+    def test_cone_faces_point_outward(self) -> None:
+        self.assert_outward(create_cone(1.0, 3.0, segments=12), lambda c: Vec3(c.x, 0.0, c.z))
+
+    def test_sphere_faces_point_outward(self) -> None:
+        self.assert_outward(create_sphere(1.0, segments=8, rings=6), lambda c: c)
+
+    def test_torus_faces_point_outward(self) -> None:
+        def from_tube_center(c: Vec3) -> Vec3:
+            r = math.hypot(c.x, c.z)
+            return c - Vec3(c.x / r * 2.0, 0.0, c.z / r * 2.0)
+
+        self.assert_outward(create_torus(2.0, 0.5), from_tube_center)
+
+
 class TestQuaternion(unittest.TestCase):
     def test_identity(self) -> None:
         q = Quaternion(0, 0, 0, 1)
