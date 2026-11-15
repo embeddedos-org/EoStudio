@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Fixed
+- **Cube, cylinder and cone faces point outward**: `create_cube()`,
+  `create_cylinder()` and `create_cone()` listed their triangles clockwise as
+  seen from outside, so face normals, `Mesh.compute_normals()` and exported
+  STL facets pointed into the solid (a 2 x 2 x 2 cube had a signed volume of
+  -8). The faces are now counter-clockwise, like `create_sphere()` and
+  `create_torus()` (`eostudio/core/geometry/primitives.py`).
 - **`Transform.apply_to_point()` applies the rotation**: it used the scale
   and the position and ignored `rotation`, so a point turned 90 degrees about
   Z came back unrotated. Points are now scaled, rotated, then translated;

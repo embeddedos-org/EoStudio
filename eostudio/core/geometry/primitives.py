@@ -191,19 +191,20 @@ def create_cube(size: float = 1.0) -> Mesh:
         Vec3(h, h, h),
         Vec3(-h, h, h),
     ]
+    # Counter-clockwise seen from outside, so face normals point outward.
     faces = [
-        Face(0, 1, 2),
-        Face(0, 2, 3),
-        Face(4, 6, 5),
-        Face(4, 7, 6),
-        Face(0, 4, 5),
-        Face(0, 5, 1),
-        Face(2, 6, 7),
-        Face(2, 7, 3),
-        Face(0, 3, 7),
-        Face(0, 7, 4),
-        Face(1, 5, 6),
-        Face(1, 6, 2),
+        Face(0, 2, 1),
+        Face(0, 3, 2),
+        Face(4, 5, 6),
+        Face(4, 6, 7),
+        Face(0, 5, 4),
+        Face(0, 1, 5),
+        Face(2, 7, 6),
+        Face(2, 3, 7),
+        Face(0, 7, 3),
+        Face(0, 4, 7),
+        Face(1, 6, 5),
+        Face(1, 2, 6),
     ]
     return Mesh(name="Cube", vertices=vertices, faces=faces)
 
@@ -245,8 +246,8 @@ def create_cylinder(radius: float = 1.0, height: float = 2.0, segments: int = 16
         b = i * 2 + 1
         c = ((i + 1) % segments) * 2 + 1
         d = ((i + 1) % segments) * 2
-        faces.append(Face(a, d, c))
-        faces.append(Face(a, c, b))
+        faces.append(Face(a, c, d))
+        faces.append(Face(a, b, c))
     return Mesh(name="Cylinder", vertices=vertices, faces=faces)
 
 
@@ -262,7 +263,7 @@ def create_cone(radius: float = 1.0, height: float = 2.0, segments: int = 16) ->
     for i in range(segments):
         a = 1 + i
         b = 1 + (i + 1) % segments
-        faces.append(Face(tip_idx, a, b))
+        faces.append(Face(tip_idx, b, a))
     return Mesh(name="Cone", vertices=vertices, faces=faces)
 
 
