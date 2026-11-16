@@ -7,6 +7,18 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
 
+def _same_text(actual: Any, expected: str) -> bool:
+    """Compare a variable with the literal on the right of ``==`` / ``!=``.
+
+    A bool variable (set by a toggle action, or loaded from JSON ``true``)
+    is written ``true`` / ``false`` in a condition, so compare it without
+    case: str(True) is "True".
+    """
+    if isinstance(actual, bool):
+        return str(actual).lower() == expected.lower()
+    return str(actual) == expected
+
+
 class VariableType(Enum):
     STRING = "string"
     NUMBER = "number"
@@ -232,9 +244,9 @@ class StateMachine:
                 var_name, op, expected = parts
                 actual = self.get_variable(var_name)
                 if op == "==":
-                    return str(actual) == expected
+                    return _same_text(actual, expected)
                 if op == "!=":
-                    return str(actual) != expected
+                    return not _same_text(actual, expected)
                 if op == ">":
                     return float(actual or 0) > float(expected)
                 if op == "<":

@@ -33,6 +33,13 @@
   timeout prints `Error: could not run <framework> tests: ...` and exits 1, as
   does a directory with no supported test framework. A path that does not
   exist is rejected by the argument check.
+- **Prototype conditions match boolean variables**: `x == true` and
+  `x == false` compared `str(value)` with the literal, and `str(True)` is
+  `"True"`, so a variable set by a toggle action (or loaded from JSON `true`)
+  never matched `== true` or `== false`, and `!= true` always passed. Bool
+  variables are now compared without case, in both interaction conditions
+  and state-machine guards (`eostudio/core/prototyping/interactions.py`,
+  `eostudio/core/prototyping/state_machine.py`).
 
 ## [3.1.0] - 2026-05-27
 
