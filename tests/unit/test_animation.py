@@ -206,6 +206,65 @@ class TestAnimationClip:
         assert clip.get_track("nonexistent") is None
 
 
+class TestClipFillFollowsDirection:
+    """Fill holds the value the clip actually ends (or starts) on.
+
+    A reversed clip ends on its first keyframe, so fill-forwards must hold
+    that value, not jump to the last keyframe; fill-backwards likewise
+    holds the value the first iteration starts from.
+    """
+
+    @staticmethod
+    def _clip(direction, iterations=1, fill=FillMode.BOTH, delay=0.0):
+        clip = AnimationClip(
+            target_id="x",
+            duration=1.0,
+            delay=delay,
+            iterations=iterations,
+            direction=direction,
+            fill_mode=fill,
+        )
+        track = clip.add_track("x")
+        track.add_keyframe(0.0, 0.0, EasingFunction.LINEAR)
+        track.add_keyframe(1.0, 100.0, EasingFunction.LINEAR)
+        return clip
+
+    def test_reverse_fill_forwards_holds_first_keyframe(self):
+        clip = self._clip(Direction.REVERSE)
+        assert clip.evaluate(0.999)["x"] == pytest.approx(0.1)
+        assert clip.evaluate(1.5)["x"] == 0.0
+
+    def test_alternate_even_iterations_ends_on_first_keyframe(self):
+        clip = self._clip(Direction.ALTERNATE, iterations=2)
+        assert clip.evaluate(1.999)["x"] == pytest.approx(0.1)
+        assert clip.evaluate(2.5)["x"] == 0.0
+
+    def test_alternate_odd_iterations_ends_on_last_keyframe(self):
+        clip = self._clip(Direction.ALTERNATE, iterations=3)
+        assert clip.evaluate(3.5)["x"] == 100.0
+
+    def test_alternate_reverse_even_iterations_ends_on_last_keyframe(self):
+        clip = self._clip(Direction.ALTERNATE_REVERSE, iterations=2)
+        assert clip.evaluate(2.5)["x"] == 100.0
+
+    def test_normal_fill_forwards_unchanged(self):
+        clip = self._clip(Direction.NORMAL)
+        assert clip.evaluate(1.5)["x"] == 100.0
+
+    def test_reverse_fill_backwards_holds_starting_value(self):
+        clip = self._clip(Direction.REVERSE, delay=0.5)
+        assert clip.evaluate(0.25)["x"] == 100.0
+        assert clip.evaluate(0.5)["x"] == 100.0
+
+    def test_alternate_reverse_fill_backwards_holds_starting_value(self):
+        clip = self._clip(Direction.ALTERNATE_REVERSE, iterations=2, delay=0.5)
+        assert clip.evaluate(0.25)["x"] == 100.0
+
+    def test_normal_fill_backwards_unchanged(self):
+        clip = self._clip(Direction.NORMAL, delay=0.5)
+        assert clip.evaluate(0.25)["x"] == 0.0
+
+
 class TestAnimationTimeline:
     def test_create_and_tick(self):
         tl = AnimationTimeline(name="Test")
