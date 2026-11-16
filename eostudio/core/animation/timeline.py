@@ -84,8 +84,9 @@ class AnimationClip:
 
         if effective_time < 0:
             if self.fill_mode in (FillMode.BACKWARDS, FillMode.BOTH):
-                for track in self.tracks:
-                    values[track.property_name] = track.evaluate(0)
+                # Hold the value the first iteration starts from: the last
+                # keyframe when that iteration plays in reverse.
+                return self._fill_values(at_end=self._is_reversed(0))
             return values
 
         if self.duration <= 0:
@@ -96,30 +97,42 @@ class AnimationClip:
         iteration = int(effective_time / self.duration)
         if self.iterations > 0 and iteration >= self.iterations:
             if self.fill_mode in (FillMode.FORWARDS, FillMode.BOTH):
-                for track in self.tracks:
-                    final_time = track.keyframes[-1].time if track.keyframes else self.duration
-                    values[track.property_name] = track.evaluate(final_time)
+                # Hold the value the last iteration ends on: the first
+                # keyframe when that iteration played in reverse.
+                last = self.iterations - 1
+                return self._fill_values(at_end=not self._is_reversed(last))
             return values
 
         local_time = effective_time % self.duration
         progress = local_time / self.duration
-
-        # Handle direction
-        is_reverse = False
-        if self.direction == Direction.REVERSE:
-            is_reverse = True
-        elif self.direction == Direction.ALTERNATE:
-            is_reverse = (iteration % 2) == 1
-        elif self.direction == Direction.ALTERNATE_REVERSE:
-            is_reverse = (iteration % 2) == 0
-
-        if is_reverse:
+        if self._is_reversed(iteration):
             progress = 1.0 - progress
 
         for track in self.tracks:
             track_duration = track.duration if track.duration > 0 else self.duration
             values[track.property_name] = track.evaluate(progress * track_duration)
 
+        return values
+
+    def _is_reversed(self, iteration: int) -> bool:
+        """Whether the given (0-based) iteration plays from end to start."""
+        if self.direction == Direction.REVERSE:
+            return True
+        if self.direction == Direction.ALTERNATE:
+            return (iteration % 2) == 1
+        if self.direction == Direction.ALTERNATE_REVERSE:
+            return (iteration % 2) == 0
+        return False
+
+    def _fill_values(self, at_end: bool) -> Dict[str, NumericValue]:
+        """Every track's value at its last keyframe (``at_end``) or its first."""
+        values: Dict[str, NumericValue] = {}
+        for track in self.tracks:
+            if at_end:
+                at = track.keyframes[-1].time if track.keyframes else self.duration
+            else:
+                at = 0.0
+            values[track.property_name] = track.evaluate(at)
         return values
 
     def to_dict(self) -> Dict[str, Any]:

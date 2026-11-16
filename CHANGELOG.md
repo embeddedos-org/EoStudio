@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Fixed
+- **Animation fill holds the value a reversed clip ends on**: with
+  `fill_mode` forwards, `AnimationClip.evaluate()` always held the last
+  keyframe after the clip finished, so a `reverse` clip (or an `alternate`
+  clip with an even number of iterations) that had just played down to its
+  first keyframe jumped back to its last one. Backwards fill had the same
+  problem before the delay ended. Fill now holds the value the last
+  iteration ends on, and the value the first iteration starts from
+  (`eostudio/core/animation/timeline.py`).
 - **Cube, cylinder and cone faces point outward**: `create_cube()`,
   `create_cylinder()` and `create_cone()` listed their triangles clockwise as
   seen from outside, so face normals, `Mesh.compute_normals()` and exported
