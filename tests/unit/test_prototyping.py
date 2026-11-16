@@ -243,6 +243,80 @@ class TestStateMachine:
 # Prototype Player
 # -----------------------------------------------------------------------
 
+class TestConditionsOnBooleanVariables:
+    """`x == true` / `x == false` must match a variable that holds a bool.
+
+    TOGGLE_VARIABLE (InteractionManager) and the "toggle" action
+    (StateMachine) store Python booleans, and JSON `true` loads as one,
+    but conditions compared str(True) == "True" with "true".
+    """
+
+    @staticmethod
+    def _toggle_then_navigate(condition):
+        mgr = InteractionManager()
+        mgr.set_variable("loggedIn", False)
+        mgr.add_interaction(Interaction(
+            id="toggle", source_id="login", trigger=InteractionTrigger.CLICK,
+            action=InteractionAction.TOGGLE_VARIABLE, parameters={"variable": "loggedIn"},
+        ))
+        mgr.add_interaction(Interaction(
+            id="go", source_id="next", trigger=InteractionTrigger.CLICK,
+            action=InteractionAction.NAVIGATE, target_id="dashboard", condition=condition,
+        ))
+        mgr.dispatch("login", InteractionTrigger.CLICK)
+        assert mgr.get_variable("loggedIn") is True
+        return mgr.dispatch("next", InteractionTrigger.CLICK)
+
+    def test_interaction_condition_true_after_toggle(self):
+        assert len(self._toggle_then_navigate("loggedIn == true")) == 1
+
+    def test_interaction_condition_false_after_toggle(self):
+        assert len(self._toggle_then_navigate("loggedIn == false")) == 0
+
+    def test_interaction_condition_not_equal_after_toggle(self):
+        assert len(self._toggle_then_navigate("loggedIn != true")) == 0
+
+    def test_interaction_condition_from_json_bool(self):
+        mgr = InteractionManager.from_dict({"interactions": [], "variables": {"darkMode": False}})
+        mgr.add_interaction(Interaction(
+            id="i1", source_id="btn", trigger=InteractionTrigger.CLICK,
+            action=InteractionAction.NAVIGATE, condition="darkMode == false",
+        ))
+        assert len(mgr.dispatch("btn", InteractionTrigger.CLICK)) == 1
+
+    def test_interaction_condition_string_value_unchanged(self):
+        mgr = InteractionManager()
+        mgr.set_variable("loggedIn", "true")
+        mgr.add_interaction(Interaction(
+            id="i1", source_id="btn", trigger=InteractionTrigger.CLICK,
+            action=InteractionAction.NAVIGATE, condition="loggedIn == true",
+        ))
+        assert len(mgr.dispatch("btn", InteractionTrigger.CLICK)) == 1
+
+    @staticmethod
+    def _machine(guard):
+        sm = StateMachine()
+        sm.add_state(PrototypeState(name="cart", is_initial=True))
+        sm.add_state(PrototypeState(name="checkout"))
+        sm.add_variable(PrototypeVariable("agreed", False, VariableType.BOOLEAN))
+        sm.add_transition(StateTransition("cart", "cart", trigger="tick_box",
+                                          actions=[{"type": "toggle", "variable": "agreed"}]))
+        sm.add_transition(StateTransition("cart", "checkout", trigger="pay", guard=guard))
+        sm.send_event("tick_box")
+        assert sm.get_variable("agreed") is True
+        return sm
+
+    def test_guard_true_after_toggle_action(self):
+        sm = self._machine("agreed == true")
+        assert sm.send_event("pay")
+        assert sm.state_name == "checkout"
+
+    def test_guard_false_after_toggle_action(self):
+        sm = self._machine("agreed == false")
+        assert not sm.send_event("pay")
+        assert sm.state_name == "cart"
+
+
 class TestPrototypePlayer:
     def test_create_and_navigate(self):
         player = PrototypePlayer()
