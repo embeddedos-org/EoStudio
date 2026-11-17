@@ -85,6 +85,27 @@ class TestSTLExporter(unittest.TestCase):
         self.assertIsInstance(data, bytes)
         self.assertGreater(len(data), 84)
 
+    def test_export_binary_non_ascii_name(self) -> None:
+        # The 80-byte header is ASCII; a name such as "Würfel" used to raise
+        # UnicodeEncodeError instead of producing a file.
+        mesh = create_cube(1.0)
+        mesh.name = "Würfel 部品"
+        data = STLExporter().export_binary(mesh)
+        self.assertEqual(len(data), 84 + 50 * len(mesh.faces))
+        self.assertEqual(data[:80].rstrip(b"\0"), b"EoStudio STL - W?rfel ??")
+
+    def test_export_stl_binary_file_non_ascii_name(self) -> None:
+        from eostudio.formats.stl import export_stl_binary, import_stl
+
+        mesh = create_cube(1.0)
+        mesh.name = "Würfel"
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "cube.stl")
+            export_stl_binary(mesh, path)
+            with open(path, "rb") as fh:
+                self.assertEqual(fh.read(80).rstrip(b"\0"), b"EoStudio STL - W?rfel")
+            self.assertEqual(len(import_stl(path).faces), len(mesh.faces))
+
 
 class TestSVGExporter(unittest.TestCase):
     def test_export_basic(self) -> None:

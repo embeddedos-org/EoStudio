@@ -44,6 +44,16 @@ def export_stl_ascii(mesh: Mesh, filepath: str) -> None:
         fh.write(f"endsolid {mesh.name}\n")
 
 
+def _binary_header(name: str) -> bytes:
+    """Return the 80-byte binary STL header for a mesh called ``name``.
+
+    The header is ASCII text. Characters outside ASCII are written as ``?``,
+    so a mesh name such as ``Würfel`` no longer stops the export.
+    """
+    header = f"EoStudio STL - {name}".encode("ascii", errors="replace")
+    return header[:80].ljust(80, b"\0")
+
+
 def export_stl_binary(mesh: Mesh, filepath: str) -> None:
     """Export a :class:`Mesh` as a binary STL file.
 
@@ -62,9 +72,7 @@ def export_stl_binary(mesh: Mesh, filepath: str) -> None:
     os.makedirs(os.path.dirname(filepath) or ".", exist_ok=True)
 
     with open(filepath, "wb") as fh:
-        header = f"EoStudio STL - {mesh.name}".encode("ascii")
-        header = header[:80].ljust(80, b"\0")
-        fh.write(header)
+        fh.write(_binary_header(mesh.name))
 
         fh.write(struct.pack("<I", len(mesh.faces)))
 
@@ -203,9 +211,7 @@ class STLExporter:
         import io
 
         buf = io.BytesIO()
-        header = f"EoStudio STL - {mesh.name}".encode("ascii")
-        header = header[:80].ljust(80, b"\0")
-        buf.write(header)
+        buf.write(_binary_header(mesh.name))
         buf.write(struct.pack("<I", len(mesh.faces)))
         for face in mesh.faces:
             v0 = mesh.vertices[face.v0]
