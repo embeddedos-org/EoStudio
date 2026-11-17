@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Fixed
+- **Binary STL export accepts non-ASCII mesh names**: `export_stl_binary()`
+  and `STLExporter.export_binary()` encoded the 80-byte header text
+  (`EoStudio STL - <mesh name>`) as strict ASCII, so a mesh called `Würfel`
+  raised `UnicodeEncodeError` and `export_stl_binary()` left an empty file
+  behind. Characters outside ASCII are now written as `?` in the header; the
+  geometry is unchanged (`eostudio/formats/stl.py`).
 - **Animation fill holds the value a reversed clip ends on**: with
   `fill_mode` forwards, `AnimationClip.evaluate()` always held the last
   keyframe after the clip finished, so a `reverse` clip (or an `alternate`
