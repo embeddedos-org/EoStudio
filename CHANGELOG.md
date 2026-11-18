@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Fixed
+- **Collaborative editing converges when two deletes overlap**:
+  `OTEngine.transform()` turned two concurrent deletes whose ranges overlap
+  into two zero-length deletes, so each site kept only its own delete and the
+  sites ended with different text (on `abcdef`, deleting `bc` on one site and
+  `cde` on the other left `adef` and `abf`). Each transformed delete now
+  removes its own range minus the shared part, and both sites end with `af`
+  (`eostudio/core/collaboration/realtime_collab.py`).
 - **Binary STL export accepts non-ASCII mesh names**: `export_stl_binary()`
   and `STLExporter.export_binary()` encoded the 80-byte header text
   (`EoStudio STL - <mesh name>`) as strict ASCII, so a mesh called `Würfel`
