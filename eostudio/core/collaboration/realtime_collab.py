@@ -171,11 +171,14 @@ class OTEngine:
                 )
                 return new_a, op_b
             else:
-                # Overlapping — each deletes only what the other hasn't
-                new_a_pos = min(op_a.position, op_b.position)
-                new_b_pos = min(op_b.position, op_a.position)
-                new_a = Operation(op_type=OpType.DELETE, position=new_a_pos, length=0)
-                new_b = Operation(op_type=OpType.DELETE, position=new_b_pos, length=0)
+                # Overlapping — each deletes only what the other hasn't.
+                # Whatever lies before the shared range stays where it was;
+                # whatever lies after it closes up against that, so both
+                # transformed deletes start at the earlier of the two starts.
+                overlap = min(a_end, b_end) - max(op_a.position, op_b.position)
+                start = min(op_a.position, op_b.position)
+                new_a = Operation(op_type=OpType.DELETE, position=start, length=op_a.length - overlap)
+                new_b = Operation(op_type=OpType.DELETE, position=start, length=op_b.length - overlap)
                 return new_a, new_b
 
         # For MOVE and SET_PROP, last-write-wins
