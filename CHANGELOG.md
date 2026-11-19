@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Fixed
+- **Overlapping deletes with negative positions do not over-delete**: the
+  DELETE/DELETE transform now uses the same lower-bound clamping as text
+  application, without modifying the caller's operations.
 - **Collaborative editing converges when two deletes overlap**:
   `OTEngine.transform()` turned two concurrent deletes whose ranges overlap
   into two zero-length deletes, so each site kept only its own delete and the
