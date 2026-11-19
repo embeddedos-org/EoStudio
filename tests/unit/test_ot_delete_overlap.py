@@ -42,6 +42,22 @@ class TestOverlappingDeletes(unittest.TestCase):
     def test_identical_ranges(self) -> None:
         self.assertEqual(_both_orders("abcdef", _delete(1, 3), _delete(1, 3)), ("aef", "aef"))
 
+    def test_negative_positions_use_the_applied_delete_ranges(self) -> None:
+        text = "abcdef"
+        for a_pos in (-3, -1, 0, 1, 3):
+            for b_pos in (-3, -1, 0, 2, 5):
+                if a_pos >= 0 and b_pos >= 0:
+                    continue
+                for a_len in (0, 1, 3):
+                    for b_len in (0, 1, 3):
+                        with self.subTest(a=(a_pos, a_len), b=(b_pos, b_len)):
+                            a, b = _delete(a_pos, a_len), _delete(b_pos, b_len)
+                            a_start, b_start = max(0, a_pos), max(0, b_pos)
+                            removed = set(range(a_start, a_start + a_len)) | set(range(b_start, b_start + b_len))
+                            expected = "".join(char for i, char in enumerate(text) if i not in removed)
+                            self.assertEqual(_both_orders(text, a, b), (expected, expected))
+                            self.assertEqual((a.position, b.position), (a_pos, b_pos))
+
     def test_transformed_ranges(self) -> None:
         a2, b2 = OTEngine.transform(_delete(1, 2), _delete(2, 3))
         self.assertEqual((a2.position, a2.length), (1, 1))  # "b", after "cde" is gone

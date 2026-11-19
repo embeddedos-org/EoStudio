@@ -18,7 +18,7 @@ import logging
 import threading
 import time
 import uuid
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from enum import Enum, auto
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -152,6 +152,11 @@ class OTEngine:
             return transformed_a, transformed_b
 
         elif op_a.op_type == OpType.DELETE and op_b.op_type == OpType.DELETE:
+            # Match apply_to_text's clamping without changing caller operations.
+            if op_a.position < 0:
+                op_a = replace(op_a, position=0)
+            if op_b.position < 0:
+                op_b = replace(op_b, position=0)
             # Both delete — handle overlapping ranges
             a_end = op_a.position + op_a.length
             b_end = op_b.position + op_b.length
