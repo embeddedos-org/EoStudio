@@ -55,6 +55,23 @@ class TestDesignTokens:
         assert b == 0
         assert a == 1.0
 
+    def test_color_token_rgba_eight_digit_hex(self):
+        # #RRGGBBAA: the last pair is the alpha channel, as in CSS.
+        r, g, b, a = ColorToken("overlay", "#2563eb80").rgba
+        assert (r, g, b) == (0x25, 0x63, 0xEB)
+        assert a == pytest.approx(0x80 / 255)
+
+    def test_color_token_rgba_four_digit_hex(self):
+        # #RGBA: each digit is doubled, the last one is alpha.
+        r, g, b, a = ColorToken("overlay", "#f80c").rgba
+        assert (r, g, b) == (255, 136, 0)
+        assert a == pytest.approx(0xCC / 255)
+
+    def test_color_token_rgba_hex_alpha_combines_with_opacity(self):
+        r, g, b, a = ColorToken("overlay", "#00000080", opacity=0.5).rgba
+        assert (r, g, b) == (0, 0, 0)
+        assert a == pytest.approx(0x80 / 255 * 0.5)
+
     def test_color_with_opacity(self):
         token = ColorToken("primary", "#ff0000")
         semi = token.with_opacity(0.5)
