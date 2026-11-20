@@ -43,14 +43,23 @@ class ColorToken(DesignToken):
 
     @property
     def rgba(self) -> Tuple[int, int, int, float]:
+        """Red, green, blue (0-255) and alpha (0-1) of the hex value.
+
+        Accepts the CSS hex forms ``#RGB``, ``#RGBA``, ``#RRGGBB`` and
+        ``#RRGGBBAA``. An alpha channel in the hex value is multiplied by
+        ``opacity``.
+        """
         hex_val = self.value.lstrip("#")
-        if len(hex_val) == 6:
+        if len(hex_val) in (3, 4):
+            hex_val = "".join(c * 2 for c in hex_val)
+        alpha = 1.0
+        if len(hex_val) in (6, 8):
             r, g, b = int(hex_val[0:2], 16), int(hex_val[2:4], 16), int(hex_val[4:6], 16)
-        elif len(hex_val) == 3:
-            r, g, b = int(hex_val[0] * 2, 16), int(hex_val[1] * 2, 16), int(hex_val[2] * 2, 16)
+            if len(hex_val) == 8:
+                alpha = int(hex_val[6:8], 16) / 255
         else:
             r, g, b = 0, 0, 0
-        return (r, g, b, self.opacity)
+        return (r, g, b, alpha * self.opacity)
 
     def with_opacity(self, opacity: float) -> "ColorToken":
         return ColorToken(name=self.name, value=self.value, opacity=opacity, description=self.description)

@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Fixed
+- **Design-token colors keep their hex alpha**: `ColorToken.rgba` read only
+  `#RGB` and `#RRGGBB`, so a token written as `#RRGGBBAA` or `#RGBA` (valid
+  CSS) came back as opaque black `(0, 0, 0, 1.0)`. Both forms are now parsed,
+  and the alpha in the value is multiplied by `opacity`
+  (`eostudio/core/ui_flow/design_tokens.py`).
 - **Overlapping deletes with negative positions do not over-delete**: the
   DELETE/DELETE transform now uses the same lower-bound clamping as text
   application, without modifying the caller's operations.
