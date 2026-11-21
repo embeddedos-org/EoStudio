@@ -101,8 +101,11 @@ def import_stl(filepath: str) -> Mesh:
     Returns:
         A :class:`Mesh` built from the triangles in the file.
     """
+    # 84 bytes, not 80: the binary triangle count follows the 80-byte header,
+    # and _is_ascii_stl() needs it to rule out a binary file whose header
+    # happens to start with "solid".
     with open(filepath, "rb") as fh:
-        start = fh.read(80)
+        start = fh.read(84)
 
     if _is_ascii_stl(filepath, start):
         return _import_stl_ascii(filepath)
@@ -110,17 +113,21 @@ def import_stl(filepath: str) -> Mesh:
 
 
 def _is_ascii_stl(filepath: str, header: bytes) -> bool:
-    """Heuristic: the file begins with ``solid`` and is not valid binary."""
+    """Heuristic: the file begins with ``solid`` and is not valid binary.
+
+    ``header`` is the first 84 bytes of the file: the 80-byte binary header
+    and the uint32 triangle count after it. A shorter file cannot be binary.
+    """
     try:
-        text = header.decode("ascii", errors="ignore").strip()
+        text = header[:80].decode("ascii", errors="ignore").strip()
     except Exception:
         return False
     if not text.lower().startswith("solid"):
         return False
+    if len(header) < 84:
+        return True
     file_size = os.path.getsize(filepath)
-    expected_binary_size = (
-        84 + 50 * struct.unpack_from("<I", header if len(header) >= 84 else header.ljust(84, b"\0"), 80)[0]
-    )
+    expected_binary_size = 84 + 50 * struct.unpack_from("<I", header, 80)[0]
     if expected_binary_size == file_size:
         return False
     return True
