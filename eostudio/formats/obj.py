@@ -13,7 +13,9 @@ class OBJExporter:
 
     OBJ is a simple text-based format widely supported by 3D applications.
     Each vertex is written as ``v x y z`` and each triangular face as
-    ``f v0 v1 v2`` (1-indexed).
+    ``f v0 v1 v2`` (1-indexed). When the mesh has one normal per vertex, the
+    normals are written as ``vn`` lines and each face corner names its
+    normal: ``f v0//v0 v1//v1 v2//v2``.
     """
 
     def export(self, mesh: Mesh, name: Optional[str] = None) -> str:
@@ -39,13 +41,20 @@ class OBJExporter:
         for v in mesh.vertices:
             lines.append(f"v {v.x:.6f} {v.y:.6f} {v.z:.6f}")
 
-        if mesh.normals and len(mesh.normals) == len(mesh.vertices):
+        has_normals = bool(mesh.normals) and len(mesh.normals) == len(mesh.vertices)
+        if has_normals:
             for n in mesh.normals:
                 lines.append(f"vn {n.x:.6f} {n.y:.6f} {n.z:.6f}")
 
         for face in mesh.faces:
-            # OBJ faces are 1-indexed
-            lines.append(f"f {face.v0 + 1} {face.v1 + 1} {face.v2 + 1}")
+            # OBJ faces are 1-indexed. A `vn` line is only used through a face
+            # that names it (`v//vn`); the normals are per vertex, so each
+            # corner uses the normal with its vertex's index.
+            a, b, c = face.v0 + 1, face.v1 + 1, face.v2 + 1
+            if has_normals:
+                lines.append(f"f {a}//{a} {b}//{b} {c}//{c}")
+            else:
+                lines.append(f"f {a} {b} {c}")
 
         return "\n".join(lines) + "\n"
 
