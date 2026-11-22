@@ -334,6 +334,35 @@ class TestOTEngine(unittest.TestCase):
         self.assertIn("Alice", session.document)
         self.assertIn("Bob", session.document)
 
+    def test_apply_remote_ignores_replayed_changeset(self) -> None:
+        from eostudio.core.collaboration.realtime_collab import (
+            ChangeSet,
+            CollabSession,
+            Operation,
+            OpType,
+        )
+
+        # Local delete of "bc" and a remote delete of "cde" converge to "af".
+        # Replaying the same remote ChangeSet must be a no-op (issue #60).
+        session = CollabSession("test-session", document="abcdef")
+        session.join("user1", "Alice")
+        session.apply_local(
+            "user1", [Operation(op_type=OpType.DELETE, position=1, length=2)]
+        )
+
+        remote = ChangeSet(
+            revision=0,
+            author_id="user2",
+            author_name="Bob",
+            timestamp=time.time(),
+            ops=[Operation(op_type=OpType.DELETE, position=2, length=3)],
+            change_id="remote-cde",
+        )
+        session.apply_remote(remote)
+        self.assertEqual(session.document, "af")
+        session.apply_remote(remote)
+        self.assertEqual(session.document, "af")
+
     def test_session_manager(self) -> None:
         from eostudio.core.collaboration.realtime_collab import CollabSessionManager
         mgr = CollabSessionManager()

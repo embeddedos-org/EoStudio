@@ -251,6 +251,7 @@ class CollabSession:
         self._revision = 0
         self._history: List[ChangeSet] = []
         self._pending: List[ChangeSet] = []  # Unacknowledged local changes
+        self._applied_remote_ids: set[str] = set()  # Remote change_ids already applied
         self._users: Dict[str, UserPresence] = {}
         self._lock = threading.RLock()
         self._on_change = on_change
@@ -320,8 +321,13 @@ class CollabSession:
         """Apply a change received from a remote user.
 
         Transforms against any pending local changes before applying.
+        A ChangeSet already applied (same change_id) is ignored, so a
+        redelivered remote edit is a no-op.
         """
         with self._lock:
+            if cs.change_id in self._applied_remote_ids:
+                return
+
             # Transform against pending local changes
             transformed_cs = cs
             new_pending: List[ChangeSet] = []
@@ -361,6 +367,7 @@ class CollabSession:
 
             self._pending = new_pending
             self._apply_changeset(transformed_cs)
+            self._applied_remote_ids.add(cs.change_id)
 
     def acknowledge(self, change_id: str) -> None:
         """Acknowledge that the server accepted a local change."""
