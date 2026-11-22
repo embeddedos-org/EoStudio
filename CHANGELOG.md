@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Fixed
+- **OBJ export uses the normals it writes**: when a mesh has one normal
+  per vertex (for example after `import_stl()` or an STL export, which fill
+  them in), `OBJExporter` wrote the `vn` lines but faces as `f a b c`, which
+  name no normal, so importers dropped them. Faces now name each corner's
+  normal as `f a//a b//b c//c` (`eostudio/formats/obj.py`).
 - **Binary STL files whose header starts with `solid` import again**:
   `import_stl()` read only the 80-byte header, so the triangle count that
   rules out the ASCII format was always read as 0, and such files went to

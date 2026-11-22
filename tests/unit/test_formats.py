@@ -68,6 +68,30 @@ class TestOBJExporter(unittest.TestCase):
                 content = f.read()
             self.assertIn("v ", content)
 
+    def test_faces_reference_vertex_normals(self) -> None:
+        # A `vn` line is only used through a face that names it (`v//vn`).
+        # Faces written as `f a b c` leave every normal unused, so importers
+        # drop them and shade the mesh with their own normals.
+        mesh = create_cube(2.0)
+        mesh.compute_normals()
+        lines = OBJExporter().export(mesh).splitlines()
+        n_vn = sum(1 for line in lines if line.startswith("vn "))
+        faces = [line.split()[1:] for line in lines if line.startswith("f ")]
+        self.assertEqual(n_vn, len(mesh.vertices))
+        self.assertEqual(len(faces), len(mesh.faces))
+        for face, corners in zip(mesh.faces, faces):
+            expected = [f"{i + 1}//{i + 1}" for i in (face.v0, face.v1, face.v2)]
+            self.assertEqual(corners, expected)
+
+    def test_faces_without_normals_name_vertices_only(self) -> None:
+        mesh = create_cube(2.0)
+        mesh.normals = []
+        content = OBJExporter().export(mesh)
+        self.assertNotIn("vn ", content)
+        first_face = next(line for line in content.splitlines() if line.startswith("f "))
+        face = mesh.faces[0]
+        self.assertEqual(first_face, f"f {face.v0 + 1} {face.v1 + 1} {face.v2 + 1}")
+
 
 class TestSTLExporter(unittest.TestCase):
     def test_export_ascii(self) -> None:
