@@ -194,6 +194,60 @@ class TestAutoLayout:
         css = c.to_css()
         assert css["width"] == "100%"
 
+    def test_row_reverse_keeps_results_in_child_order(self):
+        # Result i belongs to child i; the first child sits at the far end.
+        layout = AutoLayout(direction=LayoutDirection.ROW_REVERSE, gap=0)
+        positions = layout.compute_layout(100, 40, [(10, 10), (20, 20)])
+        assert positions == [(90.0, 0.0, 10, 10), (70.0, 0.0, 20, 20)]
+
+    def test_column_reverse_keeps_results_in_child_order(self):
+        layout = AutoLayout(
+            direction=LayoutDirection.COLUMN_REVERSE, gap=4, alignment=LayoutAlignment.END
+        )
+        positions = layout.compute_layout(50, 100, [(30, 10), (20, 25)])
+        assert positions == [(20.0, 90.0, 30, 10), (30.0, 61.0, 20, 25)]
+
+    def test_reverse_single_child(self):
+        layout = AutoLayout(direction=LayoutDirection.ROW_REVERSE)
+        assert layout.compute_layout(100, 40, [(10, 10)]) == [(90.0, 0.0, 10, 10)]
+
+    @pytest.mark.parametrize("distribution", list(LayoutDistribution))
+    @pytest.mark.parametrize(
+        "forward, reverse",
+        [
+            (LayoutDirection.ROW, LayoutDirection.ROW_REVERSE),
+            (LayoutDirection.COLUMN, LayoutDirection.COLUMN_REVERSE),
+        ],
+    )
+    def test_reverse_mirrors_each_child(self, forward, reverse, distribution):
+        sizes = [(10, 15), (30, 5), (20, 25)]
+        fwd = AutoLayout(direction=forward, distribution=distribution, gap=6)
+        rev = AutoLayout(direction=reverse, distribution=distribution, gap=6)
+        fwd.padding = rev.padding = (3, 7, 11, 2)  # top, right, bottom, left
+        horizontal = forward == LayoutDirection.ROW
+        main_avail = 200 - 2 - 7 if horizontal else 150 - 3 - 11
+        start = 2 if horizontal else 3
+        for (fx, fy, fw, fh), (rx, ry, rw, rh) in zip(
+            fwd.compute_layout(200, 150, sizes), rev.compute_layout(200, 150, sizes)
+        ):
+            # Same child, same size and cross position, mirrored main position.
+            assert (rw, rh) == (fw, fh)
+            if horizontal:
+                assert ry == fy
+                assert rx - start == pytest.approx(main_avail - (fx - start) - fw)
+            else:
+                assert rx == fx
+                assert ry - start == pytest.approx(main_avail - (fy - start) - fh)
+
+    def test_reverse_applies_constraints_to_their_own_child(self):
+        layout = AutoLayout(
+            direction=LayoutDirection.ROW_REVERSE,
+            gap=0,
+            children_constraints=[LayoutConstraints(fixed_height=40), LayoutConstraints()],
+        )
+        positions = layout.compute_layout(100, 50, [(10, 10), (20, 20)])
+        assert [p[3] for p in positions] == [40, 20]
+
 
 # -----------------------------------------------------------------------
 # Variants
