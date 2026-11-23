@@ -79,6 +79,12 @@
   variables are now compared without case, in both interaction conditions
   and state-machine guards (`eostudio/core/prototyping/interactions.py`,
   `eostudio/core/prototyping/state_machine.py`).
+- **Responsive overrides that only hide a component reach the CSS**:
+  `ResponsiveConfig.generate_media_queries()` skipped every override with no
+  properties, so an override whose only change is `visibility = False` (hide
+  the component at that breakpoint) wrote no media query and the component
+  stayed visible. Such an override now writes its media query with the
+  `display: none` rule (`eostudio/core/ui_flow/responsive.py`).
 
 ## [3.1.0] - 2026-05-27
 
