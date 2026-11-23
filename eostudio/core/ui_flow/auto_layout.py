@@ -133,10 +133,10 @@ class AutoLayout:
         positions = self._distribute(main_sizes, main_avail, self.gap, self.distribution)
 
         if is_reverse:
+            # Mirror each child's position along the main axis. The lists stay
+            # in child order, so result i (and children_constraints[i]) still
+            # belongs to child_sizes[i]; the first child ends up at the far end.
             positions = [main_avail - p - s for p, s in zip(positions, main_sizes)]
-            positions.reverse()
-            main_sizes = list(reversed(main_sizes))
-            cross_sizes = list(reversed(cross_sizes))
 
         for i, (pos, m_size, c_size) in enumerate(zip(positions, main_sizes, cross_sizes)):
             constraint = self.children_constraints[i] if i < len(self.children_constraints) else LayoutConstraints()

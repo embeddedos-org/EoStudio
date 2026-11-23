@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Fixed
+- **Reversed auto-layouts describe each child in order**:
+  `AutoLayout.compute_layout()` with `row-reverse` or `column-reverse`
+  returned its boxes in reverse child order, so result `i` held the position
+  and size of child `n-1-i`, and `children_constraints[i]` was applied to that
+  other child (two children of widths 10 and 20 in a 100-wide `row-reverse`
+  came back as `x=70, w=20` then `x=90, w=10`). Result `i` now belongs to
+  child `i`, with the first child at the far end
+  (`eostudio/core/ui_flow/auto_layout.py`).
 - **OBJ export uses the normals it writes**: when a mesh has one normal
   per vertex (for example after `import_stl()` or an STL export, which fill
   them in), `OBJExporter` wrote the `vn` lines but faces as `f a b c`, which
