@@ -120,14 +120,17 @@ class ResponsiveConfig:
             self.overrides, key=lambda o: BREAKPOINTS.get(o.breakpoint, Breakpoint("", 0)).min_width
         ):
             bp = BREAKPOINTS.get(override.breakpoint)
-            if not bp or not override.properties:
+            # An override that only hides the component has no properties but
+            # still needs its media query for the display: none rule.
+            if not bp or (not override.properties and override.visibility):
                 continue
             lines.append(f"\n@media {bp.media_query} {{")
-            lines.append(f"  .{class_name} {{")
-            for prop, val in override.properties.items():
-                css_prop = prop.replace("_", "-")
-                lines.append(f"    {css_prop}: {val};")
-            lines.append("  }")
+            if override.properties:
+                lines.append(f"  .{class_name} {{")
+                for prop, val in override.properties.items():
+                    css_prop = prop.replace("_", "-")
+                    lines.append(f"    {css_prop}: {val};")
+                lines.append("  }")
             if not override.visibility:
                 lines.append(f"  .{class_name} {{ display: none; }}")
             lines.append("}")

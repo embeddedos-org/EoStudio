@@ -278,6 +278,33 @@ class TestResponsive:
         assert "@media" in css
         assert ".card" in css
 
+    def test_hide_only_override_emits_display_none(self):
+        # Hiding a component at a breakpoint needs no other property.
+        cfg = ResponsiveConfig()
+        cfg.add_override("mobile").visibility = False
+        css = cfg.generate_media_queries("sidebar", {"width": "240px"})
+        assert css == (
+            ".sidebar {\n  width: 240px;\n}\n"
+            "\n@media (min-width: 375px) and (max-width: 767px) {\n"
+            "  .sidebar { display: none; }\n}"
+        )
+
+    def test_hide_only_override_loaded_from_dict(self):
+        cfg = ResponsiveConfig.from_dict({"overrides": [{"breakpoint": "tablet", "visibility": False}]})
+        css = cfg.generate_media_queries("nav", {})
+        assert "@media (min-width: 768px) and (max-width: 1023px) {\n  .nav { display: none; }\n}" in css
+
+    def test_override_with_properties_and_hidden_keeps_both(self):
+        cfg = ResponsiveConfig()
+        cfg.add_override("tablet", font_size="14px").visibility = False
+        css = cfg.generate_media_queries("card", {})
+        assert "@media (min-width: 768px) and (max-width: 1023px) {\n  .card {\n    font-size: 14px;\n  }\n  .card { display: none; }\n}" in css
+
+    def test_empty_visible_override_adds_no_media_query(self):
+        cfg = ResponsiveConfig()
+        cfg.add_override("mobile")
+        assert cfg.generate_media_queries("card", {"color": "red"}) == ".card {\n  color: red;\n}"
+
     def test_serialization(self):
         cfg = ResponsiveConfig()
         cfg.add_override("tablet", columns="2")
