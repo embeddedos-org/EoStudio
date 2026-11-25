@@ -225,11 +225,16 @@ class AnimationTimeline:
         return clips
 
     def sequence(self, clips: List[AnimationClip], gap: float = 0.0) -> None:
-        """Arrange clips to play one after another."""
+        """Arrange clips to play one after another.
+
+        Each clip starts ``gap`` seconds after the previous clip's last
+        iteration ends (an infinite clip counts as one iteration, as in
+        ``AnimationClip.total_duration``).
+        """
         current_time = 0.0
         for clip in clips:
             clip.delay = current_time
-            current_time += clip.duration + gap
+            current_time += clip.duration * max(1, clip.iterations) + gap
             if clip not in self.clips:
                 self.clips.append(clip)
 

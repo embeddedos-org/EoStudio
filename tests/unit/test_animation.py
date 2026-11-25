@@ -312,6 +312,40 @@ class TestAnimationTimeline:
         assert c1.delay == 0.0
         assert c2.delay == 1.5
 
+    def test_sequence_waits_for_every_iteration(self):
+        tl = AnimationTimeline()
+        c1 = AnimationClip(target_id="a", duration=1.0, iterations=3)
+        c2 = AnimationClip(target_id="b", duration=0.5, iterations=2)
+        c3 = AnimationClip(target_id="c", duration=1.0)
+        tl.sequence([c1, c2, c3], gap=0.25)
+        assert c1.delay == 0.0
+        assert c2.delay == 3.25
+        assert c3.delay == 4.5
+        assert tl.duration == 5.5
+
+    def test_sequence_next_clip_starts_after_previous_ends(self):
+        tl = AnimationTimeline()
+        linear = EasingFunction.LINEAR
+        c1 = AnimationClip(target_id="a", duration=1.0, iterations=2)
+        c1.add_track("x").add_keyframe(0, 0.0, linear)
+        c1.get_track("x").add_keyframe(1.0, 10.0, linear)
+        c2 = AnimationClip(target_id="b", duration=1.0)
+        c2.add_track("y").add_keyframe(0, 0.0, linear)
+        c2.get_track("y").add_keyframe(1.0, 10.0, linear)
+        tl.sequence([c1, c2])
+        # Halfway through c1's second iteration, c2 has not started.
+        assert tl.evaluate(1.5) == {"a": {"x": 5.0}}
+        # c2 starts exactly when c1's last iteration ends.
+        assert tl.evaluate(2.0)["b"] == {"y": 0.0}
+        assert tl.evaluate(2.5)["b"] == {"y": 5.0}
+
+    def test_sequence_infinite_clip_counts_one_iteration(self):
+        tl = AnimationTimeline()
+        c1 = AnimationClip(target_id="a", duration=2.0, iterations=-1)
+        c2 = AnimationClip(target_id="b", duration=1.0)
+        tl.sequence([c1, c2])
+        assert c2.delay == 2.0
+
     def test_play_pause_stop(self):
         tl = AnimationTimeline()
         assert tl.state == PlayState.IDLE
