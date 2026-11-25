@@ -352,9 +352,7 @@ class CollabSession:
                 for i in range(len(transformed_ops)):
                     remote_op = transformed_ops[i]
                     for j in range(len(pending_ops)):
-                        remote_op, pending_ops[j] = OTEngine.transform(
-                            remote_op, pending_ops[j]
-                        )
+                        remote_op, pending_ops[j] = OTEngine.transform(remote_op, pending_ops[j])
                     transformed_ops[i] = remote_op
 
                 transformed_cs = ChangeSet(
