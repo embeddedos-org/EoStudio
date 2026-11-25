@@ -333,18 +333,29 @@ class CollabSession:
             new_pending: List[ChangeSet] = []
 
             for pending in self._pending:
-                transformed_ops: List[Operation] = []
-                pending_ops: List[Operation] = []
+                # One pass over the remote x local grid, keeping BOTH halves of
+                # every transform. OTEngine.transform() returns a symmetric
+                # pair, and the local half it returns is already transformed
+                # against that remote op.
+                #
+                # The previous code ran two passes and threw the local half
+                # away, recomputing it in the second pass against the
+                # *untransformed* remote ops. Each local op was therefore
+                # transformed against a remote op that had not itself been
+                # transformed against the preceding local ops, so a pending
+                # overlapping delete could be shortened twice and collapse to
+                # length 0. A later remote edit was then transformed without
+                # that pending deletion and the sites diverged (issue #59).
+                transformed_ops: List[Operation] = list(transformed_cs.ops)
+                pending_ops: List[Operation] = list(pending.ops)
 
-                for remote_op in transformed_cs.ops:
-                    for local_op in pending.ops:
-                        remote_op, local_op = OTEngine.transform(remote_op, local_op)
-                    transformed_ops.append(remote_op)
-
-                for local_op in pending.ops:
-                    for remote_op in transformed_cs.ops:
-                        _, local_op = OTEngine.transform(remote_op, local_op)
-                    pending_ops.append(local_op)
+                for i in range(len(transformed_ops)):
+                    remote_op = transformed_ops[i]
+                    for j in range(len(pending_ops)):
+                        remote_op, pending_ops[j] = OTEngine.transform(
+                            remote_op, pending_ops[j]
+                        )
+                    transformed_ops[i] = remote_op
 
                 transformed_cs = ChangeSet(
                     revision=transformed_cs.revision,

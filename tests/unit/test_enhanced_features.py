@@ -334,6 +334,87 @@ class TestOTEngine(unittest.TestCase):
         self.assertIn("Alice", session.document)
         self.assertIn("Bob", session.document)
 
+    def _two_site_documents(self, local_ops, remote_ops, document="abcdefgh"):
+        """Run the same two concurrent changes at both sites, return both texts.
+
+        Convergence is the only property that matters: two sites that saw the
+        same edits in a different order must end with the same text.
+        """
+        import time as _t
+        from eostudio.core.collaboration.realtime_collab import ChangeSet, CollabSession
+
+        def _cs(author, ops, change_id):
+            return ChangeSet(revision=0, author_id=author, author_name=author,
+                             timestamp=_t.time(), ops=list(ops), change_id=change_id)
+
+        site_a = CollabSession("site-a", document=document)
+        site_a.join("alice", "Alice")
+        site_a.apply_local("alice", list(local_ops))
+        site_a.apply_remote(_cs("bob", remote_ops, "from-bob"))
+
+        site_b = CollabSession("site-b", document=document)
+        site_b.join("bob", "Bob")
+        site_b.apply_local("bob", list(remote_ops))
+        site_b.apply_remote(_cs("alice", local_ops, "from-alice"))
+
+        return site_a.document, site_b.document
+
+    def test_pending_multi_op_changeset_survives_a_remote_edit(self) -> None:
+        """Issue #59: apply_remote() recomputed the local half of each transform
+        against the *untransformed* remote ops, so an op in a pending multi-op
+        changeset was transformed against a remote op that had not itself been
+        transformed against the ops preceding it. Overlapping pending deletes
+        were shortened twice and the sites diverged.
+
+        Every case below diverged before the fix; the comment gives what each
+        site used to end with.
+        """
+        from eostudio.core.collaboration.realtime_collab import Operation, OpType
+
+        def D(position: int, length: int) -> Operation:
+            return Operation(op_type=OpType.DELETE, position=position, length=length)
+
+        def I(position: int, content: str) -> Operation:
+            return Operation(op_type=OpType.INSERT, position=position, content=content)
+
+        cases = [
+            # (local ops, remote ops, pre-fix site A, pre-fix site B)
+            ([D(0, 1), D(0, 1)], [D(0, 1)], "cdefgh", "bcdefgh"),
+            ([D(0, 1), D(0, 1)], [D(1, 1)], "cdefgh", "defgh"),
+            ([D(0, 1), D(0, 1)], [D(1, 2)], "defgh", "efgh"),
+            ([D(0, 1), D(0, 1)], [I(1, "X")], "Xcdefgh", "bcdefgh"),
+            ([D(0, 1), D(0, 2)], [D(0, 1)], "defgh", "cdefgh"),
+        ]
+        for local_ops, remote_ops, was_a, was_b in cases:
+            with self.subTest(local=local_ops, remote=remote_ops):
+                doc_a, doc_b = self._two_site_documents(local_ops, remote_ops)
+                self.assertEqual(doc_a, doc_b,
+                                 f"sites diverged: {doc_a!r} vs {doc_b!r} "
+                                 f"(before the fix: {was_a!r} vs {was_b!r})")
+
+    @unittest.expectedFailure
+    def test_a_changeset_that_deletes_its_own_insert_still_diverges(self) -> None:
+        """Known limitation, NOT fixed here -- see issue filed alongside #59.
+
+        A changeset whose second op deletes the text its own first op inserted
+        is sequentially self-dependent, and pairwise transform cannot model
+        that: op 2 is expressed in a document that only exists after op 1.
+        Before the #59 fix these five cases converged by coincidence rather
+        than by correctness; afterwards site B loses the remote insert. Fixing
+        it properly needs compose() over op sequences, which is a redesign of
+        OTEngine, so this test is marked expected-failure and will fail loudly
+        the moment somebody does that work.
+        """
+        from eostudio.core.collaboration.realtime_collab import Operation, OpType
+
+        local_ops = [
+            Operation(op_type=OpType.INSERT, position=2, content="X"),
+            Operation(op_type=OpType.DELETE, position=2, length=2),
+        ]
+        remote_ops = [Operation(op_type=OpType.INSERT, position=2, content="X")]
+        doc_a, doc_b = self._two_site_documents(local_ops, remote_ops)
+        self.assertEqual(doc_a, doc_b)
+
     def test_apply_remote_ignores_replayed_changeset(self) -> None:
         from eostudio.core.collaboration.realtime_collab import (
             ChangeSet,
