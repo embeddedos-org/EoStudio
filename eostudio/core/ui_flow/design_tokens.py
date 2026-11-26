@@ -25,9 +25,13 @@ class DesignToken:
             d["alias_of"] = self.alias_of
         return d
 
+    def css_value(self) -> Any:
+        """The value written into the token's CSS custom property."""
+        return self.value
+
     def to_css_variable(self) -> str:
         css_name = self.name.replace(".", "-").replace("_", "-")
-        return f"--{css_name}: {self.value};"
+        return f"--{css_name}: {self.css_value()};"
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "DesignToken":
@@ -85,6 +89,14 @@ class TypographyToken(DesignToken):
             f"letter-spacing: {self.letter_spacing}em;"
         )
 
+    def css_value(self) -> str:
+        """The ``font`` shorthand (weight, size/line-height, family).
+
+        ``value`` holds the token's label (``"H1"``), which is not CSS.
+        Letter spacing is not part of ``font``; ``to_css()`` still has it.
+        """
+        return f"{self.font_weight} {self.font_size}px/{self.line_height} {self.font_family}"
+
 
 @dataclass
 class SpacingToken(DesignToken):
@@ -94,6 +106,12 @@ class SpacingToken(DesignToken):
 
     def to_css(self) -> str:
         return f"{self.value}px"
+
+    def css_value(self) -> Any:
+        """A number is a px length; a string (``"1rem"``) is used as it is."""
+        if isinstance(self.value, (int, float)) and not isinstance(self.value, bool):
+            return self.to_css()
+        return self.value
 
 
 @dataclass
@@ -109,6 +127,10 @@ class ShadowToken(DesignToken):
 
     def to_css(self) -> str:
         return f"{self.offset_x}px {self.offset_y}px {self.blur}px {self.spread}px {self.color}"
+
+    def css_value(self) -> str:
+        """The ``box-shadow`` value; ``value`` holds the label (``"md"``)."""
+        return self.to_css()
 
 
 @dataclass

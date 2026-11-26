@@ -47,6 +47,28 @@ class TestDesignTokens:
         css = token.to_css_variable()
         assert "--color-primary: #2563eb;" in css
 
+    def test_spacing_css_variable_is_a_px_length(self):
+        assert SpacingToken("spacing.md", 16).to_css_variable() == "--spacing-md: 16px;"
+        assert SpacingToken("spacing.gutter", "1.5rem").to_css_variable() == "--spacing-gutter: 1.5rem;"
+
+    def test_shadow_css_variable_is_the_box_shadow(self):
+        token = ShadowToken("shadow.md", "md", offset_y=4, blur=6, spread=-1, color="rgba(0,0,0,0.1)")
+        assert token.to_css_variable() == f"--shadow-md: {token.to_css()};"
+        assert token.to_css_variable() == "--shadow-md: 0.0px 4px 6px -1px rgba(0,0,0,0.1);"
+
+    def test_typography_css_variable_is_the_font_shorthand(self):
+        token = TypographyToken("type.h1", "H1", font_size=36, font_weight=700, line_height=1.2)
+        assert token.to_css_variable() == "--type-h1: 700 36px/1.2 Inter, system-ui, sans-serif;"
+
+    def test_default_theme_css_variables_hold_css_values(self):
+        for ts in (DesignTokenSet.create_default_light(), DesignTokenSet.create_default_dark()):
+            css = ts.to_css_variables()
+            assert "  --spacing-md: 16px;" in css
+            assert "  --shadow-md: md;" not in css
+            assert "  --type-h1: H1;" not in css
+            assert "  --type-body: 400 16px/1.6 Inter, system-ui, sans-serif;" in css
+            assert "  --radius-md: 8px;" in css
+
     def test_color_token_rgba(self):
         token = ColorToken("primary", "#ff8800")
         r, g, b, a = token.rgba
