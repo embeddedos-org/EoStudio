@@ -10,6 +10,62 @@ from eostudio.core.ui_flow.design_tokens import DesignTokenSet
 from eostudio.core.ui_flow.variants import VariantSet
 from eostudio.core.ui_flow.responsive import ResponsiveConfig, BREAKPOINTS
 
+#: Variant properties use the short names the Tk previews read (``bg``);
+#: CSS needs the real property name.
+_CSS_PROPERTY_NAMES = {"bg": "background"}
+
+#: CSS properties that take a bare number (the list React uses for inline
+#: styles). A number for any other property is a length in px, as in the
+#: spacing and typography tokens.
+_UNITLESS_CSS_PROPERTIES = {
+    "animation-iteration-count",
+    "aspect-ratio",
+    "border-image-outset",
+    "border-image-slice",
+    "border-image-width",
+    "column-count",
+    "columns",
+    "fill-opacity",
+    "flex",
+    "flex-grow",
+    "flex-shrink",
+    "flood-opacity",
+    "font-weight",
+    "grid-area",
+    "grid-column",
+    "grid-column-end",
+    "grid-column-start",
+    "grid-row",
+    "grid-row-end",
+    "grid-row-start",
+    "line-clamp",
+    "-webkit-line-clamp",
+    "line-height",
+    "opacity",
+    "order",
+    "orphans",
+    "scale",
+    "stop-opacity",
+    "stroke-dasharray",
+    "stroke-dashoffset",
+    "stroke-miterlimit",
+    "stroke-opacity",
+    "stroke-width",
+    "tab-size",
+    "widows",
+    "z-index",
+    "zoom",
+}
+
+
+def _css_declaration(prop: str, val: Any) -> str:
+    """Return one ``  property: value;`` line for a variant property."""
+    css_prop = _CSS_PROPERTY_NAMES.get(prop, prop.replace("_", "-"))
+    if isinstance(val, (int, float)) and not isinstance(val, bool) and val != 0:
+        if css_prop not in _UNITLESS_CSS_PROPERTIES:
+            val = f"{val}px"
+    return f"  {css_prop}: {val};"
+
 
 @dataclass
 class DesignSystem:
@@ -77,15 +133,13 @@ class DesignSystem:
                 class_name = f"{comp_type.lower()}--{variant.name}"
                 lines.append(f".{class_name} {{")
                 for prop, val in variant.properties.items():
-                    css_prop = prop.replace("_", "-")
-                    lines.append(f"  {css_prop}: {val};")
+                    lines.append(_css_declaration(prop, val))
                 lines.append("}")
                 for state in variant.states:
                     selector = state.to_css_selector(f".{class_name}")
                     lines.append(f"{selector} {{")
                     for prop, val in state.properties.items():
-                        css_prop = prop.replace("_", "-")
-                        lines.append(f"  {css_prop}: {val};")
+                        lines.append(_css_declaration(prop, val))
                     lines.append("}")
             lines.append("")
 

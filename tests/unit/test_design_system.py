@@ -397,6 +397,45 @@ class TestDesignSystem:
         assert ":root {" in css
         assert "button--primary" in css
 
+    @staticmethod
+    def _rule(css, selector):
+        """Return the declarations of the rule for ``selector``."""
+        start = css.index(selector + " {\n") + len(selector) + 3
+        return css[start : css.index("}", start)].splitlines()
+
+    def test_export_css_writes_background_for_bg(self):
+        css = DesignSystem().export_css()
+        assert "  background: #2563eb;" in self._rule(css, ".button--primary")
+        assert "  background: #1d4ed8;" in self._rule(css, ".button--primary:hover")
+        assert "  background: transparent;" in self._rule(css, ".button--ghost")
+        assert "  bg:" not in css
+
+    def test_export_css_gives_numeric_lengths_a_px_unit(self):
+        css = DesignSystem().export_css()
+        assert "  border-radius: 8px;" in self._rule(css, ".button--primary")
+        assert "  border-radius: 6px;" in self._rule(css, ".input--outlined")
+        assert "  font-size: 14px;" in self._rule(css, ".input--outlined")
+
+    def test_export_css_keeps_unitless_numbers_and_strings(self):
+        css = DesignSystem().export_css()
+        primary = self._rule(css, ".button--primary")
+        assert "  font-weight: 600;" in primary
+        assert "  padding: 10px 20px;" in primary
+        assert "  opacity: 0.6;" in self._rule(css, ".button--primary:disabled")
+        ds = DesignSystem()
+        ds.add_component_variants(VariantSet(component_type="Card"))
+        ds.component_variants["Card"].add_variant(
+            "flat", margin=0, z_index=2, line_height=1.5, aspect_ratio=1.5, grid_row=2
+        )
+        card = self._rule(ds.export_css(), ".card--flat")
+        assert card == [
+            "  margin: 0;",
+            "  z-index: 2;",
+            "  line-height: 1.5;",
+            "  aspect-ratio: 1.5;",
+            "  grid-row: 2;",
+        ]
+
     def test_export_tailwind(self):
         ds = DesignSystem()
         config = ds.export_tailwind_config()
