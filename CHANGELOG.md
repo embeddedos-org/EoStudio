@@ -93,6 +93,12 @@
   the component at that breakpoint) wrote no media query and the component
   stayed visible. Such an override now writes its media query with the
   `display: none` rule (`eostudio/core/ui_flow/responsive.py`).
+- **Sequenced clips wait for every iteration of the clip before them**:
+  `AnimationTimeline.sequence()` started each clip one `duration` after the
+  previous one, ignoring `iterations`, so a clip after a 3-iteration clip
+  started during its second iteration and the two played together. Each clip
+  now starts after the previous clip's last iteration plus `gap` (an infinite
+  clip still counts as one iteration) (`eostudio/core/animation/timeline.py`).
 
 ## [3.1.0] - 2026-05-27
 
