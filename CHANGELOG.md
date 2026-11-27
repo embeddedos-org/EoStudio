@@ -99,6 +99,15 @@
   started during its second iteration and the two played together. Each clip
   now starts after the previous clip's last iteration plus `gap` (an infinite
   clip still counts as one iteration) (`eostudio/core/animation/timeline.py`).
+- **Spacing, shadow and typography tokens write CSS values into their
+  custom properties**: `DesignTokenSet.to_css_variables()` wrote each token's
+  `value` as it is, so spacing came out unitless (`--spacing-md: 16;`) and
+  shadow and typography tokens wrote their labels (`--shadow-md: md;`,
+  `--type-h1: H1;`); none of these is usable through `var()`. Spacing
+  numbers now get `px`, a shadow writes its `box-shadow` value and a
+  typography token writes the `font` shorthand
+  (`--type-h1: 700 36px/1.2 Inter, system-ui, sans-serif;`)
+  (`eostudio/core/ui_flow/design_tokens.py`).
 
 ## [3.1.0] - 2026-05-27
 
