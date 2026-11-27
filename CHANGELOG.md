@@ -3,6 +3,15 @@
 ## [Unreleased]
 
 ### Fixed
+- **Design-system CSS export writes valid component styles**:
+  `DesignSystem.export_css()` copied variant properties as they are stored,
+  so every button rule had `bg: #2563eb;` (not a CSS property; browsers drop
+  it, so buttons had no background) and numbers without a unit
+  (`border-radius: 8;`, `font-size: 14;`, also dropped). `bg` is now written
+  as `background`, and a number gets `px` unless the property takes a bare
+  number (`opacity`, `font-weight`, `line-height`, `z-index`,
+  `aspect-ratio`, `grid-row`, ... as in React's unitless list) or it is 0
+  (`eostudio/core/ui_flow/design_system.py`).
 - **Reversed auto-layouts describe each child in order**:
   `AutoLayout.compute_layout()` with `row-reverse` or `column-reverse`
   returned its boxes in reverse child order, so result `i` held the position
